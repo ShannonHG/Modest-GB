@@ -12,7 +12,11 @@ namespace SHG
 		LOG_LEVEL_OPTION,
 	};
 
-	bool CommandLineParser::ParseArguments(int argCount, char* args[], AppConfig* config)
+	bool ParseArgumentValue(std::string argKey, std::string argValue, AppConfig* config);
+	bool ParseLogLevel(std::string argValue, LogLevel* logLevel);
+	std::string ConvertStringToLowercase(std::string s);
+
+	bool ParseCommandLineArguments(int argCount, char* args[], AppConfig* config)
 	{
 		// args[0] is the program execution command
 		// args[1] is expected to be the ROM file. If no ROM is provided, then stop.
@@ -74,7 +78,7 @@ namespace SHG
 		return true;
 	}
 
-	bool CommandLineParser::ParseArgumentValue(std::string option, std::string optionValue, AppConfig* result)
+	bool ParseArgumentValue(std::string option, std::string optionValue, AppConfig* result)
 	{
 		if (option == LOG_LEVEL_OPTION)
 		{
@@ -84,7 +88,7 @@ namespace SHG
 		return false;
 	}
 
-	bool CommandLineParser::ParseLogLevel(std::string optionValue, LogLevel* logLevel)
+	bool ParseLogLevel(std::string optionValue, LogLevel* logLevel)
 	{
 		// Confirm that the option's value exists in the LOG_LEVEL_STRINGS map
 		if (LOG_LEVEL_STRINGS_TO_ENUMS.find(optionValue) == LOG_LEVEL_STRINGS_TO_ENUMS.end())
@@ -96,7 +100,7 @@ namespace SHG
 		return true;
 	}
 
-	std::string CommandLineParser::ConvertStringToLowercase(std::string s)
+	std::string ConvertStringToLowercase(std::string s)
 	{
 		std::string result = s;
 

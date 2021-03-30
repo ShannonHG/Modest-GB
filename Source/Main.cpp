@@ -1,21 +1,27 @@
 #include "Logger.hpp"
 #include "AppConfig.hpp"
 #include "CommandLineParser.hpp"
+#include "Cartridge.hpp"
+
+using namespace SHG;
 
 int main(int argc, char* argv[]) 
 {
-	SHG::AppConfig config;
+	AppConfig config;
 
-	if (SHG::CommandLineParser::ParseArguments(argc, argv, &config))
+	if (ParseCommandLineArguments(argc, argv, &config))
 	{
-		SHG::Logger::Write("Setting ROM file path to '" + config.romFilePath + "' ");
+		Logger::Write("Setting ROM file path to '" + config.romFilePath + "' ");
 	}
 	else
 	{
 		return 0;
 	}
 
-	SHG::Logger::Write("Setting log level to '" + SHG::LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
+	Logger::Write("Setting log level to '" + LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
+
+	Cartridge cartridge;
+	cartridge.LoadFromFile(config.romFilePath);
 
 	return 0;
 }
