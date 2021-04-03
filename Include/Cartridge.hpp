@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include "Globals.hpp"
+#include "MemoryBankController.hpp"
 
 namespace SHG
 {
@@ -81,15 +82,21 @@ namespace SHG
 		MemoryBankControllerType GetMemoryBankControllerType();
 		uint32_t GetROMSize();
 		uint32_t GetRAMSize();
+		MemoryBankController* GetMemoryBankController();
 
 	private:
-		uint64_t romSize = 0;
-		uint32_t ramSize = 0;
+		std::unique_ptr<MemoryBankController> memoryBankController;
 		MemoryBankControllerType memoryBankControllerType;
 
-		void ParseCartridgeType(uint8_t byte);
-		void ParseROMSize(uint8_t byte);
-		void ParseRAMSize(uint8_t byte);
-		void ParseHeaderByte(uint8_t byte, uint16_t address);
+		std::vector<uint8_t> ram;
+		std::vector<uint8_t> rom;
+
+		void DecodeCartridgeType(uint8_t byte);
+		void DecodeROMSize(uint8_t byte);
+		void DecodeRAMSize(uint8_t byte);
+		void DecodeROMByte(uint8_t byte, uint16_t address);
+
+		uint8_t GetByte(uint16_t address);
+		void SetByte(uint16_t address, uint8_t value);
 	};
 }
