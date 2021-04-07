@@ -2,13 +2,18 @@
 
 namespace SHG
 {
-	uint8_t MBC5::GetByte(uint16_t address)
+	std::string MBC5::GetName()
 	{
-		return 0;
+		return "MBC5";
 	}
 
-	void MBC5::SetByte(uint16_t address, uint8_t byte)
+	bool MBC5::TryGetByte(uint16_t address, uint8_t& outValue)
 	{
+		return false;
+	}
 
+	bool MBC5::TrySetByte(uint16_t address, uint8_t byte)
+	{
+		return false;
 	}
 }

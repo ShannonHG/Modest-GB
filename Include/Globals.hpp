@@ -4,7 +4,9 @@
 
 namespace SHG
 {
-	const uint16_t KiB = 1024;
-	const uint32_t MiB = pow(1024, 2);
-	const uint64_t GiB = pow(1024, 3);
+	extern const uint16_t KiB;
+	extern const uint32_t MiB;
+	extern const uint64_t GiB;
+	extern const uint16_t ROM_BANK_SIZE;
+	extern const uint16_t RAM_BANK_SIZE;
 }

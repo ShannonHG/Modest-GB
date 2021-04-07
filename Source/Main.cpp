@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
 	AppConfig config;
 
-	if (ParseCommandLineArguments(argc, argv, &config))
+	if (TryParseCommandLineArguments(argc, argv, &config))
 	{
 		Logger::Write("Setting ROM file path to '" + config.romFilePath + "' ");
 	}

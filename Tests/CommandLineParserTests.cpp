@@ -14,7 +14,7 @@ namespace SHG
 		bool success = false;
 
 		// Verify that no errors are thrown due to no ROM file being provided
-		ASSERT_NO_THROW(success = ParseCommandLineArguments(1, testArgs, &config));
+		ASSERT_NO_THROW(success = TryParseCommandLineArguments(1, testArgs, &config));
 
 		EXPECT_EQ(success, false);
 	}
@@ -26,7 +26,7 @@ namespace SHG
 		AppConfig config;
 		bool success = false;
 
-		success = ParseCommandLineArguments(2, testArgs, &config);
+		success = TryParseCommandLineArguments(2, testArgs, &config);
 		EXPECT_EQ(success, true);
 	}
 
@@ -37,7 +37,7 @@ namespace SHG
 		AppConfig config;
 		bool success = false;
 
-		success = ParseCommandLineArguments(6, testArgs, &config);
+		success = TryParseCommandLineArguments(6, testArgs, &config);
 
 		EXPECT_EQ(success, true);
 
@@ -56,7 +56,7 @@ namespace SHG
 		AppConfig config;
 		bool success = false;
 
-		success = ParseCommandLineArguments(2, testArgs, &config);
+		success = TryParseCommandLineArguments(2, testArgs, &config);
 
 		EXPECT_EQ(success, true);
 
@@ -82,31 +82,31 @@ namespace SHG
 		bool success = false;
 
 		// Set the LogLevel to 'Verbose'
-		success = ParseCommandLineArguments(argCount, verboseTestArgs, &config);
+		success = TryParseCommandLineArguments(argCount, verboseTestArgs, &config);
 		EXPECT_EQ(config.logLevel, LogLevel::Verbose);
 		EXPECT_EQ(success, true);
 		success = false;
 
 		// Set the LogLevel to 'Log'
-		success = ParseCommandLineArguments(argCount, logTestArgs, &config);
+		success = TryParseCommandLineArguments(argCount, logTestArgs, &config);
 		EXPECT_EQ(config.logLevel, LogLevel::Log);
 		EXPECT_EQ(success, true);
 		success = false;
 
 		// Set the LogLevel to 'Error'
-		success = ParseCommandLineArguments(argCount, errorTestArgs, &config);
+		success = TryParseCommandLineArguments(argCount, errorTestArgs, &config);
 		EXPECT_EQ(config.logLevel, LogLevel::Error);
 		EXPECT_EQ(success, true);
 		success = false;
 
 		// Set the LogLevel to 'Warning'
-		success = ParseCommandLineArguments(argCount, warningTestArgs, &config);
+		success = TryParseCommandLineArguments(argCount, warningTestArgs, &config);
 		EXPECT_EQ(config.logLevel, LogLevel::Warning);
 		EXPECT_EQ(success, true);
 		success = false;
 
 		// Set the LogLevel to 'Silent'
-		success = ParseCommandLineArguments(argCount, silentTestArgs, &config);
+		success = TryParseCommandLineArguments(argCount, silentTestArgs, &config);
 		EXPECT_EQ(config.logLevel, LogLevel::Silent);
 		EXPECT_EQ(success, true);
 	}
@@ -118,7 +118,7 @@ namespace SHG
 		AppConfig config;
 		bool success = false;
 
-		success = ParseCommandLineArguments(4, testArgs, &config);
+		success = TryParseCommandLineArguments(4, testArgs, &config);
 		EXPECT_EQ(success, true);
 
 		// Confirm that the log level is set to the default, 

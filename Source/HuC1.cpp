@@ -2,13 +2,18 @@
 
 namespace SHG
 {
-	uint8_t HuC1::GetByte(uint16_t address)
+	std::string HuC1::GetName()
+	{
+		return "HuC1";
+	}
+
+	bool HuC1::TryGetByte(uint16_t address, uint8_t& outValue)
 	{
 		return 0;
 	}
 
-	void HuC1::SetByte(uint16_t address, uint8_t byte)
+	bool HuC1::TrySetByte(uint16_t address, uint8_t byte)
 	{
-
+		return false;
 	}
 }

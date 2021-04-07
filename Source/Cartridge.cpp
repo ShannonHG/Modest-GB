@@ -1,5 +1,7 @@
 #include <fstream>
 #include <cmath>
+#include <cassert>
+#include "Logger.hpp"
 #include "Cartridge.hpp"
 #include "Logger.hpp"
 #include "MBC1.hpp"
@@ -156,18 +158,12 @@ namespace SHG
 
 	void Cartridge::DecodeROMSize(uint8_t byte)
 	{
-		uint64_t romSize = 0;
+		// Calculation reference: https://gbdev.io/pandocs/#the-cartridge-header
+		 uint64_t romSize = (32 << byte) * KiB;
 
-		switch (byte)
-		{
-		default:
-			// Calculation reference: https://gbdev.io/pandocs/#the-cartridge-header
-			romSize = (32 << byte) * KiB; 
-			break;
-		}
-
-		double romSizeMB = romSize / (double)KiB;
-		Logger::Write("Cartridge ROM available:  " + std::to_string(romSizeMB) + " KiB");
+		// Display the ROM size (in KiB) for debugging purposes
+		double romSizeKB = romSize / (double)KiB;
+		Logger::Write("Cartridge ROM available:  " + std::to_string(romSizeKB) + " KiB");
 	}
 
 	void Cartridge::DecodeRAMSize(uint8_t byte)
@@ -196,8 +192,9 @@ namespace SHG
 
 		ram = std::vector<uint8_t>(ramSize);
 
-		double ramSizeMB = ramSize / (double)KiB;
-		Logger::Write("Cartridge RAM available: " + std::to_string(ramSizeMB) + " KiB");
+		// Display the RAM size (in KiB) for debugging purposes
+		double ramSizeKB = ramSize / (double)KiB;
+		Logger::Write("Cartridge RAM available: " + std::to_string(ramSizeKB) + " KiB");
 	}
 
 	MemoryBankControllerType Cartridge::GetMemoryBankControllerType()
@@ -205,21 +202,50 @@ namespace SHG
 		return memoryBankControllerType;
 	}
 
-	MemoryBankController* Cartridge::GetMemoryBankController()
+	bool Cartridge::TryGetByte(uint16_t address, uint8_t& outValue)
 	{
-		return memoryBankController.get();
+		switch (memoryBankControllerType)
+		{
+		case MemoryBankControllerType::None:
+			// TODO: The address may also refer to RAM
+
+			if (address > rom.size())
+			{
+				Logger::WriteError("Attempted to read from invalid cartridge address");
+				return false;
+			}
+
+			outValue = rom[address];
+			return true;
+		default:
+			// If the memoryBankControllerType is anything other than None, then the memoryBankController should not be NULL
+			assert(memoryBankController != null);
+			return memoryBankController->TryGetByte(address, outValue);
+		}
 	}
 
-	uint8_t Cartridge::GetByte(uint16_t address)
+	bool Cartridge::TrySetByte(uint16_t address, uint8_t value)
 	{
-		return 0;
+		switch (memoryBankControllerType)
+		{
+		case MemoryBankControllerType::None:
+			// TODO: The address may also refer to RAM
+
+			if (address > rom.size())
+			{
+				Logger::WriteWarning("Attempted to write to invalid cartridge address");
+				return false;
+			}
+
+			rom[address] = value;
+			return true;
+		default:
+			// If the memoryBankControllerType is anything other than None, then the memoryBankController should not be NULL
+			assert(memoryBankController != null);
+			return memoryBankController->TrySetByte(address, value);
+		}
 	}
 
-	void Cartridge::SetByte(uint16_t address, uint8_t value)
-	{
-	
-	}
-	
 	uint32_t Cartridge::GetROMSize()
 	{
 		return rom.size();

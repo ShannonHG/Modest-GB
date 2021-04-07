@@ -82,7 +82,6 @@ namespace SHG
 		MemoryBankControllerType GetMemoryBankControllerType();
 		uint32_t GetROMSize();
 		uint32_t GetRAMSize();
-		MemoryBankController* GetMemoryBankController();
 
 	private:
 		std::unique_ptr<MemoryBankController> memoryBankController;
@@ -96,7 +95,7 @@ namespace SHG
 		void DecodeRAMSize(uint8_t byte);
 		void DecodeROMByte(uint8_t byte, uint16_t address);
 
-		uint8_t GetByte(uint16_t address);
-		void SetByte(uint16_t address, uint8_t value);
+		bool TryGetByte(uint16_t address, uint8_t& outValue);
+		bool TrySetByte(uint16_t address, uint8_t value);
 	};
 }

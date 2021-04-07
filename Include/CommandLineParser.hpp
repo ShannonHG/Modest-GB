@@ -14,5 +14,5 @@ namespace SHG
 		/// <param name="args"></param>
 		/// <param name="config"></param>
 		/// <returns></returns>
-		bool ParseCommandLineArguments(int argCount, char* args[], AppConfig* config);
+		bool TryParseCommandLineArguments(int argCount, char* args[], AppConfig* config);
 }

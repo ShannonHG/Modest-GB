@@ -2,13 +2,18 @@
 
 namespace SHG
 {
-	uint8_t MMM01::GetByte(uint16_t address)
+	std::string MMM01::GetName()
 	{
-		return 0;
+		return "MMM01";
 	}
 
-	void MMM01::SetByte(uint16_t address, uint8_t byte)
+	bool MMM01::TryGetByte(uint16_t address, uint8_t& outValue)
 	{
+		return false;
+	}
 
+	bool MMM01::TrySetByte(uint16_t address, uint8_t byte)
+	{
+		return false;
 	}
 }

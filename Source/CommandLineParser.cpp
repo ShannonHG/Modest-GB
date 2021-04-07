@@ -16,7 +16,7 @@ namespace SHG
 	bool ParseLogLevel(std::string argValue, LogLevel* logLevel);
 	std::string ConvertStringToLowercase(std::string s);
 
-	bool ParseCommandLineArguments(int argCount, char* args[], AppConfig* config)
+	bool TryParseCommandLineArguments(int argCount, char* args[], AppConfig* config)
 	{
 		// args[0] is the program execution command
 		// args[1] is expected to be the ROM file. If no ROM is provided, then stop.
