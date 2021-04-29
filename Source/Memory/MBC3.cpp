@@ -1,4 +1,4 @@
-#include "MBC3.hpp"
+#include "Memory/MBC3.hpp"
 
 namespace SHG
 {

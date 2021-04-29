@@ -1,5 +1,6 @@
 #include "MBCTestGlobals.hpp"
 #include "Globals.hpp"
+#include "Memory/MemoryBankController.hpp"
 
 namespace SHG
 {
@@ -7,14 +8,14 @@ namespace SHG
 	{
 		std::vector<uint8_t> rom(size);
 		uint8_t randMax = 255;
-		uint16_t numOfBanks = size / ROM_BANK_SIZE;
+		uint16_t numOfBanks = size / MemoryBankController::ROM_BANK_SIZE;
 		uint16_t addrOffset2 = offset;
 		uint16_t addrOffset3 = offset * 2;
 
 		// Store random values in different sections of each bank
 		for (int i = 0; i < numOfBanks; i++)
 		{
-			uint32_t bankStartAddr = i * ROM_BANK_SIZE;
+			uint32_t bankStartAddr = i * MemoryBankController::ROM_BANK_SIZE;
 
 			rom[bankStartAddr] = rand() % randMax;
 			rom[bankStartAddr + addrOffset2] = rand() % randMax;
@@ -28,14 +29,14 @@ namespace SHG
 	{
 		std::vector<uint8_t> ram(size);
 		uint8_t randMax = 255;
-		uint16_t numOfBanks = size / RAM_BANK_SIZE;
+		uint16_t numOfBanks = size / MemoryBankController::RAM_BANK_SIZE;
 		uint16_t addrOffset2 = offset;
 		uint16_t addrOffset3 = offset * 2;
 
 		// Store random values in different sections of each bank
 		for (int i = 0; i < numOfBanks; i++)
 		{
-			uint32_t bankStartAddr = i * RAM_BANK_SIZE;
+			uint32_t bankStartAddr = i * MemoryBankController::RAM_BANK_SIZE;
 
 			ram[bankStartAddr] = rand() % randMax;
 			ram[bankStartAddr + addrOffset2] = rand() % randMax;

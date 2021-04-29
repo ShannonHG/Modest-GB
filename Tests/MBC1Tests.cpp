@@ -1,7 +1,7 @@
 #include <vector>
 #include "gtest/gtest.h"
-#include "Cartridge.hpp"
-#include "MBC1.hpp"
+#include "Memory/Cartridge.hpp"
+#include "Memory/MBC1.hpp"
 #include "MBCTestGlobals.hpp"
 
 namespace SHG
@@ -19,7 +19,7 @@ namespace SHG
 		mbc.AttachROM(rom);
 
 		// Compare bytes in the first ROM bank, to bytes retrieved from the 
-		// memory bank controller in addresses ranges 0x0000 to 0x3FFF
+		// memory bank controller in the address range 0x0000 to 0x3FFF
 
 		uint8_t byte1 = 0;
 		EXPECT_EQ(mbc.TryGetByte(0, byte1), true);
@@ -48,8 +48,8 @@ namespace SHG
 		// Set ROM bank number
 		EXPECT_EQ(mbc.TrySetByte(0x2050, targetROMBankNum), true);
 
-		// Compare bytes in the first ROM bank, to bytes retrieved from the 
-		// memory bank controller in addresses ranges 0x0000 to 0x3FFF
+		// Compare bytes in the target ROM bank, to bytes retrieved from the 
+		// memory bank controller in the address range 0x4000 to 0x7FFF
 
 		uint32_t virtualAddressRangeStart = 0x4000;
 		uint32_t targetVirtualAddress = 0x4000;
@@ -94,8 +94,8 @@ namespace SHG
 		// Enable RAM
 		EXPECT_EQ(mbc.TrySetByte(0x0000, 0x0A), true);
 
-		// Compare bytes in the first ROM bank, to bytes retrieved from the 
-		// memory bank controller in addresses ranges 0x0000 to 0x3FFF
+		// Compare bytes in the target RAM bank, to bytes retrieved from the 
+		// memory bank controller in the address range 0xA000 to 0xBFFF
 
 		uint32_t virtualAddressRangeStart = 0xA000;
 		uint32_t targetVirtualAddress = 0xA000;

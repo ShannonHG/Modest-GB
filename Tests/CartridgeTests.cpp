@@ -1,6 +1,6 @@
 #include <array>
 #include "gtest/gtest.h"
-#include "Cartridge.hpp"
+#include "Memory/Cartridge.hpp"
 
 namespace SHG
 {
@@ -12,7 +12,7 @@ namespace SHG
 		testROMData[CH_RAM_SIZE_ADDRESS] = 0x05; // 64 KiB
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetRAMSize(), 64 * KiB);
 	}
@@ -22,7 +22,7 @@ namespace SHG
 		testROMData[CH_ROM_SIZE_ADDRESS] = 0x00; // 32 KiB
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetROMSize(), 32 * KiB);
 	}
@@ -32,7 +32,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x01; // MBC1
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC1);
 	}
@@ -42,7 +42,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x05; // MBC2
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC2);
 	}
@@ -52,7 +52,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x0F; // MBC3
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC3);
 	}
@@ -62,7 +62,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x19; // MBC5
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC5);
 	}
@@ -72,7 +72,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x20; // MBC6
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC6);
 	}
@@ -82,7 +82,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x22; // MBC7
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC7);
 	}
@@ -92,7 +92,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x0B; // MMM01
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MMM01);
 	}
@@ -102,7 +102,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0xFE; // HuC3
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::HuC3);
 	}
@@ -112,7 +112,7 @@ namespace SHG
 		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0xFF; // HuC1
 
 		Cartridge cartridge;
-		cartridge.LoadFromData(testROMData);
+		cartridge.LoadFromMemory(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::HuC1);
 	}

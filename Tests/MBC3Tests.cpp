@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "Cartridge.hpp"
-#include "MBC3.hpp"
+#include "Memory/Cartridge.hpp"
+#include "Memory/MBC3.hpp"
 
 namespace SHG
 {

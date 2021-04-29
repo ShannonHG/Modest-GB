@@ -1,9 +1,9 @@
 #pragma once
-#include "MemoryBankController.hpp"
+#include "Memory/MemoryBankController.hpp"
 
 namespace SHG
 {
-	class MBC6 : public MemoryBankController
+	class MBC2 : public MemoryBankController
 	{
 	public:
 		bool TryGetByte(uint16_t address, uint8_t& outValue) override;

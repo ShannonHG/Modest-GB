@@ -2,17 +2,17 @@
 #include <cmath>
 #include <cassert>
 #include "Logger.hpp"
-#include "Cartridge.hpp"
+#include "Memory/Cartridge.hpp"
 #include "Logger.hpp"
-#include "MBC1.hpp"
-#include "MBC2.hpp"
-#include "MBC3.hpp"
-#include "MBC5.hpp"
-#include "MBC6.hpp"
-#include "MBC7.hpp"
-#include "HuC1.hpp"
-#include "HuC3.hpp"
-#include "MMM01.hpp"
+#include "Memory/MBC1.hpp"
+#include "Memory/MBC2.hpp"
+#include "Memory/MBC3.hpp"
+#include "Memory/MBC5.hpp"
+#include "Memory/MBC6.hpp"
+#include "Memory/MBC7.hpp"
+#include "Memory/HuC1.hpp"
+#include "Memory/HuC3.hpp"
+#include "Memory/MMM01.hpp"
 
 namespace SHG
 {
@@ -43,7 +43,7 @@ namespace SHG
 		return true;
 	}
 
-	bool Cartridge::LoadFromData(std::vector<uint8_t>& data)
+	bool Cartridge::LoadFromMemory(std::vector<uint8_t>& data)
 	{
 		uint16_t address = 0;
 		for (uint8_t byte : data)

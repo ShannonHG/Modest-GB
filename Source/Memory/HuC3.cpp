@@ -1,4 +1,4 @@
-#include "HuC3.hpp"
+#include "Memory/HuC3.hpp"
 
 namespace SHG
 {

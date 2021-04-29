@@ -1,7 +1,7 @@
 #include "Logger.hpp"
 #include "AppConfig.hpp"
 #include "CommandLineParser.hpp"
-#include "Cartridge.hpp"
+#include "Memory/Cartridge.hpp"
 
 using namespace SHG;
 

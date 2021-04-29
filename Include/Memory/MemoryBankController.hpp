@@ -9,6 +9,9 @@ namespace SHG
 	class MemoryBankController
 	{
 	public:
+		static const uint16_t ROM_BANK_SIZE;
+		static const uint16_t RAM_BANK_SIZE;
+
 		void AttachRAM(std::vector<uint8_t>& ram);
 		void AttachROM(std::vector<uint8_t>& rom);
 

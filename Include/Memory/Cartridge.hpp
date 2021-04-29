@@ -3,7 +3,7 @@
 #include <map>
 #include <vector>
 #include "Globals.hpp"
-#include "MemoryBankController.hpp"
+#include "Memory/MemoryBankController.hpp"
 
 namespace SHG
 {
@@ -77,10 +77,36 @@ namespace SHG
 	class Cartridge
 	{
 	public:
+		/// <summary>
+		/// Loads a ROM from a file
+		/// </summary>
+		/// <param name="romFilePath"></param>
+		/// <returns></returns>
 		bool LoadFromFile(std::string romFilePath);
-		bool LoadFromData(std::vector<uint8_t>& data);
+
+		/// <summary>
+		/// Loads a ROM from in-memory data
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
+		bool LoadFromMemory(std::vector<uint8_t>& data);
+
+		/// <summary>
+		/// The type of memory bank controller this catridge uses.
+		/// </summary>
+		/// <returns></returns>
 		MemoryBankControllerType GetMemoryBankControllerType();
+
+		/// <summary>
+		/// Size of the ROM included in this cartridge (if any)
+		/// </summary>
+		/// <returns></returns>
 		uint32_t GetROMSize();
+
+		/// <summary>
+		/// Size of the RAM included in this cartridge (if any)
+		/// </summary>
+		/// <returns></returns>
 		uint32_t GetRAMSize();
 
 	private:

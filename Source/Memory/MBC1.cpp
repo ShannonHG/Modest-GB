@@ -1,5 +1,5 @@
 #include <sstream>
-#include "MBC1.hpp"
+#include "Memory/MBC1.hpp"
 #include "Logger.hpp"
 #include "Globals.hpp"
 
@@ -165,6 +165,9 @@ namespace SHG
 
 	uint8_t MBC1::GetROMBankNumber()
 	{
+		// If the banking mode is 0, the ROM bank number register defines the full bank number.
+		// If the banking mode is 1, the 2 bits in the secondary bank register will be used as bits 
+		// 5 and 6 of the ROM bank number, while the lower bits are defined by the ROM bank number register.
 		if (GetBankingMode() == 0)
 		{
 			return registers[ROM_BANK_NUM_REGISTER_ADDR];

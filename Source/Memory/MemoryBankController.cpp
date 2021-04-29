@@ -1,11 +1,14 @@
 #include <sstream>
 #include <iomanip>
-#include "MemoryBankController.hpp"
+#include "Memory/MemoryBankController.hpp"
 #include "Logger.hpp"
 #include "Globals.hpp"
 
 namespace SHG
 {
+	const uint16_t MemoryBankController::ROM_BANK_SIZE = 16 * KiB;
+	const uint16_t MemoryBankController::RAM_BANK_SIZE = 8 * KiB;
+
 	void MemoryBankController::AttachRAM(std::vector<uint8_t>& ram)
 	{
 		this->ram = &ram;

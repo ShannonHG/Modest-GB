@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include "MemoryBankController.hpp"
+#include "Memory/MemoryBankController.hpp"
 
 namespace SHG
 {
