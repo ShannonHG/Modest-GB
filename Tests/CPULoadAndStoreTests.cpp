@@ -59,16 +59,18 @@ namespace SHG
 
 	// LD (HL), B
 	// Opcode: 0x70
-	TEST(CPU, LD_HL_B)
+	TEST(CPU, LD_ADDR_HL_B)
 	{
 		uint8_t value = 7;
+		uint16_t address = 320;
 		auto mmu = CreatePresetMemoryManagementUnit(0x70);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::BC).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (FF00 + U8), A
@@ -210,72 +212,84 @@ namespace SHG
 
 	// LD (HL), C
 	// Opcode: 0x71
-	TEST(CPU, LD_HL_C)
+	TEST(CPU, LD_ADDR_HL_C)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x71);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::BC).SetLowerByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (BC), A
 	// Opcode: 0x02
-	TEST(CPU, LD_BC_A)
+	TEST(CPU, LD_ADDR_BC_A)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x02);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::AF).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::BC).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::BC).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (DE), A
 	// Opcode: 0x12
-	TEST(CPU, LD_DE_A)
+	TEST(CPU, LD_ADDR_DE_A)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x12);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::AF).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::DE).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::DE).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (HL+), A
 	// Opcode: 0x22
-	TEST(CPU, LD_HL_INC_A)
+	TEST(CPU, LD_ADDR_INC_HL_A)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x22);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::AF).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value + 1);
+		EXPECT_EQ(mmu.GetByte(address), value);
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), address + 1);
 	}
 
 	// LD (HL-), A
 	// Opcode: 0x32
-	TEST(CPU, LD_HL_DEC_A)
+	TEST(CPU, LD_ADDR_DEC_HL_A)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x32);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::AF).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value - 1);
+		EXPECT_EQ(mmu.GetByte(address), value);
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), address - 1);
 	}
 
 	// LD B, D
@@ -308,16 +322,18 @@ namespace SHG
 
 	// LD (HL), D
 	// Opcode: 0x72
-	TEST(CPU, LD_HL_D)
+	TEST(CPU, LD_ADDR_HL_D)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x72);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::DE).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (FF00 + C), A
@@ -399,16 +415,18 @@ namespace SHG
 
 	// LD (HL), E
 	// Opcode: 0x73
-	TEST(CPU, LD_HL_E)
+	TEST(CPU, LD_ADDR_HL_E)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x73);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::DE).SetLowerByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD B, H
@@ -455,16 +473,17 @@ namespace SHG
 
 	// LD (HL), H
 	// Opcode: 0x74
-	TEST(CPU, LD_HL_H)
+	TEST(CPU, LD_ADDR_HL_H)
 	{
 		uint8_t value = 7;
+		uint16_t address = value << 8;
 		auto mmu = CreatePresetMemoryManagementUnit(0x74);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::HL).SetUpperByte(value);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD B, L
@@ -567,27 +586,32 @@ namespace SHG
 
 	// LD (HL), U8
 	// Opcode: 0x36
-	TEST(CPU, LD_HL_U8)
+	TEST(CPU, LD_ADDR_HL_U8)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x36);
 		mmu.SetByte(1, value);
 
 		auto processor = CPU(mmu);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD B, (HL)
 	// Opcode: 0x46
-	TEST(CPU, LD_B_HL)
+	TEST(CPU, LD_B_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x46);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::BC).GetUpperByte(), value);
@@ -595,13 +619,15 @@ namespace SHG
 
 	// LD D, (HL)
 	// Opcode: 0x56
-	TEST(CPU, LD_D_HL)
+	TEST(CPU, LD_D_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
 		auto mmu = CreatePresetMemoryManagementUnit(0x56);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::DE).GetUpperByte(), value);
@@ -609,13 +635,16 @@ namespace SHG
 
 	// LD H, (HL)
 	// Opcode: 0x66
-	TEST(CPU, LD_H_HL)
+	TEST(CPU, LD_H_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 400;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x66);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetUpperByte(), value);
@@ -665,16 +694,18 @@ namespace SHG
 
 	// LD (HL), A
 	// Opcode: 0x77
-	TEST(CPU, LD_HL_A)
+	TEST(CPU, LD_ADDR_HL_A)
 	{
 		uint8_t value = 7;
+		uint16_t address = 400;
 		auto mmu = CreatePresetMemoryManagementUnit(0x77);
 
 		auto processor = CPU(mmu);
 		processor.GetRegister(CPURegisterID::AF).SetUpperByte(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value);
+		EXPECT_EQ(mmu.GetByte(address), value);
 	}
 
 	// LD (U16), SP
@@ -812,13 +843,16 @@ namespace SHG
 
 	// LD A, (BC)
 	// Opcode: 0x0A
-	TEST(CPU, LD_A_BC)
+	TEST(CPU, LD_A_ADDR_BC)
 	{
-		uint8_t value = 7;
+		uint8_t value = 8;
+		uint16_t address = 300;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x0A);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::BC).SetData(value);
+		processor.GetRegister(CPURegisterID::BC).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetUpperByte(), value);
@@ -826,13 +860,16 @@ namespace SHG
 
 	// LD A, (DE)
 	// Opcode: 0x1A
-	TEST(CPU, LD_A_DE)
+	TEST(CPU, LD_A_ADDR_DE)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x1A);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::DE).SetData(value);
+		processor.GetRegister(CPURegisterID::DE).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetUpperByte(), value);
@@ -840,31 +877,37 @@ namespace SHG
 
 	// LD A, (HL+)
 	// Opcode: 0x2A
-	TEST(CPU, LD_A_HL_INC)
+	TEST(CPU, LD_A_ADDR_HL_INC)
 	{
-		uint8_t value = 7;
+		uint8_t value = 9;
+		uint16_t address = 400;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x2A);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value + 1);
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), address + 1);
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetUpperByte(), value);
 	}
 
 	// LD A, (HL-)
 	// Opcode: 0x3A
-	TEST(CPU, LD_A_HL_DEC)
+	TEST(CPU, LD_A_ADDR_HL_DEC)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x3A);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value - 1);
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), address - 1);
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetUpperByte(), value);
 	}
 
@@ -1189,11 +1232,14 @@ namespace SHG
 	// Opcode: 0x4E
 	TEST(CPU, LD_C_HL)
 	{
-		uint8_t value = 7;
+		uint8_t value = 10;
+		uint16_t address = 350;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x4E);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::BC).GetLowerByte(), value);
@@ -1201,13 +1247,16 @@ namespace SHG
 
 	// LD E, (HL)
 	// Opcode: 0x5E
-	TEST(CPU, LD_E_HL)
+	TEST(CPU, LD_E_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 400;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x5E);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::DE).GetLowerByte(), value);
@@ -1215,27 +1264,38 @@ namespace SHG
 
 	// LD L, (HL)
 	// Opcode: 0x6E
-	TEST(CPU, LD_L_HL)
+	TEST(CPU, LD_L_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 300;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x6E);
+		mmu.SetByte(address, value);
+
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		Logger::Write("D: " + std::to_string(processor.GetRegister(CPURegisterID::HL).GetData()));
+
 		processor.Cycle();
+
+		Logger::Write("D: " + std::to_string(processor.GetRegister(CPURegisterID::HL).GetData()));
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetLowerByte(), value);
 	}
 
 	// LD A, (HL)
 	// Opcode: 0x7E
-	TEST(CPU, LD_A_HL)
+	TEST(CPU, LD_A_ADDR_HL)
 	{
 		uint8_t value = 7;
+		uint16_t address = 400;
+
 		auto mmu = CreatePresetMemoryManagementUnit(0x7E);
+		mmu.SetByte(address, value);
 
 		auto processor = CPU(mmu);
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegister(CPURegisterID::HL).SetData(address);
 		processor.Cycle();
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetUpperByte(), value);

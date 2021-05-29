@@ -39,5 +39,7 @@ namespace SHG
 		void StoreValueInRegister(CPURegister* targetRegister, CPURegisterAddressType addressType, uint16_t value);
 		CPUInstruction DecodeLoadAndStoreInstruction(uint8_t opcode);
 		CPUInstruction DecodeArithmeticInstruction(uint8_t opcode);
+
+		void SetInstructionData(uint8_t upperNibble, uint8_t lowerNibble, CPUInstruction& instruction);
 	};
 }

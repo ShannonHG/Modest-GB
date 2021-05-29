@@ -16,5 +16,6 @@ namespace SHG
 		OR,
 		XOR,
 		AND,
+		Compare
 	};
 }

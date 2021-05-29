@@ -4,12 +4,14 @@ namespace SHG
 {
 	void CPURegister::SetUpperByte(uint8_t value)
 	{
-		data |= value << 8;
+		data &= 0x00FF;
+		data |= (value << 8);
 	}
 
 	void CPURegister::SetLowerByte(uint8_t value)
 	{
-		data |= 0x00FF & value;
+		data &= 0xFF00;
+		data |= value;
 	}
 
 	uint8_t CPURegister::GetUpperByte()

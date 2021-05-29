@@ -103,9 +103,8 @@ namespace SHG
 				break;
 			case 0x02:
 				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::BC];
+				instruction.targetAddress = registers[CPURegisterID::BC].GetData();
 				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
 				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
 				break;
 			case 0x03:
@@ -138,7 +137,9 @@ namespace SHG
 				instruction.targetRegister = &registers[CPURegisterID::AF];
 				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
 				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				instruction.data.push_back(registers[CPURegisterID::BC].GetData());
+
+				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::BC].GetData());
+				instruction.data.push_back(data8);
 				break;
 			case 0x0B:
 				break;
@@ -168,9 +169,8 @@ namespace SHG
 				break;
 			case 0x12:
 				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::DE];
+				instruction.targetAddress = registers[CPURegisterID::DE].GetData();
 				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
 				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
 				break;
 			case 0x13:
@@ -198,7 +198,9 @@ namespace SHG
 				instruction.targetRegister = &registers[CPURegisterID::AF];
 				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
 				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				instruction.data.push_back(registers[CPURegisterID::DE].GetData());
+
+				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::DE].GetData());
+				instruction.data.push_back(data8);
 				break;
 			case 0x1B:
 				break;
@@ -228,10 +230,10 @@ namespace SHG
 				break;
 			case 0x22:
 				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
+				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
+				registers[CPURegisterID::HL].Increment();
 				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte() + 1);
+				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
 				break;
 			case 0x23:
 				break;
@@ -258,7 +260,10 @@ namespace SHG
 				instruction.targetRegister = &registers[CPURegisterID::AF];
 				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
 				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				instruction.data.push_back(registers[CPURegisterID::HL].GetData());
+
+				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
+				instruction.data.push_back(data8);
+
 				registers[CPURegisterID::HL].Increment();
 				break;
 			case 0x2B:
@@ -289,10 +294,10 @@ namespace SHG
 				break;
 			case 0x32:
 				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
+				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
+				registers[CPURegisterID::HL].Decrement();
 				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte() - 1);
+				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
 				break;
 			case 0x33:
 				break;
@@ -302,9 +307,8 @@ namespace SHG
 				break;
 			case 0x36:
 				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
+				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
 				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
 				data8 = Fetch8Bit();
 				instruction.data.push_back(data8);
 				break;
@@ -319,7 +323,10 @@ namespace SHG
 				instruction.targetRegister = &registers[CPURegisterID::AF];
 				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
 				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				instruction.data.push_back(registers[CPURegisterID::HL].GetData());
+
+				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
+				instruction.data.push_back(data8);
+
 				registers[CPURegisterID::HL].Decrement();
 				break;
 			case 0x3B:
@@ -601,11 +608,74 @@ namespace SHG
 	{
 		CPUInstruction instruction;
 
+		instruction.instructionType = CPUInstructionType::Load;
+
 		uint8_t upperNibble = opcode >> 4;
 		uint8_t lowerNibble = opcode & 0x0F;
 
-		instruction.instructionType = CPUInstructionType::Load;
+		SetInstructionData(upperNibble, lowerNibble, instruction);
 
+		CPURegisterID targetRegisterID;
+
+		if (upperNibble == 7)
+		{
+			if (lowerNibble <= 7) instruction.targetAddress = registers[CPURegisterID::HL].GetData();
+			else
+			{
+				instruction.targetRegister = &registers[CPURegisterID::AF];
+				instruction.registerAddressType = CPURegisterAddressType::Upper;
+			}
+		}
+		else
+		{
+			// Due to the format of the opcodes in this range, subtracting the upper 4-bits from 8, 
+			// happens to give us the correct target register ID.
+			targetRegisterID = (CPURegisterID)(upperNibble - (8 - upperNibble));
+			instruction.targetRegister = &registers[targetRegisterID];
+
+			instruction.registerAddressType = lowerNibble <= 7 ? CPURegisterAddressType::Upper : CPURegisterAddressType::Lower;
+		}
+
+		return instruction;
+	}
+
+	CPUInstruction CPU::DecodeArithmeticInstruction(uint8_t opcode)
+	{
+		CPUInstruction instruction;
+
+		instruction.targetRegister = &registers[CPURegisterID::AF];
+		instruction.registerAddressType = CPURegisterAddressType::Upper;
+
+		instruction.data.push_back(instruction.targetRegister->GetUpperByte());
+
+		uint8_t upperNibble = opcode >> 4;
+		uint8_t lowerNibble = opcode & 0x0F;
+
+		SetInstructionData(upperNibble, lowerNibble, instruction);
+
+		uint8_t temp = lowerNibble < 8 ? 0 : 1;
+
+		switch (upperNibble)
+		{
+		case 0x08:
+			instruction.instructionType = temp == 0 ? CPUInstructionType::Add : CPUInstructionType::AddWithCarry;
+			break;
+		case 0x09:
+			instruction.instructionType = temp == 0 ? CPUInstructionType::Subtract : CPUInstructionType::SubtractWithCarry;
+			break;
+		case 0x0A:
+			instruction.instructionType = temp == 0 ? CPUInstructionType::AND : CPUInstructionType::XOR;
+			break;
+		case 0x0B:
+			instruction.instructionType = temp == 0 ? CPUInstructionType::OR : CPUInstructionType::Compare;
+			break;
+		}
+
+		return instruction;
+	}
+
+	void CPU::SetInstructionData(uint8_t upperNibble, uint8_t lowerNibble, CPUInstruction& instruction)
+	{
 		// Since there are a total of 7 different registers that may be provided as the source
 		// register (B, C, D, E, H, L, A), only 3 bits are needed to identify the register. 
 		// This keeps the decoded value between 0 - 7 (an 8 will be interpreted as 0, and a 9 as 1).
@@ -613,13 +683,12 @@ namespace SHG
 
 		instruction.operandSize = CPUInstructionOperandSize::EightBit;
 
-		uint8_t data = 0;
+		uint16_t data = 0;
 
 		switch (lower3Bits)
 		{
 		case 6:
-			instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-			data = registers[CPURegisterID::HL].GetData();
+			data = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
 			break;
 		case 7:
 			data = registers[CPURegisterID::AF].GetUpperByte();
@@ -650,29 +719,5 @@ namespace SHG
 		}
 
 		instruction.data.push_back(data);
-
-		CPURegisterID targetRegisterID;
-
-		if (upperNibble == 7)
-		{
-			targetRegisterID = lowerNibble <= 7 ? CPURegisterID::HL : CPURegisterID::AF;
-			instruction.registerAddressType = targetRegisterID == CPURegisterID::HL ? CPURegisterAddressType::Full : CPURegisterAddressType::Upper;
-		}
-		else
-		{
-			// Due to the format of the opcodes in this range, subtracting the upper 4-bits from 8, 
-			// happens to give us the correct target register ID.
-			targetRegisterID = (CPURegisterID)(upperNibble - (8 - upperNibble));;
-			instruction.registerAddressType = lowerNibble <= 7 ? CPURegisterAddressType::Upper : CPURegisterAddressType::Lower;
-		}
-
-		instruction.targetRegister = &registers[targetRegisterID];
-		return instruction;
-	}
-
-	CPUInstruction CPU::DecodeArithmeticInstruction(uint8_t opcode)
-	{
-		CPUInstruction instruction;
-		return instruction;
 	}
 }
