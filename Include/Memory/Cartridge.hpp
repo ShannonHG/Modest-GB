@@ -74,7 +74,7 @@ namespace SHG
 	static const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
 	static const uint16_t CH_RAM_SIZE_ADDRESS = 0x0149;
 
-	class Cartridge
+	class Cartridge : public MemoryManagementUnit
 	{
 	public:
 		/// <summary>
@@ -109,6 +109,10 @@ namespace SHG
 		/// <returns></returns>
 		uint32_t GetRAMSize();
 
+		uint8_t GetByte(uint16_t address) override;
+		void SetByte(uint16_t address, uint8_t value) override;
+		bool IsAddressAvailable(uint16_t address) override;
+
 	private:
 		std::unique_ptr<MemoryBankController> memoryBankController;
 		MemoryBankControllerType memoryBankControllerType;
@@ -120,8 +124,5 @@ namespace SHG
 		void DecodeROMSize(uint8_t byte);
 		void DecodeRAMSize(uint8_t byte);
 		void DecodeROMByte(uint8_t byte, uint16_t address);
-
-		bool TryGetByte(uint16_t address, uint8_t& outValue);
-		bool TrySetByte(uint16_t address, uint8_t value);
 	};
 }

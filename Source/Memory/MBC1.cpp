@@ -51,17 +51,17 @@ namespace SHG
 		return "MBC1";
 	}
 
-	bool MBC1::TryGetByte(uint16_t address, uint8_t& outValue)
+	uint8_t MBC1::GetByte(uint16_t address)
 	{
 		if (address <= ROM_BANK_X0_END_ADDR && address >= ROM_BANK_X0_START_ADDR)
 		{
-			return TryGetByteFromROM(address, outValue);
+			return GetByteFromROM(address);
 		}
 		else if (address <= ROM_SWITCHABLE_BANK_END_ADDR && address >= ROM_SWITCHABLE_BANK_START_ADDR)
 		{
 			uint16_t offset = CalculatePhysicalROMAddress(GetROMBankNumber(), ROM_SWITCHABLE_BANK_START_ADDR, address);
 
-			return TryGetByteFromROM(offset, outValue);
+			return GetByteFromROM(offset);
 		}
 		else if (address <= RAM_SWITCHABLE_BANK_END_ADDR && address >= RAM_SWITCHABLE_BANK_START_ADDR)
 		{
@@ -70,14 +70,14 @@ namespace SHG
 			{
 				uint16_t offset = CalculatePhysicalRAMAddress(GetRAMBankNumber(), RAM_SWITCHABLE_BANK_START_ADDR, address);
 
-				return TryGetByteFromRAM(offset, outValue);
+				return GetByteFromRAM(offset);
 			}
 		}
 
 		return true;
 	}
 
-	bool MBC1::TrySetByte(uint16_t address, uint8_t value)
+	void MBC1::SetByte(uint16_t address, uint8_t value)
 	{
 		if (address <= RAM_ENABLE_END_ADDR && address >= RAM_ENABLE_START_ADDR)
 		{
@@ -142,20 +142,23 @@ namespace SHG
 		}
 		else if (address <= RAM_SWITCHABLE_BANK_END_ADDR && address >= RAM_SWITCHABLE_BANK_START_ADDR)
 		{
-			if (!IsRAMEnabled()) return false;
+			if (!IsRAMEnabled()) return;
 			else
 			{
 				uint16_t offset = CalculatePhysicalRAMAddress(GetRAMBankNumber(), RAM_SWITCHABLE_BANK_START_ADDR, address);
 
-				return TrySetByteInRAM(offset, value);
+				return SetByteInRAM(offset, value);
 			}
 		}
 		else if (address <= BANK_MODE_SELECT_END_ADDR && address >= BANK_MODE_SELECT_START_ADDR)
 		{
 			registers[BANK_MODE_SELECT_REGISTER_ADDR] = value & 1;
 		}
+	}
 
-		return true;
+	bool MBC1::IsAddressAvailable(uint16_t address)
+	{
+		return address >= ROM_BANK_X0_START_ADDR && address <= BANK_MODE_SELECT_END_ADDR;
 	}
 
 	bool MBC1::IsRAMEnabled()

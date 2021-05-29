@@ -22,9 +22,9 @@ namespace SHG
 		CPURegister& GetRegister(CPURegisterID registerID);
 
 		/// <summary>
-		/// Perform a single instruction cycle
+		/// Perform a single instruction cycle, and returns the duration of the executed instruction.
 		/// </summary>
-		void Cycle();
+		uint32_t Cycle();
 		
 	private:
 		static const uint8_t REGISTER_COUNT = 6;
@@ -32,9 +32,12 @@ namespace SHG
 		MemoryManagementUnit& memoryManagementUnit;
 		std::map<CPURegisterID, CPURegister> registers;
 
-		bool TryFetch(uint8_t& result);
-		bool TryDecode(uint8_t byte, CPUInstruction& result);
-		void Execute(CPUInstruction& instruction);
+		uint8_t Fetch8Bit();
+		uint16_t Fetch16Bit();
+		CPUInstruction Decode(uint8_t opcode);
+		uint32_t Execute(const CPUInstruction& instruction);
 		void StoreValueInRegister(CPURegister* targetRegister, CPURegisterAddressType addressType, uint16_t value);
+		CPUInstruction DecodeLoadAndStoreInstruction(uint8_t opcode);
+		CPUInstruction DecodeArithmeticInstruction(uint8_t opcode);
 	};
 }

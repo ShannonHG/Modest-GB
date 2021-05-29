@@ -3,10 +3,11 @@
 #include <vector>
 #include <string>
 #include "Globals.hpp"
+#include "Memory/MemoryManagementUnit.hpp"
 
 namespace SHG
 {
-	class MemoryBankController
+	class MemoryBankController : public MemoryManagementUnit
 	{
 	public:
 		static const uint16_t ROM_BANK_SIZE;
@@ -15,8 +16,9 @@ namespace SHG
 		void AttachRAM(std::vector<uint8_t>& ram);
 		void AttachROM(std::vector<uint8_t>& rom);
 
-		virtual bool TryGetByte(uint16_t address, uint8_t& outValue) = 0;
-		virtual bool TrySetByte(uint16_t address, uint8_t value) = 0;
+		virtual uint8_t GetByte(uint16_t address) override = 0;
+		virtual void SetByte(uint16_t address, uint8_t value) override = 0;
+		virtual bool IsAddressAvailable(uint16_t address) override = 0;
 
 		/// <summary>
 		/// Calculates the physical ROM address using the RAM bank number, and distance from the beginning of 
@@ -41,9 +43,9 @@ namespace SHG
 		void WriteInvalidROMAccesMessage(uint16_t address);
 		void WriteInvalidRAMAccesMessage(uint16_t address);
 
-		bool TrySetByteInRAM(uint32_t address, uint8_t value);
-		bool TryGetByteFromRAM(uint32_t address, uint8_t& outValue);
-		bool TrySetByteInROM(uint32_t address, uint8_t value);
-		bool TryGetByteFromROM(uint32_t address, uint8_t& outValue);
+		void SetByteInRAM(uint32_t address, uint8_t value);
+		uint8_t GetByteFromRAM(uint32_t address);
+		void SetByteInROM(uint32_t address, uint8_t value);
+		uint8_t GetByteFromROM(uint32_t address);
 	};
 }

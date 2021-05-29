@@ -44,7 +44,17 @@ namespace SHG
 		/// </summary>
 		void SetData(uint16_t value);
 
+		/// <summary>
+		/// Increases the stored 16 bit value by 1
+		/// </summary>
+		void Increment();
+
+		/// <summary>
+		/// Decreases the stored 16 bit value by 1
+		/// </summary>
+		void Decrement();
+
 	private:
-		uint16_t data;
+		uint16_t data = 0;
 	};
 }

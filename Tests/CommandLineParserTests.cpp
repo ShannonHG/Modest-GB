@@ -89,7 +89,7 @@ namespace SHG
 
 		// Set the LogLevel to 'Log'
 		success = TryParseCommandLineArguments(argCount, logTestArgs, &config);
-		EXPECT_EQ(config.logLevel, LogLevel::Log);
+		EXPECT_EQ(config.logLevel, LogLevel::Info);
 		EXPECT_EQ(success, true);
 		success = false;
 

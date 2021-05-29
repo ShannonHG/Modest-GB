@@ -4,6 +4,7 @@ namespace SHG
 {
 	enum class CPUInstructionType
 	{
+		Invalid,
 		Add, 
 		AddWithCarry,
 		Subtract,
@@ -11,7 +12,7 @@ namespace SHG
 		Increment,
 		Decrement,
 		DecimalAdjust,
-		Load, 
+		Load,
 		OR,
 		XOR,
 		AND,

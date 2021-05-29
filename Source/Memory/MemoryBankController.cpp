@@ -56,25 +56,24 @@ namespace SHG
 		return ramBankOffset + (targetVirtualAddress - (virtualAddressRangeStart + ramBankOffset));
 	}
 
-	bool MemoryBankController::TrySetByteInRAM(uint32_t address, uint8_t value)
+	void MemoryBankController::SetByteInRAM(uint32_t address, uint8_t value)
 	{
 		if (ram == NULL)
 		{
 			WriteMissingRAMMessage();
-			return false;
+			return;
 		}
 
 		if (address >= ram->size())
 		{
 			WriteInvalidRAMAccesMessage(address);
-			return false;
+			return;
 		}
 
 		(*ram)[address] = value;
-		return true;
 	}
 
-	bool MemoryBankController::TryGetByteFromRAM(uint32_t address, uint8_t& outValue)
+	uint8_t MemoryBankController::GetByteFromRAM(uint32_t address)
 	{
 		if (ram == NULL)
 		{
@@ -88,43 +87,42 @@ namespace SHG
 			return false;
 		}
 
-		outValue = (*ram)[address];
-		return true;
+		return (*ram)[address];
 	}
 
-	bool MemoryBankController::TrySetByteInROM(uint32_t address, uint8_t value)
+	void MemoryBankController::SetByteInROM(uint32_t address, uint8_t value)
 	{
 		if (rom == NULL)
 		{
 			WriteMissingROMMessage();
-			return false;
+			return;
 		}
 
 		if (address >= rom->size())
 		{
 			WriteInvalidROMAccesMessage(address);
-			return false;
+			return;
 		}
 
 		(*rom)[address] = value;
-		return true;
 	}
 
-	bool MemoryBankController::TryGetByteFromROM(uint32_t address, uint8_t& outValue)
+	uint8_t MemoryBankController::GetByteFromROM(uint32_t address)
 	{
+		// TODO: This should probably throw an exception
+
 		if (rom == NULL)
 		{
 			WriteMissingROMMessage();
-			return false;
+			return 0;
 		}
 
 		if (address >= rom->size())
 		{
 			WriteInvalidROMAccesMessage(address);
-			return false;
+			return 0;
 		}
 
-		outValue = (*rom)[address];
-		return true;
+		return (*rom)[address];
 	}
 }

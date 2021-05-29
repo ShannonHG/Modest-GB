@@ -4,10 +4,10 @@ namespace SHG
 {
 	enum class CPURegisterID
 	{
-		AF,
-		BC,
-		DE,
-		HL,
+		AF = 7,
+		BC = 0,
+		DE = 2,
+		HL = 4,
 		PC,
 		SP
 	};

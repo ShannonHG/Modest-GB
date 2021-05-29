@@ -7,12 +7,13 @@ namespace SHG
 	class MBC1 : public MemoryBankController
 	{
 	public:
-		bool TryGetByte(uint16_t address, uint8_t& outValue) override;
-		bool TrySetByte(uint16_t address, uint8_t value) override;
+		uint8_t GetByte(uint16_t address) override;
+		void SetByte(uint16_t address, uint8_t value) override;
 		uint8_t GetRAMBankNumber();
 		uint8_t GetROMBankNumber();
 		uint8_t GetBankingMode();
 		bool IsRAMEnabled();
+		bool IsAddressAvailable(uint16_t address) override;
 
 	protected:
 		std::string GetName() override;

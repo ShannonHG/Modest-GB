@@ -10,9 +10,11 @@ namespace SHG
 	struct CPUInstruction
 	{
 		CPUInstructionType instructionType;
-		CPURegister* targetRegister;
+		CPURegister* targetRegister = NULL;
 		CPURegisterAddressType registerAddressType;
 		CPUInstructionOperandSize operandSize;
 		std::vector<uint16_t> data;
+		uint32_t duration;
+		uint16_t targetAddress;
 	};
 }

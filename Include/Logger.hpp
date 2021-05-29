@@ -7,7 +7,7 @@ namespace SHG
 	enum class LogLevel
 	{
 		Verbose,
-		Log,
+		Info,
 		Error,
 		Warning,
 		Silent
@@ -16,7 +16,7 @@ namespace SHG
 	const std::map<std::string, LogLevel> LOG_LEVEL_STRINGS_TO_ENUMS =
 	{
 		{"verbose", LogLevel::Verbose},
-		{"log", LogLevel::Log},
+		{"log", LogLevel::Info},
 		{"error", LogLevel::Error},
 		{"warning", LogLevel::Warning},
 		{"silent", LogLevel::Silent}
@@ -25,7 +25,7 @@ namespace SHG
 	const std::map<LogLevel, std::string> LOG_LEVEL_ENUMS_TO_STRINGS =
 	{
 		{LogLevel::Verbose, "verbose"},
-		{LogLevel::Log, "log"},
+		{LogLevel::Info, "log"},
 		{LogLevel::Error, "error"},
 		{LogLevel::Warning, "warning"},
 		{LogLevel::Silent, "silent"}
@@ -35,6 +35,7 @@ namespace SHG
 	{
 	public:
 		static LogLevel CurrentLogLevel;
+		static std::ofstream LogFileStream;
 
 		/// <summary>
 		/// Writes a message to the console if <see cref="CurrentLogLevel"/> is 
@@ -58,6 +59,8 @@ namespace SHG
 		static void WriteError(std::string message);
 
 	private:
+		static void InitLogFile();
 		static bool IsLogLevelEnabled(LogLevel logLevel);
+		static void WriteMessage(std::string message);
 	};
 }
