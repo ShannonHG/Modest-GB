@@ -12,14 +12,25 @@ namespace SHG
 	CPU::CPU(MemoryManagementUnit& memoryManagementUnit) : memoryManagementUnit(memoryManagementUnit)
 	{
 		this->memoryManagementUnit = memoryManagementUnit;
-		registers = std::map<CPURegisterID, CPURegister>();
+		registers = std::map<CPURegisterID, Register16>();
 
-		registers[CPURegisterID::AF] = CPURegister();
-		registers[CPURegisterID::BC] = CPURegister();
-		registers[CPURegisterID::HL] = CPURegister();
-		registers[CPURegisterID::DE] = CPURegister();
-		registers[CPURegisterID::PC] = CPURegister();
-		registers[CPURegisterID::SP] = CPURegister();
+		registers[CPURegisterID::AF] = Register16();
+		regAF = &registers[CPURegisterID::AF];
+
+		registers[CPURegisterID::BC] = Register16();
+		regBC = &registers[CPURegisterID::BC];
+
+		registers[CPURegisterID::HL] = Register16();
+		regHL = &registers[CPURegisterID::HL];
+
+		registers[CPURegisterID::DE] = Register16();
+		regDE = &registers[CPURegisterID::DE];
+
+		registers[CPURegisterID::PC] = Register16();
+		programCounter = &registers[CPURegisterID::PC];
+
+		registers[CPURegisterID::SP] = Register16();
+		stackPointer = &registers[CPURegisterID::SP];
 	}
 
 	uint32_t CPU::Cycle()
@@ -36,7 +47,10 @@ namespace SHG
 		}
 
 		// Log information about the instruction 
-		messageStream << "[CPU] Executing instruction - Opcode: " << ConvertToHexString(opcode, 2) << " | " << "Data: ";
+		messageStream << "[CPU] Executing instruction - ";
+		messageStream << "Instruction: " << instruction.GetInstructionTypeString() << " | ";
+		messageStream << "Opcode: " << ConvertToHexString(opcode, 2) << " | ";
+		messageStream << "Data: ";
 		for (auto data : instruction.data) messageStream << data << " ";
 
 		Logger::Write(messageStream.str());
@@ -44,10 +58,50 @@ namespace SHG
 		return Execute(instruction);
 	}
 
+	uint8_t CPU::GetZeroFlag()
+	{
+		return regAF->GetLowRegister().GetBit(7);
+	}
+
+	uint8_t CPU::GetSubtractionFlag()
+	{
+		return regAF->GetLowRegister().GetBit(6);
+	}
+
+	uint8_t CPU::GetHalfCarryFlag()
+	{
+		return regAF->GetLowRegister().GetBit(5);
+	}
+
+	uint8_t CPU::GetCarryFlag()
+	{
+		return regAF->GetLowRegister().GetBit(4);
+	}
+
+	void CPU::SetZeroFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(7, enabled);
+	}
+
+	void CPU::SetSubtractionFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(6, enabled);
+	}
+
+	void CPU::SetHalfCarryFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(5, enabled);
+	}
+
+	void CPU::SetCarryFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(4, enabled);
+	}
+
 	uint8_t CPU::Fetch8Bit()
 	{
-		uint16_t address = registers[CPURegisterID::PC].GetData();
-		registers[CPURegisterID::PC].Increment();
+		uint16_t address = programCounter->GetData();
+		programCounter->Increment();
 
 		if (!memoryManagementUnit.IsAddressAvailable(address))
 		{
@@ -86,264 +140,200 @@ namespace SHG
 		}
 		else
 		{
-			uint8_t data8;
-			uint16_t data16;
-
 			switch (opcode)
 			{
 			case 0x00:
 				break;
 			case 0x01:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::BC];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				data16 = Fetch16Bit();
-				instruction.data.push_back(data16);
+				Create16BitLoadInstruction(instruction, regBC, Fetch16Bit());
 				break;
 			case 0x02:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetAddress = registers[CPURegisterID::BC].GetData();
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, regBC->GetData(), regAF->GetHighByte());
 				break;
 			case 0x03:
+				Create16BitIncrementInstruction(instruction, regBC);
 				break;
 			case 0x04:
+				Create8BitIncrementInstruction(instruction, &regBC->GetHighRegister());
 				break;
 			case 0x05:
+				Create8BitDecrementInstruction(instruction, &regBC->GetHighRegister());
 				break;
 			case 0x06:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::BC];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regBC->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x07:
 				break;
 			case 0x08:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				data16 = Fetch16Bit();
-				instruction.targetAddress = data16;
-				instruction.data.push_back(registers[CPURegisterID::SP].GetData());
+				Create16BitLoadInstruction(instruction, Fetch16Bit(), stackPointer->GetData());
 				break;
 			case 0x09:
+				Create16BitAddInstruction(instruction, regHL, regBC->GetData());
 				break;
 			case 0x0A:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-
-				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::BC].GetData());
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(regBC->GetData()));
 				break;
 			case 0x0B:
+				Create16BitDecrementInstruction(instruction, regBC);
 				break;
 			case 0x0C:
+				Create8BitIncrementInstruction(instruction, &regBC->GetLowRegister());
 				break;
 			case 0x0D:
+				Create8BitDecrementInstruction(instruction, &regBC->GetLowRegister());
 				break;
 			case 0x0E:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::BC];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Lower;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regBC->GetLowRegister(), Fetch8Bit());
 				break;
 			case 0x0F:
 				break;
 			case 0x10:
 				break;
 			case 0x11:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::DE];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				data16 = Fetch16Bit();
-				instruction.data.push_back(data16);
+				Create16BitLoadInstruction(instruction, regDE, Fetch16Bit());
 				break;
 			case 0x12:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetAddress = registers[CPURegisterID::DE].GetData();
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, regDE->GetData(), regAF->GetHighByte());
 				break;
 			case 0x13:
+				Create16BitIncrementInstruction(instruction, regDE);
 				break;
 			case 0x14:
+				Create8BitIncrementInstruction(instruction, &regDE->GetHighRegister());
 				break;
 			case 0x15:
+				Create8BitDecrementInstruction(instruction, &regDE->GetHighRegister());
 				break;
 			case 0x16:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::DE];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regDE->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x17:
 				break;
 			case 0x18:
 				break;
 			case 0x19:
+				Create16BitAddInstruction(instruction, regHL, regDE->GetData());
 				break;
 			case 0x1A:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-
-				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::DE].GetData());
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(regDE->GetData()));
 				break;
 			case 0x1B:
+				Create16BitDecrementInstruction(instruction, regDE);
 				break;
 			case 0x1C:
+				Create8BitIncrementInstruction(instruction, &regDE->GetLowRegister());
 				break;
 			case 0x1D:
+				Create8BitDecrementInstruction(instruction, &regDE->GetLowRegister());
 				break;
 			case 0x1E:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::DE];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Lower;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regDE->GetLowRegister(), Fetch8Bit());
 				break;
 			case 0x1F:
 				break;
 			case 0x20:
 				break;
 			case 0x21:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				data16 = Fetch16Bit();
-				instruction.data.push_back(data16);
+				Create16BitLoadInstruction(instruction, regHL, Fetch16Bit());
 				break;
 			case 0x22:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
-				registers[CPURegisterID::HL].Increment();
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, regHL->GetData(), regAF->GetHighByte());
+				regHL->Increment();
 				break;
 			case 0x23:
+				Create16BitIncrementInstruction(instruction, regHL);
 				break;
 			case 0x24:
+				Create8BitIncrementInstruction(instruction, &regHL->GetHighRegister());
 				break;
 			case 0x25:
+				Create8BitDecrementInstruction(instruction, &regHL->GetHighRegister());
 				break;
 			case 0x26:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regHL->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x27:
+				instruction.instructionType = CPUInstructionType::DecimalAdjust;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+				instruction.targetRegister8 = &regAF->GetHighRegister();
+				instruction.data.push_back(regAF->GetHighByte());
 				break;
 			case 0x28:
 				break;
 			case 0x29:
+				Create16BitAddInstruction(instruction, regHL, regHL->GetData());
 				break;
 			case 0x2A:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-
-				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
-				instruction.data.push_back(data8);
-
-				registers[CPURegisterID::HL].Increment();
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(regHL->GetData()));
+				regHL->Increment();
 				break;
 			case 0x2B:
+				Create16BitDecrementInstruction(instruction, regHL);
 				break;
 			case 0x2C:
+				Create8BitIncrementInstruction(instruction, &regHL->GetLowRegister());
 				break;
 			case 0x2D:
+				Create8BitDecrementInstruction(instruction, &regHL->GetLowRegister());
 				break;
 			case 0x2E:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::HL];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Lower;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regHL->GetLowRegister(), Fetch8Bit());
 				break;
 			case 0x2F:
+				instruction.instructionType = CPUInstructionType::OnesComplement;
+				instruction.targetRegister8 = &regAF->GetHighRegister();
+				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+				instruction.data.push_back(regAF->GetHighByte());
 				break;
 			case 0x30:
 				break;
 			case 0x31:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::SP];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				data16 = Fetch16Bit();
-				instruction.data.push_back(data16);
+				Create16BitLoadInstruction(instruction, stackPointer, Fetch16Bit());
 				break;
 			case 0x32:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
-				registers[CPURegisterID::HL].Decrement();
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, regHL->GetData(), regAF->GetHighByte());
+				regHL->Decrement();
 				break;
 			case 0x33:
+				Create16BitIncrementInstruction(instruction, stackPointer);
 				break;
 			case 0x34:
+				Create8BitIncrementInstruction(instruction, regHL->GetData());
 				break;
 			case 0x35:
+				Create8BitDecrementInstruction(instruction, regHL->GetData());
 				break;
 			case 0x36:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetAddress = registers[CPURegisterID::HL].GetData();
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, regHL->GetData(), Fetch8Bit());
 				break;
 			case 0x37:
+				instruction.instructionType = CPUInstructionType::SetCarryFlag;
+				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0x38:
 				break;
 			case 0x39:
+				Create16BitAddInstruction(instruction, regHL, stackPointer->GetData());
 				break;
 			case 0x3A:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-
-				data8 = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
-				instruction.data.push_back(data8);
-
-				registers[CPURegisterID::HL].Decrement();
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(regHL->GetData()));
+				regHL->Decrement();
 				break;
 			case 0x3B:
+				Create16BitDecrementInstruction(instruction, stackPointer);
 				break;
 			case 0x3C:
+				Create8BitIncrementInstruction(instruction, &regAF->GetHighRegister());
 				break;
 			case 0x3D:
+				Create8BitDecrementInstruction(instruction, &regAF->GetHighRegister());
 				break;
 			case 0x3E:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = Fetch8Bit();
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x3F:
+				instruction.instructionType = CPUInstructionType::FlipCarryFlag;
+				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0xC0:
 				break;
@@ -358,6 +348,7 @@ namespace SHG
 			case 0xC5:
 				break;
 			case 0xC6:
+				Create8BitAddInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xC7:
 				break;
@@ -374,6 +365,7 @@ namespace SHG
 			case 0xCD:
 				break;
 			case 0xCE:
+				Create8BitAddWithCarryInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xCF:
 				break;
@@ -390,6 +382,7 @@ namespace SHG
 			case 0xD5:
 				break;
 			case 0xD6:
+				Create8BitSubtractInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xD7:
 				break;
@@ -406,23 +399,17 @@ namespace SHG
 			case 0xDD:
 				break;
 			case 0xDE:
+				Create8BitSubtractWithCarryInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xDF:
 				break;
 			case 0xE0:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				data8 = Fetch8Bit();
-				instruction.targetAddress = 0xFF00 | data8;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, 0xFF00 | Fetch8Bit(), regAF->GetHighByte());
 				break;
 			case 0xE1:
 				break;
 			case 0xE2:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.targetAddress = 0xFF00 | registers[CPURegisterID::BC].GetLowerByte();
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, 0xFF00 | regBC->GetLowByte(), regAF->GetHighByte());
 				break;
 			case 0xE3:
 				break;
@@ -431,19 +418,21 @@ namespace SHG
 			case 0xE5:
 				break;
 			case 0xE6:
+				Create8BitANDInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xE7:
 				break;
 			case 0xE8:
+				instruction.instructionType = CPUInstructionType::Add;
+				instruction.targetRegister16 = stackPointer;
+				instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+				instruction.data.push_back(stackPointer->GetData());
+				instruction.data.push_back((int8_t)Fetch8Bit());
 				break;
 			case 0xE9:
 				break;
 			case 0xEA:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::SixteenBit;
-				data16 = Fetch16Bit();
-				instruction.targetAddress = data16;
-				instruction.data.push_back(registers[CPURegisterID::AF].GetUpperByte());
+				Create8BitLoadInstruction(instruction, Fetch16Bit(), regAF->GetHighByte());
 				break;
 			case 0xEB:
 				break;
@@ -452,27 +441,17 @@ namespace SHG
 			case 0xED:
 				break;
 			case 0xEE:
+				Create8BitXORInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xEF:
 				break;
 			case 0xF0:
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = Fetch8Bit();
-				data8 = memoryManagementUnit.GetByte(0xFF00 | data8);
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(0xFF00 | Fetch8Bit()));
 				break;
 			case 0xF1:
 				break;
 			case 0xF2:
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data8 = memoryManagementUnit.GetByte(0xFF00 | registers[CPURegisterID::BC].GetLowerByte());
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(0xFF00 | regBC->GetLowByte()));
 				break;
 			case 0xF3:
 				break;
@@ -481,26 +460,21 @@ namespace SHG
 			case 0xF5:
 				break;
 			case 0xF6:
+				Create8BitORInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xF7:
 				break;
 			case 0xF8:
+				instruction.instructionType = CPUInstructionType::Load;
+				instruction.targetRegister16 = regHL;
+				instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+				instruction.data.push_back(stackPointer->GetData() + ((int8_t)Fetch8Bit()));
 				break;
 			case 0xF9:
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.targetRegister = &registers[CPURegisterID::SP];
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Full;
-				instruction.data.push_back(registers[CPURegisterID::HL].GetData());
+				Create16BitLoadInstruction(instruction, stackPointer, regHL->GetData());
 				break;
 			case 0xFA:
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.instructionType = CPUInstructionType::Load;
-				instruction.operandSize = CPUInstructionOperandSize::EightBit;
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
-				data16 = Fetch16Bit();
-				data8 = memoryManagementUnit.GetByte(data16);
-				instruction.data.push_back(data8);
+				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(Fetch16Bit()));
 				break;
 			case 0xFB:
 				break;
@@ -509,6 +483,7 @@ namespace SHG
 			case 0xFD:
 				break;
 			case 0xFE:
+				Create8BitCompareInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xFF:
 				break;
@@ -523,81 +498,129 @@ namespace SHG
 
 	uint32_t CPU::Execute(const CPUInstruction& instruction)
 	{
-		CPURegister* targetRegister = instruction.targetRegister;
-		CPURegisterAddressType addressType = instruction.registerAddressType;
-
-		uint16_t result = 0;
+		// int is used instead of uint here so that
+		// the result can be checked for a negative value. 
+		// Otherwise when the result of an operation is less than zero, 
+		// an uint would return 255 instead.
+		int result = 0;
+		bool shouldEnableHalfCarryFlag = false;
+		bool shouldEnableCarryFlag = false;
+		bool shouldEnableSubtractionFlag = false;
+		bool shouldEnableZeroFlag = false;
 
 		switch (instruction.instructionType)
 		{
 		case CPUInstructionType::Add:
 			result = instruction.data[0] + instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
+			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
+			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], instruction.data[1]);
 			break;
 		case CPUInstructionType::AddWithCarry:
+		{
+			uint8_t carryFlag = GetCarryFlag();
+			result = instruction.data[0] + instruction.data[1] + carryFlag;
+			shouldEnableZeroFlag = result == 0;
+			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
+			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], (instruction.data[1] + carryFlag));
 			break;
+		}
 		case CPUInstructionType::AND:
 			result = instruction.data[0] & instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
 			break;
 		case CPUInstructionType::DecimalAdjust:
+		{
+			result = instruction.data[0];
+			uint8_t lowerNibble = instruction.data[0] & 0x0F;
+			if (lowerNibble >= 0x0A || (GetHalfCarryFlag() == 1))
+			{
+				result += 0x06;
+				shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(lowerNibble, 0x06);
+			}
+
+			uint8_t upperNibble = result >> 4;
+			if (upperNibble >= 0xA0 || (GetCarryFlag() == 1))
+			{
+				result += 0x60;
+				shouldEnableCarryFlag = result < 0 || result > std::numeric_limits<uint8_t>::max();
+			}
 			break;
+		}
 		case CPUInstructionType::Decrement:
+			result = instruction.data[0] - 1;
+			shouldEnableZeroFlag = result == 0;
 			break;
 		case CPUInstructionType::Increment:
+			result = instruction.data[0] + 1;
 			break;
 		case CPUInstructionType::Load:
 			result = instruction.data[0];
 			break;
 		case CPUInstructionType::OR:
 			result = instruction.data[0] | instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
 			break;
 		case CPUInstructionType::Subtract:
 			result = instruction.data[0] - instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
+			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
+			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], -instruction.data[1]);
 			break;
 		case CPUInstructionType::SubtractWithCarry:
+		{
+			uint8_t carryFlag = GetCarryFlag();
+			result = instruction.data[0] - instruction.data[1] - carryFlag;
+			shouldEnableZeroFlag = result == 0;
+			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
+			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], -(instruction.data[1] + carryFlag));
 			break;
+		}
 		case CPUInstructionType::XOR:
 			result = instruction.data[0] ^ instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
+			break;
+		case CPUInstructionType::Compare:
+			result = instruction.data[0] - instruction.data[1];
+			shouldEnableZeroFlag = result == 0;
+			break;
+		case CPUInstructionType::FlipCarryFlag:
+			shouldEnableCarryFlag = GetCarryFlag() ^ 1;
+			break;
+		case CPUInstructionType::SetCarryFlag:
+			shouldEnableCarryFlag = true;
+			break;
+		case CPUInstructionType::OnesComplement:
+			result = instruction.data[0] ^ 0x00FF;
 			break;
 		}
 
-		switch (instruction.operandSize)
+		SetSubtractionFlag(shouldEnableSubtractionFlag);
+		SetZeroFlag(shouldEnableZeroFlag);
+		SetCarryFlag(shouldEnableCarryFlag);
+		SetHalfCarryFlag(shouldEnableHalfCarryFlag);
+
+		switch (instruction.storageType)
 		{
-		case CPUInstructionOperandSize::EightBit:
-			if (instruction.targetRegister == NULL) memoryManagementUnit.SetByte(instruction.targetAddress, instruction.data[0]);
-			else StoreValueInRegister(instruction.targetRegister, instruction.registerAddressType, (uint8_t)result);
+		case CPUInstructionStorageType::EightBitAddress:
+			memoryManagementUnit.SetByte(instruction.targetAddress, result);
 			break;
-		case CPUInstructionOperandSize::SixteenBit:
-			if (instruction.targetRegister == NULL)
-			{
-				uint8_t upperByte = instruction.data[0] >> 8;
-				uint8_t lowerByte = instruction.data[0] & 0x00FF;
-				memoryManagementUnit.SetByte(instruction.targetAddress, lowerByte);
-				memoryManagementUnit.SetByte(instruction.targetAddress + 1, upperByte);
-			}
-			else StoreValueInRegister(instruction.targetRegister, instruction.registerAddressType, result);
+		case CPUInstructionStorageType::SixteenBitAddress:
+			memoryManagementUnit.SetByte(instruction.targetAddress, result & 0x00FF);
+			memoryManagementUnit.SetByte(instruction.targetAddress + 1, result >> 8);
+			break;
+		case CPUInstructionStorageType::EightBitRegister:
+			instruction.targetRegister8->SetData((uint8_t)result);
+			break;
+		case CPUInstructionStorageType::SixteenBitRegister:
+			instruction.targetRegister16->SetData(result);
 			break;
 		}
 
 		return instruction.duration;
 	}
 
-	void CPU::StoreValueInRegister(CPURegister* targetRegister, CPURegisterAddressType addressType, uint16_t value)
-	{
-		switch (addressType)
-		{
-		case CPURegisterAddressType::Lower:
-			targetRegister->SetLowerByte((uint8_t)value);
-			break;
-		case CPURegisterAddressType::Upper:
-			targetRegister->SetUpperByte((uint8_t)value);
-			break;
-		case CPURegisterAddressType::Full:
-			targetRegister->SetData(value);
-			break;
-		}
-	}
-
-	CPURegister& CPU::GetRegister(CPURegisterID registerID)
+	Register16& CPU::GetRegister(CPURegisterID registerID)
 	{
 		// The CPU should always have a corresponding register for every CPURegisterID.
 		assert(registers.count(registerID) != 0);
@@ -619,21 +642,28 @@ namespace SHG
 
 		if (upperNibble == 7)
 		{
-			if (lowerNibble <= 7) instruction.targetAddress = registers[CPURegisterID::HL].GetData();
+			if (lowerNibble <= 7)
+			{
+				instruction.targetAddress = regHL->GetData();
+				instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+			}
 			else
 			{
-				instruction.targetRegister = &registers[CPURegisterID::AF];
-				instruction.registerAddressType = CPURegisterAddressType::Upper;
+				instruction.targetRegister8 = &regAF->GetHighRegister();
+				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
 			}
 		}
 		else
 		{
+			instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+
 			// Due to the format of the opcodes in this range, subtracting the upper 4-bits from 8, 
 			// happens to give us the correct target register ID.
 			targetRegisterID = (CPURegisterID)(upperNibble - (8 - upperNibble));
-			instruction.targetRegister = &registers[targetRegisterID];
+			Register16* sixteenBitRegister = &registers[targetRegisterID];
 
-			instruction.registerAddressType = lowerNibble <= 7 ? CPURegisterAddressType::Upper : CPURegisterAddressType::Lower;
+			instruction.targetRegister8 = lowerNibble <= 7 ? &sixteenBitRegister->GetHighRegister() : &sixteenBitRegister->GetLowRegister();
+
 		}
 
 		return instruction;
@@ -643,10 +673,10 @@ namespace SHG
 	{
 		CPUInstruction instruction;
 
-		instruction.targetRegister = &registers[CPURegisterID::AF];
-		instruction.registerAddressType = CPURegisterAddressType::Upper;
+		instruction.targetRegister8 = &regAF->GetHighRegister();
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
 
-		instruction.data.push_back(instruction.targetRegister->GetUpperByte());
+		instruction.data.push_back(regAF->GetHighByte());
 
 		uint8_t upperNibble = opcode >> 4;
 		uint8_t lowerNibble = opcode & 0x0F;
@@ -681,17 +711,15 @@ namespace SHG
 		// This keeps the decoded value between 0 - 7 (an 8 will be interpreted as 0, and a 9 as 1).
 		uint8_t lower3Bits = lowerNibble & 0b111;
 
-		instruction.operandSize = CPUInstructionOperandSize::EightBit;
-
 		uint16_t data = 0;
 
 		switch (lower3Bits)
 		{
 		case 6:
-			data = memoryManagementUnit.GetByte(registers[CPURegisterID::HL].GetData());
+			data = memoryManagementUnit.GetByte(regHL->GetData());
 			break;
 		case 7:
-			data = registers[CPURegisterID::AF].GetUpperByte();
+			data = regAF->GetHighByte();
 			break;
 		default:
 			// Registers have the following mapping:
@@ -714,10 +742,209 @@ namespace SHG
 
 			// If the value of the least signicant 4 bits is even, then get the data from the uppermost 8-bit register, 
 			// otherwise use the data in the lower 8-bit register.
-			data = lowerNibble % 2 == 0 ? registers[sourceRegisterID].GetUpperByte() : registers[sourceRegisterID].GetLowerByte();
+			data = lowerNibble % 2 == 0 ? registers[sourceRegisterID].GetHighByte() : registers[sourceRegisterID].GetLowByte();
 			break;
 		}
 
 		instruction.data.push_back(data);
+	}
+
+	void CPU::Create8BitIncrementInstruction(CPUInstruction& instruction, Register8* targetRegister)
+	{
+		instruction.instructionType = CPUInstructionType::Increment;
+		instruction.targetRegister8 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(targetRegister->GetData());
+	}
+
+	void CPU::Create8BitIncrementInstruction(CPUInstruction& instruction, uint16_t targetAddress)
+	{
+		instruction.instructionType = CPUInstructionType::Increment;
+		instruction.targetAddress = targetAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
+	}
+
+	void CPU::Create16BitIncrementInstruction(CPUInstruction& instruction, Register16* targetRegister)
+	{
+		instruction.instructionType = CPUInstructionType::Increment;
+		instruction.targetRegister16 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.data.push_back(targetRegister->GetData());
+	}
+
+	void CPU::Create16BitIncrementInstruction(CPUInstruction& instruction, uint16_t targetAddress)
+	{
+		instruction.instructionType = CPUInstructionType::Increment;
+		instruction.targetAddress = targetAddress;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
+	}
+
+	void CPU::Create8BitDecrementInstruction(CPUInstruction& instruction, Register8* targetRegister)
+	{
+		instruction.instructionType = CPUInstructionType::Decrement;
+		instruction.targetRegister8 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(targetRegister->GetData());
+	}
+
+	void CPU::Create16BitDecrementInstruction(CPUInstruction& instruction, Register16* targetRegister)
+	{
+		instruction.instructionType = CPUInstructionType::Decrement;
+		instruction.targetRegister16 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.data.push_back(targetRegister->GetData());
+	}
+
+	void CPU::Create8BitDecrementInstruction(CPUInstruction& instruction, uint16_t targetAddress)
+	{
+		instruction.instructionType = CPUInstructionType::Decrement;
+		instruction.targetAddress = targetAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
+	}
+
+	void CPU::Create8BitLoadInstruction(CPUInstruction& instruction, Register8* targetRegister, uint8_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Load;
+		instruction.targetRegister8 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::Create8BitLoadInstruction(CPUInstruction& instruction, uint16_t targetAddress, uint8_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Load;
+		instruction.targetAddress = targetAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::Create16BitLoadInstruction(CPUInstruction& instruction, Register16* targetRegister, uint16_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Load;
+		instruction.targetRegister16 = targetRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::Create16BitLoadInstruction(CPUInstruction& instruction, uint16_t targetAddress, uint16_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Load;
+		instruction.targetAddress = targetAddress;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitAddress;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::Create8BitAddInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::Add;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create16BitAddInstruction(CPUInstruction& instruction, Register16* storageRegister, uint16_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::Add;
+		instruction.targetRegister16 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitAddWithCarryInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::AddWithCarry;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitSubtractInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::Subtract;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitSubtractWithCarryInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::SubtractWithCarry;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitXORInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::XOR;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitORInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::OR;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitCompareInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::Compare;
+		instruction.storageType = CPUInstructionStorageType::None;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	void CPU::Create8BitANDInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand)
+	{
+		instruction.instructionType = CPUInstructionType::AND;
+		instruction.targetRegister8 = storageRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.data.push_back(storageRegister->GetData());
+		instruction.data.push_back(operand);
+	}
+
+	bool CPU::ShouldEnableCarryFlag(const CPUInstruction& instruction, int operationResult)
+	{
+		switch (instruction.instructionType)
+		{
+		case CPUInstructionType::Add:
+		case CPUInstructionType::AddWithCarry:
+			switch (instruction.storageType)
+			{
+			case CPUInstructionStorageType::EightBitAddress:
+			case CPUInstructionStorageType::EightBitRegister:
+				return operationResult > std::numeric_limits<uint8_t>::max();
+			case CPUInstructionStorageType::SixteenBitAddress:
+			case CPUInstructionStorageType::SixteenBitRegister:
+				return operationResult > std::numeric_limits<uint16_t>::max();
+				break;
+
+			}
+		case CPUInstructionType::Subtract:
+		case CPUInstructionType::SubtractWithCarry:
+			return operationResult < 0;
+		default:
+			return false;
+		}
+	}
+
+	bool CPU::ShouldEnableHalfCarryFlag(uint16_t operand1, uint16_t operand2)
+	{
+		// Isolate and add low nibbles to determine if a carry occurs.
+		return (((operand1 & 0x0F) + (operand2 & 0x0F)) & 0x10) == 0x10;
 	}
 }

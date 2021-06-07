@@ -34,8 +34,8 @@ namespace SHG
 
 	protected:
 
-		std::vector<uint8_t>* ram;
-		std::vector<uint8_t>* rom;
+		std::vector<uint8_t>* ram{};
+		std::vector<uint8_t>* rom{};
 
 		virtual std::string GetName() = 0;
 		void WriteMissingROMMessage();

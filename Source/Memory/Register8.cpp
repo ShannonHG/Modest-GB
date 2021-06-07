@@ -1,0 +1,35 @@
+#include "Memory/Register8.hpp"
+
+namespace SHG
+{
+	void Register8::SetData(uint8_t data)
+	{
+		this->data = data;
+	}
+
+	void Register8::SetBit(uint8_t bitNumber, bool enabled)
+	{
+		if (enabled) data |= ((uint8_t)enabled) << bitNumber;
+		else data &= ~(((uint8_t)!enabled) << bitNumber);
+	}
+
+	uint8_t Register8::GetBit(uint8_t bitNumber)
+	{
+		return (data >> bitNumber) & 1;
+	}
+
+	uint8_t Register8::GetData()
+	{
+		return data;
+	}
+
+	void Register8::Increment()
+	{
+		data++;
+	}
+
+	void Register8::Decrement()
+	{
+		data--;
+	}
+}

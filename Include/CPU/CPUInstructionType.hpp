@@ -16,6 +16,9 @@ namespace SHG
 		OR,
 		XOR,
 		AND,
-		Compare
+		Compare,
+		FlipCarryFlag,
+		SetCarryFlag,
+		OnesComplement
 	};
 }

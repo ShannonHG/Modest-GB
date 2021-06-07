@@ -1,20 +1,22 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "CPU/CPUInstructionType.hpp"
-#include "CPU/CPURegister.hpp"
-#include "CPU/CPURegisterAddressType.hpp"
-#include "CPU/CPUInstructionOperandSize.hpp"
+#include "Memory/Register16.hpp"
+#include "CPU/CPUInstructionStorageType.hpp"
 
 namespace SHG
 {
 	struct CPUInstruction
 	{
-		CPUInstructionType instructionType;
-		CPURegister* targetRegister = NULL;
-		CPURegisterAddressType registerAddressType;
-		CPUInstructionOperandSize operandSize;
-		std::vector<uint16_t> data;
-		uint32_t duration;
-		uint16_t targetAddress;
+		CPUInstructionType instructionType{};
+		Register16* targetRegister16 = NULL;
+		Register8* targetRegister8 = NULL;
+		CPUInstructionStorageType storageType{};
+		std::vector<int> data{};
+		uint32_t duration{};
+		uint16_t targetAddress{};
+
+		std::string GetInstructionTypeString();
 	};
 }
