@@ -7,12 +7,37 @@ namespace SHG
 	class MBC1 : public MemoryBankController
 	{
 	public:
-		uint8_t GetByte(uint16_t address) override;
-		void SetByte(uint16_t address, uint8_t value) override;
+		/// <summary>
+		/// Returns the current RAM bank number.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetRAMBankNumber();
+
+		/// <summary>
+		/// Returns the current ROM bank number.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetROMBankNumber();
+
+		/// <summary>
+		/// Returns the current ROM banking mode.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetBankingMode();
+
+		/// <summary>
+		/// Returns true if RAM is enabled, and false otherwise.
+		/// </summary>
+		/// <returns></returns>
 		bool IsRAMEnabled();
+
+		/// <inheritdoc/>
+		uint8_t GetByte(uint16_t address) override;
+
+		/// <inheritdoc/>
+		void SetByte(uint16_t address, uint8_t value) override;
+
+		/// <inheritdoc/>
 		bool IsAddressAvailable(uint16_t address) override;
 
 	protected:

@@ -74,6 +74,9 @@ namespace SHG
 	static const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
 	static const uint16_t CH_RAM_SIZE_ADDRESS = 0x0149;
 
+	/// <summary>
+	/// Data structure representing a GameBoy cartridge.
+	/// </summary>
 	class Cartridge : public MemoryManagementUnit
 	{
 	public:
@@ -109,8 +112,13 @@ namespace SHG
 		/// <returns></returns>
 		uint32_t GetRAMSize();
 
+		/// <inheritdoc/>
 		uint8_t GetByte(uint16_t address) override;
+
+		/// <inheritdoc/>
 		void SetByte(uint16_t address, uint8_t value) override;
+
+		/// <inheritdoc/>
 		bool IsAddressAvailable(uint16_t address) override;
 
 	private:

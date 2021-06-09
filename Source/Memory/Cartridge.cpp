@@ -216,7 +216,7 @@ namespace SHG
 			return rom[address];
 		default:
 			// If the memoryBankControllerType is anything other than None, then the memoryBankController should not be NULL
-			assert(memoryBankController != null);
+			assert(memoryBankController != NULL);
 			return memoryBankController->GetByte(address);
 		}
 	}
@@ -238,7 +238,7 @@ namespace SHG
 			break;
 		default:
 			// If the memoryBankControllerType is anything other than None, then the memoryBankController should not be NULL
-			assert(memoryBankController != null);
+			assert(memoryBankController != NULL);
 			memoryBankController->SetByte(address, value);
 			break;
 		}

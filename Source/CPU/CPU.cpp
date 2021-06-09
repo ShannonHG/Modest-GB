@@ -42,20 +42,76 @@ namespace SHG
 
 		if (instruction.instructionType == CPUInstructionType::Invalid)
 		{
-			messageStream << "[CPU] Invalid opcode encountered: " << ConvertToHexString(opcode, 2);
+			messageStream << "[CPU] Invalid opcode encountered: " << ConvertToHexString(instruction.opcode, 2);
 			throw InvalidOpcodeException(messageStream.str());
 		}
 
 		// Log information about the instruction 
 		messageStream << "[CPU] Executing instruction - ";
-		messageStream << "Instruction: " << instruction.GetInstructionTypeString() << " | ";
-		messageStream << "Opcode: " << ConvertToHexString(opcode, 2) << " | ";
-		messageStream << "Data: ";
-		for (auto data : instruction.data) messageStream << data << " ";
+		messageStream << instruction.ToString();
 
 		Logger::Write(messageStream.str());
 
 		return Execute(instruction);
+	}
+
+	Register8* CPU::GetRegisterA()
+	{
+		return &regAF->GetHighRegister();
+	}
+	Register8* CPU::GetRegisterF()
+	{
+		return &regAF->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterB()
+	{
+		return &regBC->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterC()
+	{
+		return &regBC->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterD()
+	{
+		return &regDE->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterE()
+	{
+		return &regDE->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterH()
+	{
+		return &regHL->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterL()
+	{
+		return &regHL->GetLowRegister();
+	}
+
+	Register16* CPU::GetRegisterAF()
+	{
+		return regAF;
+	}
+
+	Register16* CPU::GetRegisterBC()
+	{
+		return regBC;
+	}
+
+	Register16* CPU::GetRegisterDE()
+	{
+		return regDE;
+	}
+
+	Register16* CPU::GetRegisterHL()
+	{
+		return regHL;
 	}
 
 	uint8_t CPU::GetZeroFlag()
@@ -129,14 +185,15 @@ namespace SHG
 		// TODO: Set duration of instruction
 
 		CPUInstruction instruction;
+		instruction.opcode = opcode;
 
 		if (opcode >= 0x40 && opcode < 0x80)
 		{
-			instruction = DecodeLoadAndStoreInstruction(opcode);
+			DecodeLoadAndStoreInstruction(instruction);
 		}
 		else if (opcode >= 0x80 && opcode < 0xC0)
 		{
-			instruction = DecodeArithmeticInstruction(opcode);
+			DecodeArithmeticInstruction(instruction);
 		}
 		else
 		{
@@ -254,7 +311,7 @@ namespace SHG
 				break;
 			case 0x27:
 				instruction.instructionType = CPUInstructionType::DecimalAdjust;
-				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 				instruction.targetRegister8 = &regAF->GetHighRegister();
 				instruction.data.push_back(regAF->GetHighByte());
 				break;
@@ -282,7 +339,7 @@ namespace SHG
 			case 0x2F:
 				instruction.instructionType = CPUInstructionType::OnesComplement;
 				instruction.targetRegister8 = &regAF->GetHighRegister();
-				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 				instruction.data.push_back(regAF->GetHighByte());
 				break;
 			case 0x30:
@@ -359,6 +416,10 @@ namespace SHG
 			case 0xCA:
 				break;
 			case 0xCB:
+				instruction.opcode = (opcode << 8) | Fetch8Bit();
+
+				// Another byte is fetched to determine which CB prefixed opcode was encountered.
+				DecodeCBPrefixedInstruction(instruction);
 				break;
 			case 0xCC:
 				break;
@@ -425,7 +486,7 @@ namespace SHG
 			case 0xE8:
 				instruction.instructionType = CPUInstructionType::Add;
 				instruction.targetRegister16 = stackPointer;
-				instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+				instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 				instruction.data.push_back(stackPointer->GetData());
 				instruction.data.push_back((int8_t)Fetch8Bit());
 				break;
@@ -467,7 +528,7 @@ namespace SHG
 			case 0xF8:
 				instruction.instructionType = CPUInstructionType::Load;
 				instruction.targetRegister16 = regHL;
-				instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+				instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 				instruction.data.push_back(stackPointer->GetData() + ((int8_t)Fetch8Bit()));
 				break;
 			case 0xF9:
@@ -593,6 +654,20 @@ namespace SHG
 		case CPUInstructionType::OnesComplement:
 			result = instruction.data[0] ^ 0x00FF;
 			break;
+		case CPUInstructionType::RotateLeft:
+			result = (instruction.data[0] << 1) | (instruction.data[0] >> 7);
+			break;
+		case CPUInstructionType::RotateRight:
+			result = (instruction.data[0] >> 1) | (instruction.data[0] << 7);
+			break;
+		case CPUInstructionType::RotateLeftThroughCarry:
+			shouldEnableCarryFlag = instruction.data[0] & 0b10000000;
+			result = (instruction.data[0] << 1) | (GetCarryFlag());
+			break;
+		case CPUInstructionType::RotateRightThroughCarry:
+			shouldEnableCarryFlag = instruction.data[0] & 1;
+			result = (instruction.data[0] >> 1) | (GetCarryFlag() << 7);
+			break;
 		}
 
 		SetSubtractionFlag(shouldEnableSubtractionFlag);
@@ -602,17 +677,17 @@ namespace SHG
 
 		switch (instruction.storageType)
 		{
-		case CPUInstructionStorageType::EightBitAddress:
+		case CPUInstructionStorageType::EightBitMemoryData:
 			memoryManagementUnit.SetByte(instruction.targetAddress, result);
 			break;
-		case CPUInstructionStorageType::SixteenBitAddress:
+		case CPUInstructionStorageType::SixteenBitMemoryData:
 			memoryManagementUnit.SetByte(instruction.targetAddress, result & 0x00FF);
 			memoryManagementUnit.SetByte(instruction.targetAddress + 1, result >> 8);
 			break;
-		case CPUInstructionStorageType::EightBitRegister:
+		case CPUInstructionStorageType::EightBitRegisterData:
 			instruction.targetRegister8->SetData((uint8_t)result);
 			break;
-		case CPUInstructionStorageType::SixteenBitRegister:
+		case CPUInstructionStorageType::SixteenBitRegisterData:
 			instruction.targetRegister16->SetData(result);
 			break;
 		}
@@ -627,16 +702,14 @@ namespace SHG
 		return registers[registerID];
 	}
 
-	CPUInstruction CPU::DecodeLoadAndStoreInstruction(uint8_t opcode)
+	void CPU::DecodeLoadAndStoreInstruction(CPUInstruction& instruction)
 	{
-		CPUInstruction instruction;
-
 		instruction.instructionType = CPUInstructionType::Load;
 
-		uint8_t upperNibble = opcode >> 4;
-		uint8_t lowerNibble = opcode & 0x0F;
+		uint8_t upperNibble = instruction.opcode >> 4;
+		uint8_t lowerNibble = instruction.opcode & 0x0F;
 
-		SetInstructionData(upperNibble, lowerNibble, instruction);
+		instruction.data.push_back(GenerateDataFromOpcode(instruction.opcode));
 
 		CPURegisterID targetRegisterID;
 
@@ -645,17 +718,17 @@ namespace SHG
 			if (lowerNibble <= 7)
 			{
 				instruction.targetAddress = regHL->GetData();
-				instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+				instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
 			}
 			else
 			{
 				instruction.targetRegister8 = &regAF->GetHighRegister();
-				instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 			}
 		}
 		else
 		{
-			instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 
 			// Due to the format of the opcodes in this range, subtracting the upper 4-bits from 8, 
 			// happens to give us the correct target register ID.
@@ -665,23 +738,19 @@ namespace SHG
 			instruction.targetRegister8 = lowerNibble <= 7 ? &sixteenBitRegister->GetHighRegister() : &sixteenBitRegister->GetLowRegister();
 
 		}
-
-		return instruction;
 	}
 
-	CPUInstruction CPU::DecodeArithmeticInstruction(uint8_t opcode)
+	void CPU::DecodeArithmeticInstruction(CPUInstruction& instruction)
 	{
-		CPUInstruction instruction;
-
 		instruction.targetRegister8 = &regAF->GetHighRegister();
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 
 		instruction.data.push_back(regAF->GetHighByte());
 
-		uint8_t upperNibble = opcode >> 4;
-		uint8_t lowerNibble = opcode & 0x0F;
+		uint8_t upperNibble = instruction.opcode >> 4;
+		uint8_t lowerNibble = instruction.opcode & 0x0F;
 
-		SetInstructionData(upperNibble, lowerNibble, instruction);
+		instruction.data.push_back(GenerateDataFromOpcode(instruction.opcode));
 
 		uint8_t temp = lowerNibble < 8 ? 0 : 1;
 
@@ -700,15 +769,70 @@ namespace SHG
 			instruction.instructionType = temp == 0 ? CPUInstructionType::OR : CPUInstructionType::Compare;
 			break;
 		}
-
-		return instruction;
 	}
 
-	void CPU::SetInstructionData(uint8_t upperNibble, uint8_t lowerNibble, CPUInstruction& instruction)
+	void CPU::DecodeCBPrefixedInstruction(CPUInstruction& instruction)
 	{
-		// Since there are a total of 7 different registers that may be provided as the source
-		// register (B, C, D, E, H, L, A), only 3 bits are needed to identify the register. 
-		// This keeps the decoded value between 0 - 7 (an 8 will be interpreted as 0, and a 9 as 1).
+		uint8_t opcodeWithoutPrefix = instruction.opcode & 0x00FF;
+		instruction.data.push_back(GenerateDataFromOpcode(opcodeWithoutPrefix));
+
+		uint8_t upperNibble = opcodeWithoutPrefix >> 4;
+		uint8_t lowerNibble = opcodeWithoutPrefix & 0x0F;
+		uint8_t lower3Bits = lowerNibble & 0b111;
+
+		switch (lower3Bits)
+		{
+		case 6:
+			instruction.targetAddress = regHL->GetData();
+			instruction.data.push_back(memoryManagementUnit.GetByte(instruction.targetAddress));
+			instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
+			break;
+		case 7:
+			instruction.targetRegister8 = &regAF->GetHighRegister();
+			instruction.data.push_back(instruction.targetRegister8->GetData());
+			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+			break;
+		default:
+			instruction.targetRegister8 = Get8BitRegisterFromOpcode(instruction.opcode);
+			instruction.data.push_back(instruction.targetRegister8->GetData());
+			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+			break;
+		}
+
+		switch (upperNibble)
+		{
+		case 0x00:
+			// RLC, RRC,
+			instruction.instructionType = lowerNibble <= 7 ? CPUInstructionType::RotateLeft : CPUInstructionType::RotateRight;
+			break;
+		case 0x01:
+			// RL, RR
+			instruction.instructionType = lowerNibble <= 7 ? CPUInstructionType::RotateLeftThroughCarry : CPUInstructionType::RotateRightThroughCarry;
+			break;
+		case 0x02:
+			// SLA
+			break;
+		case 0x03:
+			// SWAP
+			break;
+		case 0x04:
+		case 0x05:
+		case 0x06:
+		case 0x07:
+			// BIT
+			break;
+		case 0x08:
+		case 0x09:
+		case 0x0A:
+		case 0x0B:
+			// RES
+			break;
+		}
+	}
+
+	uint8_t CPU::GenerateDataFromOpcode(uint8_t opcode)
+	{
+		uint8_t lowerNibble = opcode & 0x0F;
 		uint8_t lower3Bits = lowerNibble & 0b111;
 
 		uint16_t data = 0;
@@ -722,38 +846,50 @@ namespace SHG
 			data = regAF->GetHighByte();
 			break;
 		default:
-			// Registers have the following mapping:
-			// B: 0
-			// C: 1
-			// D: 2
-			// E: 3
-			// H: 4
-			// L: 5
-			// Since the registers are stored in the "registers" map as 16-bit registers, 
-			// we need to index them using the index of their upper 8-bit register, which 
-			// happens to have an even index. In addition, since there are only 8 possible registers, 
-			// but 16 possible values, each register ID will appear twice (B can be represented by both 0 and 8).
-			// With this in mind, the source register's ID can generally be determined using the least
-			// significant 3 bits, subtracted by the remainder of the lower nibble divided by 2 (which provides 
-			// us with the index of its upper 8-bit register). This makes more sense when looking at an opcode table. 
-			// Additionally, this does not work for determining the 8-bit A register, or the 16-bit HL register,
-			// so those are handled manually.
-			auto sourceRegisterID = (CPURegisterID)(lower3Bits - (lowerNibble % 2));
-
-			// If the value of the least signicant 4 bits is even, then get the data from the uppermost 8-bit register, 
-			// otherwise use the data in the lower 8-bit register.
-			data = lowerNibble % 2 == 0 ? registers[sourceRegisterID].GetHighByte() : registers[sourceRegisterID].GetLowByte();
+			data = Get8BitRegisterFromOpcode(opcode)->GetData();
 			break;
 		}
 
-		instruction.data.push_back(data);
+		return data;
+	}
+
+	Register8* CPU::Get8BitRegisterFromOpcode(uint8_t opcode)
+	{
+		uint8_t lowerNibble = opcode & 0x0F;
+
+		// Since there are a total of 7 different registers that may be provided as the source
+		// register (B, C, D, E, H, L, A), only 3 bits are needed to identify the register. 
+		// This keeps the decoded value between 0 - 7 (an 8 will be interpreted as 0, and a 9 as 1).
+		uint8_t lower3Bits = lowerNibble & 0b111;
+
+		// Registers have the following mapping:
+		// B: 0
+		// C: 1
+		// D: 2
+		// E: 3
+		// H: 4
+		// L: 5
+		// Since the registers are stored in the "registers" map as 16-bit registers, 
+		// we need to index them using the index of their upper 8-bit register, which 
+		// happens to have an even index. In addition, since there are only 8 possible registers, 
+		// but 16 possible values, each register ID will appear twice (B can be represented by both 0 and 8).
+		// With this in mind, the source register's ID can generally be determined using the least
+		// significant 3 bits, subtracted by the remainder of the lower nibble divided by 2 (which provides 
+		// us with the index of its upper 8-bit register). This makes more sense when looking at an opcode table. 
+		// Additionally, this does not work for determining the 8-bit A register, or the 16-bit HL register,
+		// so those are handled manually.
+		auto sourceRegisterID = (CPURegisterID)(lower3Bits - (lowerNibble % 2));
+
+		// If the value of the least signicant 4 bits is even, then get the data from the uppermost 8-bit register, 
+		// otherwise use the data in the lower 8-bit register.
+		return lowerNibble % 2 == 0 ? &registers[sourceRegisterID].GetHighRegister() : &registers[sourceRegisterID].GetLowRegister();
 	}
 
 	void CPU::Create8BitIncrementInstruction(CPUInstruction& instruction, Register8* targetRegister)
 	{
 		instruction.instructionType = CPUInstructionType::Increment;
 		instruction.targetRegister8 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(targetRegister->GetData());
 	}
 
@@ -761,7 +897,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Increment;
 		instruction.targetAddress = targetAddress;
-		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
 		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
 	}
 
@@ -769,7 +905,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Increment;
 		instruction.targetRegister16 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 		instruction.data.push_back(targetRegister->GetData());
 	}
 
@@ -777,7 +913,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Increment;
 		instruction.targetAddress = targetAddress;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
 	}
 
@@ -785,7 +921,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Decrement;
 		instruction.targetRegister8 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(targetRegister->GetData());
 	}
 
@@ -793,7 +929,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Decrement;
 		instruction.targetRegister16 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 		instruction.data.push_back(targetRegister->GetData());
 	}
 
@@ -801,7 +937,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Decrement;
 		instruction.targetAddress = targetAddress;
-		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
 		instruction.data.push_back(memoryManagementUnit.GetByte(targetAddress));
 	}
 
@@ -809,7 +945,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Load;
 		instruction.targetRegister8 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(data);
 	}
 
@@ -817,7 +953,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Load;
 		instruction.targetAddress = targetAddress;
-		instruction.storageType = CPUInstructionStorageType::EightBitAddress;
+		instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
 		instruction.data.push_back(data);
 	}
 
@@ -825,7 +961,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Load;
 		instruction.targetRegister16 = targetRegister;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 		instruction.data.push_back(data);
 	}
 
@@ -833,7 +969,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Load;
 		instruction.targetAddress = targetAddress;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitAddress;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitMemoryData;
 		instruction.data.push_back(data);
 	}
 
@@ -841,7 +977,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Add;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -850,7 +986,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Add;
 		instruction.targetRegister16 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::SixteenBitRegister;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -859,7 +995,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::AddWithCarry;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -868,7 +1004,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::Subtract;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -877,7 +1013,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::SubtractWithCarry;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -886,7 +1022,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::XOR;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -895,7 +1031,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::OR;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -912,7 +1048,7 @@ namespace SHG
 	{
 		instruction.instructionType = CPUInstructionType::AND;
 		instruction.targetRegister8 = storageRegister;
-		instruction.storageType = CPUInstructionStorageType::EightBitRegister;
+		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 		instruction.data.push_back(storageRegister->GetData());
 		instruction.data.push_back(operand);
 	}
@@ -925,11 +1061,11 @@ namespace SHG
 		case CPUInstructionType::AddWithCarry:
 			switch (instruction.storageType)
 			{
-			case CPUInstructionStorageType::EightBitAddress:
-			case CPUInstructionStorageType::EightBitRegister:
+			case CPUInstructionStorageType::EightBitMemoryData:
+			case CPUInstructionStorageType::EightBitRegisterData:
 				return operationResult > std::numeric_limits<uint8_t>::max();
-			case CPUInstructionStorageType::SixteenBitAddress:
-			case CPUInstructionStorageType::SixteenBitRegister:
+			case CPUInstructionStorageType::SixteenBitMemoryData:
+			case CPUInstructionStorageType::SixteenBitRegisterData:
 				return operationResult > std::numeric_limits<uint16_t>::max();
 				break;
 

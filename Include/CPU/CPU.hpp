@@ -10,13 +10,16 @@
 
 namespace SHG
 {
+	/// <summary>
+	/// Data structure representing a GameBoy's central processing unit.
+	/// </summary>
 	class CPU
 	{
 	public:
 		CPU(MemoryManagementUnit& mmu);
 
 		/// <summary>
-		/// Returns the register with the specified ID
+		/// Returns the 16-bit register with the specified ID
 		/// </summary>
 		/// <param name="registerID"></param>
 		/// <returns></returns>
@@ -27,19 +30,69 @@ namespace SHG
 		/// </summary>
 		uint32_t Cycle();
 
+		/// <summary>
+		/// Returns the value of the zero flag.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetZeroFlag();
+
+		/// <summary>
+		/// Returns the value of the subtraction flag.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetSubtractionFlag();
+
+		/// <summary>
+		/// Returns the value of the half carry flag.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetHalfCarryFlag();
+
+		/// <summary>
+		/// Returns the value of the carry flag.
+		/// </summary>
+		/// <returns></returns>
 		uint8_t GetCarryFlag();
 
+		/// <summary>
+		/// Sets the value of the zero flag.
+		/// </summary>
+		/// <param name="enabled"></param>
 		void SetZeroFlag(bool enabled);
+
+		/// <summary>
+		/// Sets the value of the subtraction flag.
+		/// </summary>
+		/// <param name="enabled"></param>
 		void SetSubtractionFlag(bool enabled);
+
+		/// <summary>
+		/// Sets the value of the half carry flag.
+		/// </summary>
+		/// <param name="enabled"></param>
 		void SetHalfCarryFlag(bool enabled);
+
+		/// <summary>
+		/// Sets the value of the carry flag.
+		/// </summary>
+		/// <param name="enabled"></param>
 		void SetCarryFlag(bool enabled);
 
-	private:
-		static const uint8_t REGISTER_COUNT = 6;
+		Register8* GetRegisterA();
+		Register8* GetRegisterF();
+		Register8* GetRegisterB();
+		Register8* GetRegisterC();
+		Register8* GetRegisterD();
+		Register8* GetRegisterE();
+		Register8* GetRegisterH();
+		Register8* GetRegisterL();
 
+		Register16* GetRegisterAF();
+		Register16* GetRegisterBC();
+		Register16* GetRegisterDE();
+		Register16* GetRegisterHL();
+
+	private:
 		MemoryManagementUnit& memoryManagementUnit;
 		std::map<CPURegisterID, Register16> registers;
 
@@ -52,15 +105,19 @@ namespace SHG
 
 		uint8_t Fetch8Bit();
 		uint16_t Fetch16Bit();
+
 		CPUInstruction Decode(uint8_t opcode);
 		uint32_t Execute(const CPUInstruction& instruction);
-		CPUInstruction DecodeLoadAndStoreInstruction(uint8_t opcode);
-		CPUInstruction DecodeArithmeticInstruction(uint8_t opcode);
+
+		void DecodeCBPrefixedInstruction(CPUInstruction& instruction);
+		void DecodeLoadAndStoreInstruction(CPUInstruction& instruction);
+		void DecodeArithmeticInstruction(CPUInstruction& instruction);
+
+		uint8_t GenerateDataFromOpcode(uint8_t opcode);
+		Register8* Get8BitRegisterFromOpcode(uint8_t opcode);
 
 		bool ShouldEnableCarryFlag(const CPUInstruction& instruction, int operationResult);
 		bool ShouldEnableHalfCarryFlag(uint16_t operand1, uint16_t operand2);
-
-		void SetInstructionData(uint8_t upperNibble, uint8_t lowerNibble, CPUInstruction& instruction);
 
 		void Create8BitIncrementInstruction(CPUInstruction& instruction, Register8* targetRegister);
 		void Create8BitIncrementInstruction(CPUInstruction& instruction, uint16_t targetAddress);

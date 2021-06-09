@@ -19,6 +19,10 @@ namespace SHG
 		Compare,
 		FlipCarryFlag,
 		SetCarryFlag,
-		OnesComplement
+		OnesComplement,
+		RotateLeft,
+		RotateRight,
+		RotateLeftThroughCarry,
+		RotateRightThroughCarry
 	};
 }

@@ -9,5 +9,5 @@ namespace SHG
 	extern const uint32_t MiB;
 	extern const uint64_t GiB;
 
-	std::string ConvertToHexString(uint8_t byte, int width);
+	std::string ConvertToHexString(uint16_t data, int width);
 }

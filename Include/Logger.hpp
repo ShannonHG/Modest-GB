@@ -31,11 +31,16 @@ namespace SHG
 		{LogLevel::Silent, "silent"}
 	};
 
+	/// <summary>
+	/// Writes messages to the console and/or log file.
+	/// </summary>
 	class Logger
 	{
 	public:
+		/// <summary>
+		/// The logger's current log level.
+		/// </summary>
 		static LogLevel CurrentLogLevel;
-		static std::ofstream LogFileStream;
 
 		/// <summary>
 		/// Writes a message to the console if <see cref="CurrentLogLevel"/> is 
@@ -59,6 +64,8 @@ namespace SHG
 		static void WriteError(std::string message);
 
 	private:
+		static std::ofstream LogFileStream;
+
 		static void InitLogFile();
 		static bool IsLogLevelEnabled(LogLevel logLevel);
 		static void WriteMessage(std::string message);

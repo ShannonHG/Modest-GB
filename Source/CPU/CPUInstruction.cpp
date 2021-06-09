@@ -1,7 +1,22 @@
+#include <cassert>
+#include <sstream>
 #include "CPU/CPUInstruction.hpp"
+#include "Globals.hpp"
 
 namespace SHG
 {
+	std::string CPUInstruction::ToString()
+	{
+		std::stringstream stream;
+
+		stream << "Instruction: " << GetInstructionTypeString() << " | ";
+		stream << "Opcode: " << ConvertToHexString(opcode, 4) << " | ";
+		stream << "Data: ";
+		for (auto d : data) stream << d << " ";
+
+		return stream.str();
+	}
+
 	std::string CPUInstruction::GetInstructionTypeString()
 	{
 		switch (instructionType)
@@ -36,6 +51,16 @@ namespace SHG
 			return "Set Carry Flag";
 		case CPUInstructionType::OnesComplement:
 			return "Ones Complement";
+		case CPUInstructionType::RotateLeft:
+			return "Rotate Left";
+		case CPUInstructionType::RotateRight:
+			return "Rotate Right";
+		case CPUInstructionType::RotateLeftThroughCarry:
+			return "Rotate Left Through Carry";
+		case CPUInstructionType::RotateRightThroughCarry:
+			return "Rotate Right Through Carry";
+		default:
+			assert(false);
 		}
 	}
 }
