@@ -92,6 +92,8 @@ namespace SHG
 		Register16* GetRegisterDE();
 		Register16* GetRegisterHL();
 
+		CPUInstruction GetPreviouslyExecutedInstruction();
+
 	private:
 		MemoryManagementUnit& memoryManagementUnit;
 		std::map<CPURegisterID, Register16> registers;
@@ -102,6 +104,8 @@ namespace SHG
 		Register16* regHL;
 		Register16* programCounter;
 		Register16* stackPointer;
+
+		CPUInstruction previouslyExecutedInstruction;
 
 		uint8_t Fetch8Bit();
 		uint16_t Fetch16Bit();

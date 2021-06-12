@@ -59,6 +59,20 @@ namespace SHG
 			return "Rotate Left Through Carry";
 		case CPUInstructionType::RotateRightThroughCarry:
 			return "Rotate Right Through Carry";
+		case CPUInstructionType::ArithmeticLeftShift:
+			return "Arithmetic Left Shift";
+		case CPUInstructionType::ArithmeticRightShift:
+			return "Arithmetic Right Shift";
+		case CPUInstructionType::LogicalRightShift:
+			return "Logical Right Shift";
+		case CPUInstructionType::Swap:
+			return "Swap";
+		case CPUInstructionType::BitTest:
+			return "Bit Test";
+		case CPUInstructionType::BitReset:
+			return "Bit Reset";
+		case CPUInstructionType::BitSet:
+			return "Bit Set";
 		default:
 			assert(false);
 		}

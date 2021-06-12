@@ -843,7 +843,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA5);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitAND(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
 	}
 
 	// AND A, (HL)
@@ -1360,6 +1360,13 @@ namespace SHG
 
 		processor.Cycle();
 
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2);
 	}
 
@@ -1372,6 +1379,13 @@ namespace SHG
 		targetRegister.SetData(operand2);
 
 		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), operand1 + operand2);
 	}
@@ -1386,6 +1400,13 @@ namespace SHG
 
 		processor.Cycle();
 
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Subtract);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2);
 	}
 
@@ -1398,6 +1419,13 @@ namespace SHG
 		targetRegister.SetData(operand2);
 
 		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AND);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 & operand2);
 	}
@@ -1412,6 +1440,13 @@ namespace SHG
 
 		processor.Cycle();
 
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::XOR);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 ^ operand2);
 	}
 
@@ -1424,6 +1459,13 @@ namespace SHG
 		targetRegister.SetData(operand2);
 
 		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::OR);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
 
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 | operand2);
 	}
@@ -1440,6 +1482,13 @@ namespace SHG
 
 		processor.Cycle();
 
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AddWithCarry);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2 + carryFlag);
 	}
 
@@ -1455,51 +1504,82 @@ namespace SHG
 
 		processor.Cycle();
 
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::SubtractWithCarry);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
 		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2 - carryFlag);
 	}
 
 	void Test8BitIncrement(CPU& processor, Register8& targetRegister)
 	{
-		uint8_t operand2 = 5;
+		uint8_t operand = 5;
 
-		targetRegister.SetData(operand2);
+		targetRegister.SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(targetRegister.GetData(), operand2 + 1);
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(targetRegister.GetData(), operand + 1);
 	}
 
 	void Test16BitIncrement(CPU& processor, Register16& targetRegister)
 	{
-		uint8_t operand2 = 5;
+		uint8_t operand = 5;
 
-		targetRegister.SetData(operand2);
+		targetRegister.SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(targetRegister.GetData(), operand2 + 1);
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
+
+		EXPECT_EQ(targetRegister.GetData(), operand + 1);
 	}
 
 	void Test8BitDecrement(CPU& processor, Register8& targetRegister)
 	{
-		uint8_t operand2 = 5;
+		uint8_t operand = 5;
 
-		targetRegister.SetData(operand2);
+		targetRegister.SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(targetRegister.GetData(), operand2 - 1);
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(targetRegister.GetData(), operand - 1);
 	}
 
 	void Test16BitDecrement(CPU& processor, Register16& targetRegister)
 	{
-		uint8_t operand2 = 5;
+		uint8_t operand = 5;
 
-		targetRegister.SetData(operand2);
+		targetRegister.SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(targetRegister.GetData(), operand2 - 1);
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
+
+		EXPECT_EQ(targetRegister.GetData(), operand - 1);
 	}
 
 	void Test8BitCompare(CPU& processor, Register8& targetRegister)
@@ -1511,6 +1591,13 @@ namespace SHG
 		targetRegister.SetData(operand2);
 
 		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Compare);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::None);
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}

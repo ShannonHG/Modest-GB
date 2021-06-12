@@ -23,6 +23,13 @@ namespace SHG
 		RotateLeft,
 		RotateRight,
 		RotateLeftThroughCarry,
-		RotateRightThroughCarry
+		RotateRightThroughCarry,
+		ArithmeticRightShift,
+		ArithmeticLeftShift,
+		LogicalRightShift,
+		Swap,
+		BitTest,
+		BitReset,
+		BitSet
 	};
 }

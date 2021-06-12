@@ -9,6 +9,28 @@
 
 namespace SHG
 {
+	// Some opcode's can have their instruction type easily decoded by checking 
+	// if their upper nibble is less than or greater than a certain threshold.
+	// If their upper nibble is less than or equal to the threshold, one instruction type is chosen,
+	// otherwise another instruction type is chosen. By normalizing the upper nibble between 0 and 1,
+	// this map can be used to retrieve the appropriate instruction type.
+	std::map<uint8_t, std::array<CPUInstructionType, 2>> instructionTypeMap =
+	{
+		{ 0x08, {CPUInstructionType::Add, CPUInstructionType::AddWithCarry}},
+		{ 0x09, {CPUInstructionType::Subtract, CPUInstructionType::SubtractWithCarry}},
+		{ 0x0A, {CPUInstructionType::AND, CPUInstructionType::XOR}},
+		{ 0x0B, {CPUInstructionType::OR, CPUInstructionType::Compare}}
+	};
+
+	// Similar to the above map, but used specifically for certain CB prefixed opcodes.
+	std::map<uint8_t, std::array<CPUInstructionType, 2>> cbPrefixedInstructionTypeMap =
+	{
+		{ 0x00, {CPUInstructionType::RotateLeft, CPUInstructionType::RotateRight}},
+		{ 0x01, {CPUInstructionType::RotateLeftThroughCarry, CPUInstructionType::RotateRightThroughCarry}},
+		{ 0x02, {CPUInstructionType::ArithmeticLeftShift, CPUInstructionType::ArithmeticRightShift}},
+		{ 0x03, {CPUInstructionType::Swap, CPUInstructionType::LogicalRightShift}}
+	};
+
 	CPU::CPU(MemoryManagementUnit& memoryManagementUnit) : memoryManagementUnit(memoryManagementUnit)
 	{
 		this->memoryManagementUnit = memoryManagementUnit;
@@ -52,106 +74,8 @@ namespace SHG
 
 		Logger::Write(messageStream.str());
 
+		previouslyExecutedInstruction = instruction;
 		return Execute(instruction);
-	}
-
-	Register8* CPU::GetRegisterA()
-	{
-		return &regAF->GetHighRegister();
-	}
-	Register8* CPU::GetRegisterF()
-	{
-		return &regAF->GetLowRegister();
-	}
-
-	Register8* CPU::GetRegisterB()
-	{
-		return &regBC->GetHighRegister();
-	}
-
-	Register8* CPU::GetRegisterC()
-	{
-		return &regBC->GetLowRegister();
-	}
-
-	Register8* CPU::GetRegisterD()
-	{
-		return &regDE->GetHighRegister();
-	}
-
-	Register8* CPU::GetRegisterE()
-	{
-		return &regDE->GetLowRegister();
-	}
-
-	Register8* CPU::GetRegisterH()
-	{
-		return &regHL->GetHighRegister();
-	}
-
-	Register8* CPU::GetRegisterL()
-	{
-		return &regHL->GetLowRegister();
-	}
-
-	Register16* CPU::GetRegisterAF()
-	{
-		return regAF;
-	}
-
-	Register16* CPU::GetRegisterBC()
-	{
-		return regBC;
-	}
-
-	Register16* CPU::GetRegisterDE()
-	{
-		return regDE;
-	}
-
-	Register16* CPU::GetRegisterHL()
-	{
-		return regHL;
-	}
-
-	uint8_t CPU::GetZeroFlag()
-	{
-		return regAF->GetLowRegister().GetBit(7);
-	}
-
-	uint8_t CPU::GetSubtractionFlag()
-	{
-		return regAF->GetLowRegister().GetBit(6);
-	}
-
-	uint8_t CPU::GetHalfCarryFlag()
-	{
-		return regAF->GetLowRegister().GetBit(5);
-	}
-
-	uint8_t CPU::GetCarryFlag()
-	{
-		return regAF->GetLowRegister().GetBit(4);
-	}
-
-	void CPU::SetZeroFlag(bool enabled)
-	{
-		regAF->GetLowRegister().SetBit(7, enabled);
-	}
-
-	void CPU::SetSubtractionFlag(bool enabled)
-	{
-		regAF->GetLowRegister().SetBit(6, enabled);
-	}
-
-	void CPU::SetHalfCarryFlag(bool enabled)
-	{
-		regAF->GetLowRegister().SetBit(5, enabled);
-	}
-
-	void CPU::SetCarryFlag(bool enabled)
-	{
-		regAF->GetLowRegister().SetBit(4, enabled);
 	}
 
 	uint8_t CPU::Fetch8Bit()
@@ -593,6 +517,8 @@ namespace SHG
 		case CPUInstructionType::DecimalAdjust:
 		{
 			result = instruction.data[0];
+
+			// Adjust the result so that it becomes a Binary-coded Decimal
 			uint8_t lowerNibble = instruction.data[0] & 0x0F;
 			if (lowerNibble >= 0x0A || (GetHalfCarryFlag() == 1))
 			{
@@ -600,6 +526,7 @@ namespace SHG
 				shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(lowerNibble, 0x06);
 			}
 
+			// Adjust the result so that it becomes a Binary-coded Decimal
 			uint8_t upperNibble = result >> 4;
 			if (upperNibble >= 0xA0 || (GetCarryFlag() == 1))
 			{
@@ -668,6 +595,29 @@ namespace SHG
 			shouldEnableCarryFlag = instruction.data[0] & 1;
 			result = (instruction.data[0] >> 1) | (GetCarryFlag() << 7);
 			break;
+		case CPUInstructionType::ArithmeticLeftShift:
+			result = instruction.data[0] << 1;
+			break;
+		case CPUInstructionType::ArithmeticRightShift:
+			// Shift right while retaining the sign bit (most significant bit)
+			result = (instruction.data[0] >> 1) & (instruction.data[0] & 0b10000000);
+			break;
+		case CPUInstructionType::LogicalRightShift:
+			result = instruction.data[0] >> 1;
+			break;
+		case CPUInstructionType::Swap:
+			// Swap the low and high nibbles
+			result = ((instruction.data[0] & 0x0F) << 4) | ((instruction.data[0] & 0xF0) >> 4);
+			break;
+		case CPUInstructionType::BitTest:
+			shouldEnableZeroFlag = ((instruction.data[0]) | (1 << instruction.data[1])) >> instruction.data[1];
+			break;
+		case CPUInstructionType::BitReset:
+			result = (instruction.data[0]) & ~(1 << instruction.data[1]);
+			break;
+		case CPUInstructionType::BitSet:
+			result = (instruction.data[0]) | (1 << instruction.data[1]);
+			break;
 		}
 
 		SetSubtractionFlag(shouldEnableSubtractionFlag);
@@ -693,13 +643,6 @@ namespace SHG
 		}
 
 		return instruction.duration;
-	}
-
-	Register16& CPU::GetRegister(CPURegisterID registerID)
-	{
-		// The CPU should always have a corresponding register for every CPURegisterID.
-		assert(registers.count(registerID) != 0);
-		return registers[registerID];
 	}
 
 	void CPU::DecodeLoadAndStoreInstruction(CPUInstruction& instruction)
@@ -743,30 +686,21 @@ namespace SHG
 	void CPU::DecodeArithmeticInstruction(CPUInstruction& instruction)
 	{
 		instruction.targetRegister8 = &regAF->GetHighRegister();
-		instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
-
 		instruction.data.push_back(regAF->GetHighByte());
 
 		uint8_t upperNibble = instruction.opcode >> 4;
 		uint8_t lowerNibble = instruction.opcode & 0x0F;
 
 		instruction.data.push_back(GenerateDataFromOpcode(instruction.opcode));
+		instruction.instructionType = instructionTypeMap[upperNibble][lowerNibble <= 7 ? 0 : 1];
 
-		uint8_t temp = lowerNibble < 8 ? 0 : 1;
-
-		switch (upperNibble)
+		switch (instruction.instructionType)
 		{
-		case 0x08:
-			instruction.instructionType = temp == 0 ? CPUInstructionType::Add : CPUInstructionType::AddWithCarry;
+		case CPUInstructionType::Compare:
+			instruction.storageType = CPUInstructionStorageType::None;
 			break;
-		case 0x09:
-			instruction.instructionType = temp == 0 ? CPUInstructionType::Subtract : CPUInstructionType::SubtractWithCarry;
-			break;
-		case 0x0A:
-			instruction.instructionType = temp == 0 ? CPUInstructionType::AND : CPUInstructionType::XOR;
-			break;
-		case 0x0B:
-			instruction.instructionType = temp == 0 ? CPUInstructionType::OR : CPUInstructionType::Compare;
+		default:
+			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 			break;
 		}
 	}
@@ -777,55 +711,58 @@ namespace SHG
 		instruction.data.push_back(GenerateDataFromOpcode(opcodeWithoutPrefix));
 
 		uint8_t upperNibble = opcodeWithoutPrefix >> 4;
-		uint8_t lowerNibble = opcodeWithoutPrefix & 0x0F;
-		uint8_t lower3Bits = lowerNibble & 0b111;
+		uint8_t lowNibble = opcodeWithoutPrefix & 0x0F;
+		uint8_t lower3Bits = lowNibble & 0b111;
 
+		uint8_t normalizedLowNibble = lowNibble <= 7 ? 0 : 1;
+		uint8_t bitIndex = (upperNibble - (8 - upperNibble)) + normalizedLowNibble;
+		Logger::Write("Bit Index: " + std::to_string(opcodeWithoutPrefix));
 		switch (lower3Bits)
 		{
 		case 6:
 			instruction.targetAddress = regHL->GetData();
-			instruction.data.push_back(memoryManagementUnit.GetByte(instruction.targetAddress));
 			instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
 			break;
 		case 7:
 			instruction.targetRegister8 = &regAF->GetHighRegister();
-			instruction.data.push_back(instruction.targetRegister8->GetData());
 			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 			break;
 		default:
 			instruction.targetRegister8 = Get8BitRegisterFromOpcode(instruction.opcode);
-			instruction.data.push_back(instruction.targetRegister8->GetData());
 			instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
 			break;
 		}
 
 		switch (upperNibble)
 		{
-		case 0x00:
-			// RLC, RRC,
-			instruction.instructionType = lowerNibble <= 7 ? CPUInstructionType::RotateLeft : CPUInstructionType::RotateRight;
-			break;
-		case 0x01:
-			// RL, RR
-			instruction.instructionType = lowerNibble <= 7 ? CPUInstructionType::RotateLeftThroughCarry : CPUInstructionType::RotateRightThroughCarry;
-			break;
-		case 0x02:
-			// SLA
-			break;
-		case 0x03:
-			// SWAP
+		default:
+			// Handles RLC, RRC, RL, RR, SLA, SRA, SWAP, and SRL
+			instruction.instructionType = cbPrefixedInstructionTypeMap[upperNibble][normalizedLowNibble];
 			break;
 		case 0x04:
 		case 0x05:
 		case 0x06:
 		case 0x07:
 			// BIT
+			instruction.instructionType = CPUInstructionType::BitTest;
+			instruction.storageType = CPUInstructionStorageType::None;
+			instruction.data.push_back((upperNibble - (4 - (upperNibble % 4))) + normalizedLowNibble);
 			break;
 		case 0x08:
 		case 0x09:
 		case 0x0A:
 		case 0x0B:
 			// RES
+			instruction.instructionType = CPUInstructionType::BitReset;
+			instruction.data.push_back((upperNibble - (8 - (upperNibble % 8))) + normalizedLowNibble);
+			break;
+		case 0x0C:
+		case 0x0D:
+		case 0x0E:
+		case 0x0F:
+			// SET
+			instruction.instructionType = CPUInstructionType::BitSet;
+			instruction.data.push_back((upperNibble - (12 - (upperNibble % 12))) + normalizedLowNibble);
 			break;
 		}
 	}
@@ -1082,5 +1019,116 @@ namespace SHG
 	{
 		// Isolate and add low nibbles to determine if a carry occurs.
 		return (((operand1 & 0x0F) + (operand2 & 0x0F)) & 0x10) == 0x10;
+	}
+
+	Register8* CPU::GetRegisterA()
+	{
+		return &regAF->GetHighRegister();
+	}
+	Register8* CPU::GetRegisterF()
+	{
+		return &regAF->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterB()
+	{
+		return &regBC->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterC()
+	{
+		return &regBC->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterD()
+	{
+		return &regDE->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterE()
+	{
+		return &regDE->GetLowRegister();
+	}
+
+	Register8* CPU::GetRegisterH()
+	{
+		return &regHL->GetHighRegister();
+	}
+
+	Register8* CPU::GetRegisterL()
+	{
+		return &regHL->GetLowRegister();
+	}
+
+	Register16* CPU::GetRegisterAF()
+	{
+		return regAF;
+	}
+
+	Register16* CPU::GetRegisterBC()
+	{
+		return regBC;
+	}
+
+	Register16* CPU::GetRegisterDE()
+	{
+		return regDE;
+	}
+
+	Register16* CPU::GetRegisterHL()
+	{
+		return regHL;
+	}
+
+	Register16& CPU::GetRegister(CPURegisterID registerID)
+	{
+		// The CPU should always have a corresponding register for every CPURegisterID.
+		assert(registers.count(registerID) != 0);
+		return registers[registerID];
+	}
+
+	uint8_t CPU::GetZeroFlag()
+	{
+		return regAF->GetLowRegister().GetBit(7);
+	}
+
+	uint8_t CPU::GetSubtractionFlag()
+	{
+		return regAF->GetLowRegister().GetBit(6);
+	}
+
+	uint8_t CPU::GetHalfCarryFlag()
+	{
+		return regAF->GetLowRegister().GetBit(5);
+	}
+
+	uint8_t CPU::GetCarryFlag()
+	{
+		return regAF->GetLowRegister().GetBit(4);
+	}
+
+	void CPU::SetZeroFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(7, enabled);
+	}
+
+	void CPU::SetSubtractionFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(6, enabled);
+	}
+
+	void CPU::SetHalfCarryFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(5, enabled);
+	}
+
+	void CPU::SetCarryFlag(bool enabled)
+	{
+		regAF->GetLowRegister().SetBit(4, enabled);
+	}
+
+	CPUInstruction CPU::GetPreviouslyExecutedInstruction()
+	{
+		return previouslyExecutedInstruction;
 	}
 }
