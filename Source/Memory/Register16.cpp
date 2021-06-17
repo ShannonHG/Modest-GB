@@ -58,6 +58,16 @@ namespace SHG
 		SetData(GetData() - 1);
 	}
 
+	void Register16::Increase(uint16_t amount)
+	{
+		SetData(GetData() + amount);
+	}
+
+	void Register16::Decrease(uint16_t amount)
+	{
+		SetData(GetData() - amount);
+	}
+
 	Register8& Register16::GetHighRegister()
 	{
 		return highRegister;

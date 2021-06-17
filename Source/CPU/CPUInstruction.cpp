@@ -2,17 +2,21 @@
 #include <sstream>
 #include "CPU/CPUInstruction.hpp"
 #include "Globals.hpp"
+#include "Logger.hpp"
 
 namespace SHG
 {
 	std::string CPUInstruction::ToString()
 	{
+		assert(GetInstructionTypeString().c_str() != NULL);
+
 		std::stringstream stream;
 
 		stream << "Instruction: " << GetInstructionTypeString() << " | ";
 		stream << "Opcode: " << ConvertToHexString(opcode, 4) << " | ";
 		stream << "Data: ";
-		for (auto d : data) stream << d << " ";
+		
+		for (int d : data) stream << d << " ";
 
 		return stream.str();
 	}
@@ -73,8 +77,26 @@ namespace SHG
 			return "Bit Reset";
 		case CPUInstructionType::BitSet:
 			return "Bit Set";
+		case CPUInstructionType::Jump:
+			return "Jump";
+		case CPUInstructionType::RelativeJump:
+			return "Relative Jump (JR)";
+		case CPUInstructionType::Restart:
+			return "Restart (RST)";
+		case CPUInstructionType::Call:
+			return "CALL";
+		case CPUInstructionType::Return:
+			return "Return (RET)";
+		case CPUInstructionType::DisableInterrupts:
+			return "Disable Interupts (DI)";
+		case CPUInstructionType::EnableInterrupts:
+			return "Enable Interrupts (EI)";
+		case CPUInstructionType::ReturnAndEnableInterrupts:
+			return "Return and Enable Interrupts (RETI)";
 		default:
+			Logger::WriteError("Invalid instruction type encountered.");
 			assert(false);
+			break;
 		}
 	}
 }

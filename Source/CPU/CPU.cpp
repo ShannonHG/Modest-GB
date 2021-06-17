@@ -57,7 +57,10 @@ namespace SHG
 
 	uint32_t CPU::Cycle()
 	{
+		Logger::Write("[CPU] Fetching byte...");
 		uint8_t opcode = Fetch8Bit();
+
+		Logger::Write("[CPU] Decoding instruction...");
 		CPUInstruction instruction = Decode(opcode);
 
 		std::stringstream messageStream;
@@ -124,6 +127,9 @@ namespace SHG
 			switch (opcode)
 			{
 			case 0x00:
+				// NOP
+				instruction.instructionType = CPUInstructionType::NOP;
+				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0x01:
 				Create16BitLoadInstruction(instruction, regBC, Fetch16Bit());
@@ -144,6 +150,11 @@ namespace SHG
 				Create8BitLoadInstruction(instruction, &regBC->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x07:
+				// RLCA
+				instruction.instructionType = CPUInstructionType::RotateLeft;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+				instruction.targetRegister8 = GetRegisterA();
+				instruction.data.push_back(instruction.targetRegister8->GetData());
 				break;
 			case 0x08:
 				Create16BitLoadInstruction(instruction, Fetch16Bit(), stackPointer->GetData());
@@ -167,8 +178,16 @@ namespace SHG
 				Create8BitLoadInstruction(instruction, &regBC->GetLowRegister(), Fetch8Bit());
 				break;
 			case 0x0F:
+				instruction.instructionType = CPUInstructionType::RotateRight;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+				instruction.targetRegister8 = GetRegisterA();
+				instruction.data.push_back(instruction.targetRegister8->GetData());
 				break;
 			case 0x10:
+				// TODO: Confirm whether some additional logic should be here
+				// STOP
+				instruction.instructionType = CPUInstructionType::STOP;
+				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0x11:
 				Create16BitLoadInstruction(instruction, regDE, Fetch16Bit());
@@ -189,8 +208,13 @@ namespace SHG
 				Create8BitLoadInstruction(instruction, &regDE->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0x17:
+				instruction.instructionType = CPUInstructionType::RotateLeftThroughCarry;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+				instruction.targetRegister8 = GetRegisterA();
+				instruction.data.push_back(instruction.targetRegister8->GetData());
 				break;
 			case 0x18:
+				CreateRelativeJumpInstruction(instruction, Fetch8Bit(), {});
 				break;
 			case 0x19:
 				Create16BitAddInstruction(instruction, regHL, regDE->GetData());
@@ -211,8 +235,13 @@ namespace SHG
 				Create8BitLoadInstruction(instruction, &regDE->GetLowRegister(), Fetch8Bit());
 				break;
 			case 0x1F:
+				instruction.instructionType = CPUInstructionType::RotateRightThroughCarry;
+				instruction.storageType = CPUInstructionStorageType::EightBitRegisterData;
+				instruction.targetRegister8 = GetRegisterA();
+				instruction.data.push_back(instruction.targetRegister8->GetData());
 				break;
 			case 0x20:
+				CreateRelativeJumpInstruction(instruction, Fetch8Bit(), { CPUFlag::Subtraction, CPUFlag::Zero });
 				break;
 			case 0x21:
 				Create16BitLoadInstruction(instruction, regHL, Fetch16Bit());
@@ -240,6 +269,7 @@ namespace SHG
 				instruction.data.push_back(regAF->GetHighByte());
 				break;
 			case 0x28:
+				CreateRelativeJumpInstruction(instruction, Fetch8Bit(), { CPUFlag::Zero });
 				break;
 			case 0x29:
 				Create16BitAddInstruction(instruction, regHL, regHL->GetData());
@@ -267,6 +297,7 @@ namespace SHG
 				instruction.data.push_back(regAF->GetHighByte());
 				break;
 			case 0x30:
+				CreateRelativeJumpInstruction(instruction, Fetch8Bit(), { CPUFlag::Subtraction, CPUFlag::Carry });
 				break;
 			case 0x31:
 				Create16BitLoadInstruction(instruction, stackPointer, Fetch16Bit());
@@ -292,6 +323,7 @@ namespace SHG
 				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0x38:
+				CreateRelativeJumpInstruction(instruction, Fetch8Bit(), { CPUFlag::Carry });
 				break;
 			case 0x39:
 				Create16BitAddInstruction(instruction, regHL, stackPointer->GetData());
@@ -317,95 +349,128 @@ namespace SHG
 				instruction.storageType = CPUInstructionStorageType::None;
 				break;
 			case 0xC0:
+				CreateReturnInstruction(instruction, { CPUFlag::Subtraction, CPUFlag::Zero });
 				break;
 			case 0xC1:
+				CreatePopInstruction(instruction, regBC->GetData());
 				break;
 			case 0xC2:
+				CreateStandardJumpInstruction(instruction, Fetch16Bit(), { CPUFlag::Subtraction, CPUFlag::Zero });
 				break;
 			case 0xC3:
+				CreateStandardJumpInstruction(instruction, Fetch16Bit(), {});
 				break;
 			case 0xC4:
+				CreateCallInstruction(instruction, Fetch16Bit(), { CPUFlag::Subtraction, CPUFlag::Zero });
 				break;
 			case 0xC5:
+				CreatePushInstruction(instruction, regBC->GetData());
 				break;
 			case 0xC6:
 				Create8BitAddInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xC7:
+				CreateRestartInstruction(instruction, 0x00);
 				break;
 			case 0xC8:
+				CreateReturnInstruction(instruction, { CPUFlag::Zero });
 				break;
 			case 0xC9:
+				CreateReturnInstruction(instruction, {});
 				break;
 			case 0xCA:
+				CreateStandardJumpInstruction(instruction, Fetch16Bit(), { CPUFlag::Zero });
 				break;
 			case 0xCB:
 				instruction.opcode = (opcode << 8) | Fetch8Bit();
-
 				// Another byte is fetched to determine which CB prefixed opcode was encountered.
 				DecodeCBPrefixedInstruction(instruction);
 				break;
 			case 0xCC:
+				CreateCallInstruction(instruction, Fetch16Bit(), { CPUFlag::Zero });
 				break;
 			case 0xCD:
+				CreateCallInstruction(instruction, Fetch16Bit(), {});
 				break;
 			case 0xCE:
 				Create8BitAddWithCarryInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xCF:
+				CreateRestartInstruction(instruction, 0x08);
 				break;
 			case 0xD0:
+				CreateReturnInstruction(instruction, { CPUFlag::Subtraction, CPUFlag::Carry });
 				break;
 			case 0xD1:
+				CreatePopInstruction(instruction, regDE->GetData());
 				break;
 			case 0xD2:
+				CreateStandardJumpInstruction(instruction, Fetch16Bit(), { CPUFlag::Subtraction, CPUFlag::Carry });
 				break;
 			case 0xD3:
+				// Nothing
 				break;
 			case 0xD4:
+				CreateCallInstruction(instruction, Fetch16Bit(), { CPUFlag::Subtraction, CPUFlag::Carry });
 				break;
 			case 0xD5:
+				CreatePushInstruction(instruction, regDE->GetData());
 				break;
 			case 0xD6:
 				Create8BitSubtractInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xD7:
+				CreateRestartInstruction(instruction, 0x10);
 				break;
 			case 0xD8:
+				CreateReturnInstruction(instruction, { CPUFlag::Carry });
 				break;
 			case 0xD9:
+				instruction.instructionType = CPUInstructionType::ReturnAndEnableInterrupts;
+				instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+				instruction.targetRegister16 = programCounter;
 				break;
 			case 0xDA:
+				CreateStandardJumpInstruction(instruction, Fetch16Bit(), { CPUFlag::Carry });
 				break;
 			case 0xDB:
+				// Nothing
 				break;
 			case 0xDC:
+				CreateCallInstruction(instruction, Fetch16Bit(), { CPUFlag::Carry });
 				break;
 			case 0xDD:
+				// Nothing
 				break;
 			case 0xDE:
 				Create8BitSubtractWithCarryInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xDF:
+				CreateRestartInstruction(instruction, 0x18);
 				break;
 			case 0xE0:
 				Create8BitLoadInstruction(instruction, 0xFF00 | Fetch8Bit(), regAF->GetHighByte());
 				break;
 			case 0xE1:
+				CreatePopInstruction(instruction, regHL->GetData());
 				break;
 			case 0xE2:
 				Create8BitLoadInstruction(instruction, 0xFF00 | regBC->GetLowByte(), regAF->GetHighByte());
 				break;
 			case 0xE3:
+				// Nothing
 				break;
 			case 0xE4:
+				// Nothing
 				break;
 			case 0xE5:
+				CreatePushInstruction(instruction, regHL->GetData());
 				break;
 			case 0xE6:
 				Create8BitANDInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xE7:
+				CreateRestartInstruction(instruction, 0x20);
 				break;
 			case 0xE8:
 				instruction.instructionType = CPUInstructionType::Add;
@@ -415,39 +480,49 @@ namespace SHG
 				instruction.data.push_back((int8_t)Fetch8Bit());
 				break;
 			case 0xE9:
+				CreateStandardJumpInstruction(instruction, regHL->GetData(), {});
 				break;
 			case 0xEA:
 				Create8BitLoadInstruction(instruction, Fetch16Bit(), regAF->GetHighByte());
 				break;
 			case 0xEB:
+				// Nothing
 				break;
 			case 0xEC:
+				// Nothing
 				break;
 			case 0xED:
+				// Nothing
 				break;
 			case 0xEE:
 				Create8BitXORInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xEF:
+				CreateRestartInstruction(instruction, 0x28);
 				break;
 			case 0xF0:
 				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(0xFF00 | Fetch8Bit()));
 				break;
 			case 0xF1:
+				CreatePopInstruction(instruction, regAF->GetData());
 				break;
 			case 0xF2:
 				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(0xFF00 | regBC->GetLowByte()));
 				break;
 			case 0xF3:
+				CreateInterruptDisableInstruction(instruction);
 				break;
 			case 0xF4:
+				// Nothing
 				break;
 			case 0xF5:
+				CreatePushInstruction(instruction, regAF->GetData());
 				break;
 			case 0xF6:
 				Create8BitORInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xF7:
+				CreateRestartInstruction(instruction, 0x30);
 				break;
 			case 0xF8:
 				instruction.instructionType = CPUInstructionType::Load;
@@ -462,15 +537,19 @@ namespace SHG
 				Create8BitLoadInstruction(instruction, &regAF->GetHighRegister(), memoryManagementUnit.GetByte(Fetch16Bit()));
 				break;
 			case 0xFB:
+				CreateInterruptEnableInstruction(instruction);
 				break;
 			case 0xFC:
+				// Nothing
 				break;
 			case 0xFD:
+				// Nothing
 				break;
 			case 0xFE:
 				Create8BitCompareInstruction(instruction, &regAF->GetHighRegister(), Fetch8Bit());
 				break;
 			case 0xFF:
+				CreateRestartInstruction(instruction, 0x38);
 				break;
 			default:
 				instruction.instructionType = CPUInstructionType::Invalid;
@@ -483,6 +562,7 @@ namespace SHG
 
 	uint32_t CPU::Execute(const CPUInstruction& instruction)
 	{
+		// TODO: This can probably remain an uint
 		// int is used instead of uint here so that
 		// the result can be checked for a negative value. 
 		// Otherwise when the result of an operation is less than zero, 
@@ -618,6 +698,33 @@ namespace SHG
 		case CPUInstructionType::BitSet:
 			result = (instruction.data[0]) | (1 << instruction.data[1]);
 			break;
+		case CPUInstructionType::Jump:
+			result = instruction.data[0];
+			break;
+		case CPUInstructionType::RelativeJump:
+			result = instruction.targetRegister16->GetData() + instruction.data[0];
+			break;
+		case CPUInstructionType::Return:
+			result = memoryManagementUnit.GetByte(stackPointer->GetData()) | (memoryManagementUnit.GetByte(stackPointer->GetData() + 1) << 8);
+			stackPointer->Increase(2);
+			break;
+		case CPUInstructionType::Restart:
+		case CPUInstructionType::Call:
+			stackPointer->Decrease(2);
+			Set16BitDataInMemory(stackPointer->GetData(), programCounter->GetData());
+			result = instruction.data[0];
+			break;
+		case CPUInstructionType::EnableInterrupts:
+			interruptMasterEnableFlag = 1;
+			break;
+		case CPUInstructionType::DisableInterrupts:
+			interruptMasterEnableFlag = 0;
+			break;
+		case CPUInstructionType::ReturnAndEnableInterrupts:
+			interruptMasterEnableFlag = 1;
+			result = memoryManagementUnit.GetByte(stackPointer->GetData()) | (memoryManagementUnit.GetByte(stackPointer->GetData() + 1) << 8);
+			stackPointer->Increase(2);
+			break;
 		}
 
 		SetSubtractionFlag(shouldEnableSubtractionFlag);
@@ -628,16 +735,19 @@ namespace SHG
 		switch (instruction.storageType)
 		{
 		case CPUInstructionStorageType::EightBitMemoryData:
+			assert(instruction.targetAddress != NULL);
 			memoryManagementUnit.SetByte(instruction.targetAddress, result);
 			break;
 		case CPUInstructionStorageType::SixteenBitMemoryData:
-			memoryManagementUnit.SetByte(instruction.targetAddress, result & 0x00FF);
-			memoryManagementUnit.SetByte(instruction.targetAddress + 1, result >> 8);
+			assert(instruction.targetAddress != NULL);
+			Set16BitDataInMemory(instruction.targetAddress, result);
 			break;
 		case CPUInstructionStorageType::EightBitRegisterData:
+			assert(instruction.targetRegister8 != NULL);
 			instruction.targetRegister8->SetData((uint8_t)result);
 			break;
 		case CPUInstructionStorageType::SixteenBitRegisterData:
+			assert(instruction.targetRegister16 != NULL);
 			instruction.targetRegister16->SetData(result);
 			break;
 		}
@@ -990,6 +1100,73 @@ namespace SHG
 		instruction.data.push_back(operand);
 	}
 
+	void CPU::CreateStandardJumpInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags)
+	{
+		instruction.instructionType = CPUInstructionType::Jump;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+		instruction.targetRegister16 = programCounter;
+		instruction.flags = flags;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreateRelativeJumpInstruction(CPUInstruction& instruction, uint8_t data, std::vector<CPUFlag> flags)
+	{
+		instruction.instructionType = CPUInstructionType::RelativeJump;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+		instruction.targetRegister16 = programCounter;
+		instruction.flags = flags;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreateCallInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags)
+	{
+		instruction.instructionType = CPUInstructionType::Call;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+		instruction.targetRegister16 = programCounter;
+		instruction.flags = flags;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreateRestartInstruction(CPUInstruction& instruction, uint8_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Restart;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+		instruction.targetRegister16 = programCounter;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreateReturnInstruction(CPUInstruction& instruction, std::vector<CPUFlag> flags)
+	{
+		instruction.instructionType = CPUInstructionType::Return;
+		instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
+		instruction.targetRegister16 = programCounter;
+		instruction.flags = flags;
+	}
+
+	void CPU::CreatePopInstruction(CPUInstruction& instruction, uint16_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Pop;
+		instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreatePushInstruction(CPUInstruction& instruction, uint16_t data)
+	{
+		instruction.instructionType = CPUInstructionType::Push;
+		instruction.storageType = CPUInstructionStorageType::EightBitMemoryData;
+		instruction.data.push_back(data);
+	}
+
+	void CPU::CreateInterruptDisableInstruction(CPUInstruction& instruction)
+	{
+		assert(false);
+	}
+
+	void CPU::CreateInterruptEnableInstruction(CPUInstruction& instruction)
+	{
+		assert(false);
+	}
+
 	bool CPU::ShouldEnableCarryFlag(const CPUInstruction& instruction, int operationResult)
 	{
 		switch (instruction.instructionType)
@@ -1080,6 +1257,16 @@ namespace SHG
 		return regHL;
 	}
 
+	Register16* CPU::GetProgramCounter()
+	{
+		return programCounter;
+	}
+
+	Register16* CPU::GetStackPointer()
+	{
+		return stackPointer;
+	}
+
 	Register16& CPU::GetRegister(CPURegisterID registerID)
 	{
 		// The CPU should always have a corresponding register for every CPURegisterID.
@@ -1127,8 +1314,19 @@ namespace SHG
 		regAF->GetLowRegister().SetBit(4, enabled);
 	}
 
+	void CPU::Set16BitDataInMemory(uint16_t address, uint16_t data)
+	{
+		memoryManagementUnit.SetByte(address, data & 0x00FF);
+		memoryManagementUnit.SetByte(address + 1, data >> 8);
+	}
+
 	CPUInstruction CPU::GetPreviouslyExecutedInstruction()
 	{
 		return previouslyExecutedInstruction;
+	}
+
+	bool CPU::GetInterruptMasterEnableFlag()
+	{
+		return interruptMasterEnableFlag;
 	}
 }

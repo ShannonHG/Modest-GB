@@ -47,6 +47,9 @@ namespace SHG
 		/// </summary>
 		void Decrement();
 
+		void Increase(uint16_t amount);
+		void Decrease(uint16_t amount);
+
 		/// <summary>
 		/// Returns the byte stored in the high 8-bit register.
 		/// </summary>

@@ -78,6 +78,8 @@ namespace SHG
 		/// <param name="enabled"></param>
 		void SetCarryFlag(bool enabled);
 
+		bool GetInterruptMasterEnableFlag();
+
 		Register8* GetRegisterA();
 		Register8* GetRegisterF();
 		Register8* GetRegisterB();
@@ -92,11 +94,16 @@ namespace SHG
 		Register16* GetRegisterDE();
 		Register16* GetRegisterHL();
 
+		Register16* GetProgramCounter();
+		Register16* GetStackPointer();
+
 		CPUInstruction GetPreviouslyExecutedInstruction();
 
 	private:
 		MemoryManagementUnit& memoryManagementUnit;
 		std::map<CPURegisterID, Register16> registers;
+
+		bool interruptMasterEnableFlag;
 
 		Register16* regAF;
 		Register16* regBC;
@@ -148,5 +155,19 @@ namespace SHG
 		void Create8BitORInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
 		void Create8BitANDInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
 		void Create8BitCompareInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
+
+		void CreateStandardJumpInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags);
+		void CreateRelativeJumpInstruction(CPUInstruction& instruction, uint8_t data, std::vector<CPUFlag> flags);
+
+		void CreateCallInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags);
+		void CreateRestartInstruction(CPUInstruction& instruction, uint8_t data);
+		void CreateReturnInstruction(CPUInstruction& instruction, std::vector<CPUFlag> flags);
+		void CreateInterruptDisableInstruction(CPUInstruction& instruction);
+		void CreateInterruptEnableInstruction(CPUInstruction& instruction);
+
+		void CreatePopInstruction(CPUInstruction& instruction, uint16_t data);
+		void CreatePushInstruction(CPUInstruction& instruction, uint16_t data);
+
+		void Set16BitDataInMemory(uint16_t address, uint16_t data);
 	};
 }

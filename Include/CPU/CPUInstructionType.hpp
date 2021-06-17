@@ -5,6 +5,8 @@ namespace SHG
 	enum class CPUInstructionType
 	{
 		Invalid,
+		NOP,
+		STOP,
 		Add, 
 		AddWithCarry,
 		Subtract,
@@ -30,6 +32,16 @@ namespace SHG
 		Swap,
 		BitTest,
 		BitReset,
-		BitSet
+		BitSet,
+		RelativeJump,
+		Jump,
+		Pop,
+		Push,
+		Call,
+		Restart,
+		Return,
+		DisableInterrupts,
+		EnableInterrupts,
+		ReturnAndEnableInterrupts
 	};
 }

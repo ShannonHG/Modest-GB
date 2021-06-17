@@ -4,6 +4,7 @@
 #include "CPU/CPUInstructionType.hpp"
 #include "Memory/Register16.hpp"
 #include "CPU/CPUInstructionStorageType.hpp"
+#include "CPU/CPUFlag.hpp"
 
 namespace SHG
 {
@@ -52,6 +53,11 @@ namespace SHG
 		/// The memory address, if applicable, to store the result of the instruction after execution.
 		/// </summary>
 		uint16_t targetAddress{};
+
+		/// <summary>
+		/// Flags that the instruction depends on.
+		/// </summary>
+		std::vector<CPUFlag> flags{};
 
 		/// <summary>
 		/// Returns a nicely formatted string representation of the instruction type.
