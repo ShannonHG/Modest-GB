@@ -114,7 +114,8 @@ namespace SHG
 		CPUInstruction instruction;
 		instruction.opcode = opcode;
 
-		if (opcode >= 0x40 && opcode < 0x80)
+		// 0x76 == HALT
+		if (opcode >= 0x40 && opcode < 0x80 && opcode != 0x76)
 		{
 			DecodeLoadAndStoreInstruction(instruction);
 		}
@@ -348,6 +349,10 @@ namespace SHG
 				instruction.instructionType = CPUInstructionType::FlipCarryFlag;
 				instruction.storageType = CPUInstructionStorageType::None;
 				break;
+			case 0x76:
+				instruction.instructionType = CPUInstructionType::HALT;
+				instruction.storageType = CPUInstructionStorageType::None;
+				break;
 			case 0xC0:
 				CreateReturnInstruction(instruction, { CPUFlag::Subtraction, CPUFlag::Zero });
 				break;
@@ -528,7 +533,8 @@ namespace SHG
 				instruction.instructionType = CPUInstructionType::Load;
 				instruction.targetRegister16 = regHL;
 				instruction.storageType = CPUInstructionStorageType::SixteenBitRegisterData;
-				instruction.data.push_back(stackPointer->GetData() + ((int8_t)Fetch8Bit()));
+				instruction.data.push_back(stackPointer->GetData());
+				instruction.data.push_back(((int8_t)Fetch8Bit()));
 				break;
 			case 0xF9:
 				Create16BitLoadInstruction(instruction, stackPointer, regHL->GetData());
@@ -568,31 +574,97 @@ namespace SHG
 		// Otherwise when the result of an operation is less than zero, 
 		// an uint would return 255 instead.
 		int result = 0;
-		bool shouldEnableHalfCarryFlag = false;
-		bool shouldEnableCarryFlag = false;
-		bool shouldEnableSubtractionFlag = false;
-		bool shouldEnableZeroFlag = false;
 
 		switch (instruction.instructionType)
 		{
 		case CPUInstructionType::Add:
 			result = instruction.data[0] + instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
-			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
-			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], instruction.data[1]);
+
+			if (instruction.targetRegister16 == NULL)
+			{
+				SetZeroFlag(result == 0);
+			}
+			else if (instruction.targetRegister16 == stackPointer)
+			{
+				SetZeroFlag(0);
+			}
+
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], instruction.data[1]));
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		case CPUInstructionType::AddWithCarry:
 		{
 			uint8_t carryFlag = GetCarryFlag();
 			result = instruction.data[0] + instruction.data[1] + carryFlag;
-			shouldEnableZeroFlag = result == 0;
-			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
-			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], (instruction.data[1] + carryFlag));
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], instruction.data[1] + carryFlag));
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			break;
+		}
+		case CPUInstructionType::Subtract:
+			result = instruction.data[0] - instruction.data[1];
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(1);
+			SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], -instruction.data[1]));
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			break;
+		case CPUInstructionType::SubtractWithCarry:
+		{
+			uint8_t carryFlag = GetCarryFlag();
+			result = instruction.data[0] - instruction.data[1] - carryFlag;
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(true);
+			SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], -(instruction.data[1] + carryFlag)));
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		}
 		case CPUInstructionType::AND:
 			result = instruction.data[0] & instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(true);
+			SetCarryFlag(false);
+			break;
+		case CPUInstructionType::XOR:
+			result = instruction.data[0] ^ instruction.data[1];
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(true);
+			SetCarryFlag(false);
+			break;
+		case CPUInstructionType::OR:
+			result = instruction.data[0] | instruction.data[1];
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(true);
+			SetCarryFlag(false);
+			break;
+		case CPUInstructionType::Compare:
+			result = instruction.data[0] - instruction.data[1];
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(true);
+			SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], -instruction.data[1]));
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			break;
+		case CPUInstructionType::Increment:
+			result = instruction.data[0] + 1;
+			if (instruction.targetRegister16 == NULL)
+			{
+				SetZeroFlag(result == 0);
+				SetSubtractionFlag(true);
+				SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], 1));
+			}
+			break;
+		case CPUInstructionType::Decrement:
+			result = instruction.data[0] - 1;
+			if (instruction.targetRegister16 == NULL)
+			{
+				SetZeroFlag(result == 0);
+				SetSubtractionFlag(true);
+				SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], 1));
+			}
 			break;
 		case CPUInstructionType::DecimalAdjust:
 		{
@@ -600,97 +672,108 @@ namespace SHG
 
 			// Adjust the result so that it becomes a Binary-coded Decimal
 			uint8_t lowerNibble = instruction.data[0] & 0x0F;
-			if (lowerNibble >= 0x0A || (GetHalfCarryFlag() == 1))
-			{
-				result += 0x06;
-				shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(lowerNibble, 0x06);
-			}
+			if (lowerNibble >= 0x0A || (GetHalfCarryFlag() == 1)) result += 0x06;
 
 			// Adjust the result so that it becomes a Binary-coded Decimal
 			uint8_t upperNibble = result >> 4;
-			if (upperNibble >= 0xA0 || (GetCarryFlag() == 1))
-			{
-				result += 0x60;
-				shouldEnableCarryFlag = result < 0 || result > std::numeric_limits<uint8_t>::max();
-			}
+			if (upperNibble >= 0xA0 || (GetCarryFlag() == 1)) result += 0x60;
+
+			SetZeroFlag(result == 0);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		}
-		case CPUInstructionType::Decrement:
-			result = instruction.data[0] - 1;
-			shouldEnableZeroFlag = result == 0;
-			break;
-		case CPUInstructionType::Increment:
-			result = instruction.data[0] + 1;
-			break;
-		case CPUInstructionType::Load:
-			result = instruction.data[0];
-			break;
-		case CPUInstructionType::OR:
-			result = instruction.data[0] | instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
-			break;
-		case CPUInstructionType::Subtract:
-			result = instruction.data[0] - instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
-			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
-			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], -instruction.data[1]);
-			break;
-		case CPUInstructionType::SubtractWithCarry:
-		{
-			uint8_t carryFlag = GetCarryFlag();
-			result = instruction.data[0] - instruction.data[1] - carryFlag;
-			shouldEnableZeroFlag = result == 0;
-			shouldEnableCarryFlag = ShouldEnableCarryFlag(instruction, result);
-			shouldEnableHalfCarryFlag = ShouldEnableHalfCarryFlag(instruction.data[0], -(instruction.data[1] + carryFlag));
-			break;
-		}
-		case CPUInstructionType::XOR:
-			result = instruction.data[0] ^ instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
-			break;
-		case CPUInstructionType::Compare:
-			result = instruction.data[0] - instruction.data[1];
-			shouldEnableZeroFlag = result == 0;
-			break;
-		case CPUInstructionType::FlipCarryFlag:
-			shouldEnableCarryFlag = GetCarryFlag() ^ 1;
-			break;
-		case CPUInstructionType::SetCarryFlag:
-			shouldEnableCarryFlag = true;
-			break;
 		case CPUInstructionType::OnesComplement:
 			result = instruction.data[0] ^ 0x00FF;
+			SetSubtractionFlag(true);
+			SetHalfCarryFlag(true);
 			break;
 		case CPUInstructionType::RotateLeft:
 			result = (instruction.data[0] << 1) | (instruction.data[0] >> 7);
+			SetZeroFlag(false);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			break;
+		case CPUInstructionType::RotateLeftThroughCarry:
+			result = (instruction.data[0] << 1) | (GetCarryFlag());
+			SetZeroFlag(false);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(instruction.data[0] & 0b10000000);
 			break;
 		case CPUInstructionType::RotateRight:
 			result = (instruction.data[0] >> 1) | (instruction.data[0] << 7);
-			break;
-		case CPUInstructionType::RotateLeftThroughCarry:
-			shouldEnableCarryFlag = instruction.data[0] & 0b10000000;
-			result = (instruction.data[0] << 1) | (GetCarryFlag());
+			SetZeroFlag(false);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		case CPUInstructionType::RotateRightThroughCarry:
-			shouldEnableCarryFlag = instruction.data[0] & 1;
 			result = (instruction.data[0] >> 1) | (GetCarryFlag() << 7);
+			SetZeroFlag(false);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(instruction.data[0] & 1);
 			break;
 		case CPUInstructionType::ArithmeticLeftShift:
 			result = instruction.data[0] << 1;
-			break;
-		case CPUInstructionType::ArithmeticRightShift:
-			// Shift right while retaining the sign bit (most significant bit)
-			result = (instruction.data[0] >> 1) & (instruction.data[0] & 0b10000000);
-			break;
-		case CPUInstructionType::LogicalRightShift:
-			result = instruction.data[0] >> 1;
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		case CPUInstructionType::Swap:
 			// Swap the low and high nibbles
 			result = ((instruction.data[0] & 0x0F) << 4) | ((instruction.data[0] & 0xF0) >> 4);
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(false);
+			break;
+		case CPUInstructionType::ArithmeticRightShift:
+			// Shift right while retaining the sign bit (most significant bit)
+			result = (instruction.data[0] >> 1) & (instruction.data[0] & 0b10000000);
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			break;
+		case CPUInstructionType::LogicalRightShift:
+			result = instruction.data[0] >> 1;
+			SetZeroFlag(result == 0);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
 			break;
 		case CPUInstructionType::BitTest:
-			shouldEnableZeroFlag = ((instruction.data[0]) | (1 << instruction.data[1])) >> instruction.data[1];
+			SetZeroFlag(((instruction.data[0]) | (1 << instruction.data[1])) >> instruction.data[1]);
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(true);
+			break;
+		case CPUInstructionType::FlipCarryFlag:
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(GetCarryFlag() ^ 1);
+			break;
+		case CPUInstructionType::SetCarryFlag:
+			SetSubtractionFlag(false);
+			SetHalfCarryFlag(false);
+			SetCarryFlag(true);
+			break;
+		case CPUInstructionType::Load:
+			if (instruction.data.size() == 2)
+			{
+				result = instruction.data[0] + instruction.data[1];
+				SetZeroFlag(false);
+				SetSubtractionFlag(false);
+				SetHalfCarryFlag(ShouldEnableHalfCarryFlag(instruction.data[0], instruction.data[1]));
+				SetCarryFlag(ShouldEnableCarryFlag(instruction.storageType, result));
+			}
+			else
+			{
+				result = instruction.data[0];
+			}
 			break;
 		case CPUInstructionType::BitReset:
 			result = (instruction.data[0]) & ~(1 << instruction.data[1]);
@@ -725,12 +808,13 @@ namespace SHG
 			result = memoryManagementUnit.GetByte(stackPointer->GetData()) | (memoryManagementUnit.GetByte(stackPointer->GetData() + 1) << 8);
 			stackPointer->Increase(2);
 			break;
+		case CPUInstructionType::STOP:
+			break;
+		case CPUInstructionType::NOP:
+			break;
+		case CPUInstructionType::HALT:
+			break;
 		}
-
-		SetSubtractionFlag(shouldEnableSubtractionFlag);
-		SetZeroFlag(shouldEnableZeroFlag);
-		SetCarryFlag(shouldEnableCarryFlag);
-		SetHalfCarryFlag(shouldEnableHalfCarryFlag);
 
 		switch (instruction.storageType)
 		{
@@ -1159,34 +1243,26 @@ namespace SHG
 
 	void CPU::CreateInterruptDisableInstruction(CPUInstruction& instruction)
 	{
-		assert(false);
+		instruction.instructionType = CPUInstructionType::DisableInterrupts;
+		instruction.storageType = CPUInstructionStorageType::None;
 	}
 
 	void CPU::CreateInterruptEnableInstruction(CPUInstruction& instruction)
 	{
-		assert(false);
+		instruction.instructionType = CPUInstructionType::EnableInterrupts;
+		instruction.storageType = CPUInstructionStorageType::None;
 	}
 
-	bool CPU::ShouldEnableCarryFlag(const CPUInstruction& instruction, int operationResult)
+	bool CPU::ShouldEnableCarryFlag(CPUInstructionStorageType storageType, int operationResult)
 	{
-		switch (instruction.instructionType)
+		switch (storageType)
 		{
-		case CPUInstructionType::Add:
-		case CPUInstructionType::AddWithCarry:
-			switch (instruction.storageType)
-			{
-			case CPUInstructionStorageType::EightBitMemoryData:
-			case CPUInstructionStorageType::EightBitRegisterData:
-				return operationResult > std::numeric_limits<uint8_t>::max();
-			case CPUInstructionStorageType::SixteenBitMemoryData:
-			case CPUInstructionStorageType::SixteenBitRegisterData:
-				return operationResult > std::numeric_limits<uint16_t>::max();
-				break;
-
-			}
-		case CPUInstructionType::Subtract:
-		case CPUInstructionType::SubtractWithCarry:
-			return operationResult < 0;
+		case CPUInstructionStorageType::EightBitMemoryData:
+		case CPUInstructionStorageType::EightBitRegisterData:
+			return operationResult < 0 || operationResult > std::numeric_limits<uint8_t>::max();
+		case CPUInstructionStorageType::SixteenBitMemoryData:
+		case CPUInstructionStorageType::SixteenBitRegisterData:
+			return operationResult < 0 || operationResult > std::numeric_limits<uint16_t>::max();
 		default:
 			return false;
 		}
@@ -1328,5 +1404,10 @@ namespace SHG
 	bool CPU::GetInterruptMasterEnableFlag()
 	{
 		return interruptMasterEnableFlag;
+	}
+
+	void CPU::SetInterruptMasterEnableFlag(bool enable)
+	{
+		interruptMasterEnableFlag = enable;
 	}
 }

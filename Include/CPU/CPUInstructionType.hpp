@@ -7,6 +7,7 @@ namespace SHG
 		Invalid,
 		NOP,
 		STOP,
+		HALT,
 		Add, 
 		AddWithCarry,
 		Subtract,

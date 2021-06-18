@@ -5,23 +5,257 @@
 
 namespace SHG
 {
-	void Test8BitAddition(CPU& processor, Register8& targetRegister);
-	void Test16BitAddition(CPU& processor, Register16& targetRegister);
+	void Test8BitAddition(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 2;
+		uint8_t operand2 = 5;
 
-	void Test8BitSubtraction(CPU& processor, Register8& targetRegister);
-	void Test8BitAND(CPU& processor, Register8& targetRegister);
-	void Test8BitXOR(CPU& processor, Register8& targetRegister);
-	void Test8BitOR(CPU& processor, Register8& targetRegister);
-	void Test8BitAddWithCarry(CPU& processor, Register8& targetRegister);
-	void Test8BitSubtractWithCarry(CPU& processor, Register8& targetRegister);
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
 
-	void Test8BitDecrement(CPU& processor, Register8& targetRegister);
-	void Test16BitDecrement(CPU& processor, Register16& targetRegister);
+		processor.Cycle();
 
-	void Test8BitIncrement(CPU& processor, Register8& targetRegister);
-	void Test16BitIncrement(CPU& processor, Register16& targetRegister);
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
 
-	void Test8BitCompare(CPU& processor, Register8& targetRegister);
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2);
+	}
+
+	void Test16BitAddition(CPU& processor, Register16* targetRegister)
+	{
+		uint16_t operand1 = 300;
+		uint16_t operand2 = 500;
+
+		processor.GetRegister(CPURegisterID::HL).SetData(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), operand1 + operand2);
+	}
+
+	void Test8BitSubtraction(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 7;
+		uint8_t operand2 = 5;
+
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Subtract);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2);
+	}
+
+	void Test8BitAND(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 2;
+		uint8_t operand2 = 5;
+
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AND);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 & operand2);
+	}
+
+	void Test8BitXOR(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 2;
+		uint8_t operand2 = 5;
+
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::XOR);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 ^ operand2);
+	}
+
+	void Test8BitOR(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 2;
+		uint8_t operand2 = 5;
+
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::OR);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 | operand2);
+	}
+
+	void Test8BitAddWithCarry(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 2;
+		uint8_t operand2 = 5;
+		uint8_t carryFlag = 1;
+
+		processor.SetCarryFlag((bool)carryFlag);
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AddWithCarry);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2 + carryFlag);
+	}
+
+	void Test8BitSubtractWithCarry(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 8;
+		uint8_t operand2 = 5;
+		uint8_t carryFlag = 1;
+
+		processor.SetCarryFlag((bool)carryFlag);
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::SubtractWithCarry);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2 - carryFlag);
+	}
+
+	void Test8BitIncrement(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand = 5;
+
+		targetRegister->SetData(operand);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(targetRegister->GetData(), operand + 1);
+	}
+
+	void Test16BitIncrement(CPU& processor, Register16* targetRegister)
+	{
+		uint8_t operand = 5;
+
+		targetRegister->SetData(operand);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
+
+		EXPECT_EQ(targetRegister->GetData(), operand + 1);
+	}
+
+	void Test8BitDecrement(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand = 5;
+
+		targetRegister->SetData(operand);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
+
+		EXPECT_EQ(targetRegister->GetData(), operand - 1);
+	}
+
+	void Test16BitDecrement(CPU& processor, Register16* targetRegister)
+	{
+		uint8_t operand = 5;
+
+		targetRegister->SetData(operand);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
+		EXPECT_EQ(prevInstruction.data[0], operand);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
+
+		EXPECT_EQ(targetRegister->GetData(), operand - 1);
+	}
+
+	void Test8BitCompare(CPU& processor, Register8* targetRegister)
+	{
+		uint8_t operand1 = 5;
+		uint8_t operand2 = 5;
+
+		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		targetRegister->SetData(operand2);
+
+		processor.Cycle();
+
+		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
+
+		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Compare);
+		EXPECT_EQ(prevInstruction.data[0], operand1);
+		EXPECT_EQ(prevInstruction.data[1], operand2);
+		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::None);
+
+		EXPECT_EQ(processor.GetZeroFlag(), 1);
+	}
 
 	// INC BC
 	// Opcode: 0x03
@@ -30,7 +264,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x03);
 		auto processor = CPU(mmu);
 
-		Test16BitIncrement(processor, processor.GetRegister(CPURegisterID::BC));
+		Test16BitIncrement(processor, processor.GetRegisterBC());
 	}
 
 	// INC DE
@@ -40,7 +274,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x13);
 		auto processor = CPU(mmu);
 
-		Test16BitIncrement(processor, processor.GetRegister(CPURegisterID::DE));
+		Test16BitIncrement(processor, processor.GetRegisterDE());
 	}
 
 	// INC HL
@@ -50,7 +284,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x23);
 		auto processor = CPU(mmu);
 
-		Test16BitIncrement(processor, processor.GetRegister(CPURegisterID::HL));
+		Test16BitIncrement(processor, processor.GetRegisterHL());
 	}
 
 	// INC SP
@@ -60,7 +294,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x33);
 		auto processor = CPU(mmu);
 
-		Test16BitIncrement(processor, processor.GetRegister(CPURegisterID::SP));
+		Test16BitIncrement(processor, processor.GetStackPointer());
 	}
 
 	// INC B
@@ -70,7 +304,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x04);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitIncrement(processor, processor.GetRegisterB());
 	}
 
 	// INC D
@@ -80,7 +314,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x14);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitIncrement(processor, processor.GetRegisterD());
 	}
 
 	// INC H
@@ -90,7 +324,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x24);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitIncrement(processor, processor.GetRegisterH());
 	}
 
 	// INC (HL)
@@ -104,7 +338,7 @@ namespace SHG
 		auto processor = CPU(mmu);
 
 		mmu.SetByte(address, value);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
@@ -118,7 +352,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x05);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitDecrement(processor, processor.GetRegisterB());
 	}
 
 	// DEC D
@@ -128,7 +362,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x15);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitDecrement(processor, processor.GetRegisterD());
 	}
 
 	// DEC H
@@ -138,7 +372,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x25);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitDecrement(processor, processor.GetRegisterH());
 	}
 
 	// DEC (HL)
@@ -152,7 +386,7 @@ namespace SHG
 		auto processor = CPU(mmu);
 
 		mmu.SetByte(address, value);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
@@ -170,10 +404,10 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x27);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1 + operand2);
+		processor.GetRegisterA()->SetData(operand1 + operand2);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), expectedResult);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), expectedResult);
 	}
 
 	// SCF
@@ -196,7 +430,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x09);
 		auto processor = CPU(mmu);
 
-		Test16BitAddition(processor, processor.GetRegister(CPURegisterID::BC));
+		Test16BitAddition(processor, processor.GetRegisterBC());
 	}
 
 	// ADD HL, DE
@@ -206,7 +440,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x19);
 		auto processor = CPU(mmu);
 
-		Test16BitAddition(processor, processor.GetRegister(CPURegisterID::DE));
+		Test16BitAddition(processor, processor.GetRegisterDE());
 	}
 
 	// ADD HL, HL
@@ -218,10 +452,10 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x29);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::HL).SetData(value);
+		processor.GetRegisterHL()->SetData(value);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), value * 2);
+		EXPECT_EQ(processor.GetRegisterHL()->GetData(), value * 2);
 	}
 
 	// ADD HL, SP
@@ -231,7 +465,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x39);
 		auto processor = CPU(mmu);
 
-		Test16BitAddition(processor, processor.GetRegister(CPURegisterID::SP));
+		Test16BitAddition(processor, processor.GetStackPointer());
 	}
 
 	// DEC BC
@@ -241,7 +475,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x0B);
 		auto processor = CPU(mmu);
 
-		Test16BitDecrement(processor, processor.GetRegister(CPURegisterID::BC));
+		Test16BitDecrement(processor, processor.GetRegisterBC());
 	}
 
 	// DEC DE
@@ -251,7 +485,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x1B);
 		auto processor = CPU(mmu);
 
-		Test16BitDecrement(processor, processor.GetRegister(CPURegisterID::DE));
+		Test16BitDecrement(processor, processor.GetRegisterDE());
 	}
 
 	// DEC HL
@@ -261,7 +495,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x2B);
 		auto processor = CPU(mmu);
 
-		Test16BitDecrement(processor, processor.GetRegister(CPURegisterID::HL));
+		Test16BitDecrement(processor, processor.GetRegisterHL());
 	}
 
 	// DEC SP
@@ -271,7 +505,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x3B);
 		auto processor = CPU(mmu);
 
-		Test16BitDecrement(processor, processor.GetRegister(CPURegisterID::SP));
+		Test16BitDecrement(processor, processor.GetStackPointer());
 	}
 
 	// INC C
@@ -281,7 +515,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x0C);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitIncrement(processor, processor.GetRegisterC());
 	}
 
 	// INC E
@@ -291,7 +525,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x1C);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitIncrement(processor, processor.GetRegisterE());
 	}
 
 	// INC L
@@ -301,7 +535,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x2C);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitIncrement(processor, processor.GetRegisterL());
 	}
 
 	// INC A
@@ -311,7 +545,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x3C);
 		auto processor = CPU(mmu);
 
-		Test8BitIncrement(processor, processor.GetRegister(CPURegisterID::AF).GetHighRegister());
+		Test8BitIncrement(processor, processor.GetRegisterA());
 	}
 
 	// DEC C
@@ -321,7 +555,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x0D);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitDecrement(processor, processor.GetRegisterC());
 	}
 
 	// DEC E
@@ -331,7 +565,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x1D);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitDecrement(processor, processor.GetRegisterE());
 	}
 
 	// DEC L
@@ -341,7 +575,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x2D);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitDecrement(processor, processor.GetRegisterL());
 	}
 
 	// DEC A
@@ -351,7 +585,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x3D);
 		auto processor = CPU(mmu);
 
-		Test8BitDecrement(processor, processor.GetRegister(CPURegisterID::AF).GetHighRegister());
+		Test8BitDecrement(processor, processor.GetRegisterA());
 	}
 
 	// CPL
@@ -363,10 +597,10 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x2F);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand);
+		processor.GetRegisterA()->SetData(operand);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand ^ 0x00FF);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand ^ 0x00FF);
 	}
 
 	// CCF
@@ -396,7 +630,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x80);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitAddition(processor, processor.GetRegisterB());
 	}
 
 	// ADD A, C
@@ -406,7 +640,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x81);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitAddition(processor, processor.GetRegisterC());
 	}
 
 	// ADD A, D
@@ -416,7 +650,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x82);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitAddition(processor, processor.GetRegisterD());
 	}
 
 	// ADD A, E
@@ -426,7 +660,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x83);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitAddition(processor, processor.GetRegisterE());
 	}
 
 	// ADD A, H
@@ -436,7 +670,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x84);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitAddition(processor, processor.GetRegisterH());
 	}
 
 	// ADD A, L
@@ -446,7 +680,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x85);
 		auto processor = CPU(mmu);
 
-		Test8BitAddition(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitAddition(processor, processor.GetRegisterL());
 	}
 
 	// ADD A, (HL)
@@ -462,12 +696,12 @@ namespace SHG
 
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 + operand2);
 	}
 
 	// ADD A, A
@@ -479,10 +713,10 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x87);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(value);
+		processor.GetRegisterA()->SetData(value);
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), value * 2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), value * 2);
 	}
 
 	// ADC A, B
@@ -492,7 +726,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x88);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterB());
 	}
 
 	// ADC A, C
@@ -502,7 +736,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x89);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterC());
 	}
 
 	// ADC A, D
@@ -512,7 +746,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x8A);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterD());
 	}
 
 	// ADC A, E
@@ -522,7 +756,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x8B);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterE());
 	}
 
 	// ADC A, H
@@ -532,7 +766,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x8C);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterH());
 	}
 
 	// ADC A, L
@@ -542,7 +776,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x8D);
 		auto processor = CPU(mmu);
 
-		Test8BitAddWithCarry(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitAddWithCarry(processor, processor.GetRegisterL());
 	}
 
 	// ADC A, (HL)
@@ -560,12 +794,12 @@ namespace SHG
 		mmu.SetByte(address, operand2);
 
 		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 + operand2 + carryFlag);
 	}
 
 	// ADC A, A
@@ -579,11 +813,11 @@ namespace SHG
 		auto processor = CPU(mmu);
 
 		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		processor.GetRegisterA()->SetData(operand1);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand1 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 + operand1 + carryFlag);
 	}
 
 	// SUB A, B
@@ -593,7 +827,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x90);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterB());
 	}
 
 	// SUB A, C
@@ -603,7 +837,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x91);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterC());
 	}
 
 	// SUB A, D
@@ -613,7 +847,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x92);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterD());
 	}
 
 	// SUB A, E
@@ -623,7 +857,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x93);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterE());
 	}
 
 	// SUB A, H
@@ -633,7 +867,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x94);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterH());
 	}
 
 	// SUB A, L
@@ -643,7 +877,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x95);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtraction(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitSubtraction(processor, processor.GetRegisterL());
 	}
 
 	// SUB A, (HL)
@@ -659,12 +893,12 @@ namespace SHG
 
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 - operand2);
 	}
 
 	// SUB A, A
@@ -676,11 +910,11 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x97);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand);
+		processor.GetRegisterA()->SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), 0);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), 0);
 	}
 
 	// SBC A, B
@@ -690,7 +924,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x98);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterB());
 	}
 
 	// SBC A, C
@@ -700,7 +934,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x99);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterC());
 	}
 
 	// SBC A, D
@@ -710,7 +944,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x9A);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterD());
 	}
 
 	// SBC A, E
@@ -720,7 +954,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x9B);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterE());
 	}
 
 	// SBC A, H
@@ -730,7 +964,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x9C);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterH());
 	}
 
 	// SBC A, L
@@ -740,7 +974,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0x9D);
 		auto processor = CPU(mmu);
 
-		Test8BitSubtractWithCarry(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitSubtractWithCarry(processor, processor.GetRegisterL());
 	}
 
 	// SBC A, (HL)
@@ -758,12 +992,12 @@ namespace SHG
 		mmu.SetByte(address, operand2);
 
 		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2 - carryFlag);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 - operand2 - carryFlag);
 	}
 
 	// SBC A, A
@@ -778,12 +1012,12 @@ namespace SHG
 		auto processor = CPU(mmu);
 
 		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
+		processor.GetRegisterA()->SetData(operand1);
 
 		processor.Cycle();
 
 		// TODO: Re-assess this
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), (uint8_t)-1);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), (uint8_t)-1);
 	}
 
 	// AND A, B
@@ -793,7 +1027,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA0);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitAND(processor, processor.GetRegisterB());
 	}
 
 	// AND A, C
@@ -803,7 +1037,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA1);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitAND(processor, processor.GetRegisterC());
 	}
 
 	// AND A, D
@@ -813,7 +1047,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA2);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitAND(processor, processor.GetRegisterD());
 	}
 
 	// AND A, E
@@ -823,7 +1057,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA3);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitAND(processor, processor.GetRegisterE());
 	}
 
 	// AND A, H
@@ -833,7 +1067,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA4);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitAND(processor, processor.GetRegisterH());
 	}
 
 	// AND A, L
@@ -843,7 +1077,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA5);
 		auto processor = CPU(mmu);
 
-		Test8BitAND(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitAND(processor, processor.GetRegisterL());
 	}
 
 	// AND A, (HL)
@@ -859,12 +1093,12 @@ namespace SHG
 
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 & operand2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 & operand2);
 	}
 
 	// AND A, A
@@ -876,11 +1110,11 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA7);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand);
+		processor.GetRegisterA()->SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand & operand);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand & operand);
 	}
 
 	// XOR A, B
@@ -890,7 +1124,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA8);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitXOR(processor, processor.GetRegisterB());
 	}
 
 	// XOR A, C
@@ -900,7 +1134,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xA9);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitXOR(processor, processor.GetRegisterC());
 	}
 
 	// XOR A, D
@@ -910,7 +1144,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xAA);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitXOR(processor, processor.GetRegisterD());
 	}
 
 	// XOR A, E
@@ -920,7 +1154,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xAB);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitXOR(processor, processor.GetRegisterE());
 	}
 
 	// XOR A, H
@@ -930,7 +1164,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xAC);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitXOR(processor, processor.GetRegisterH());
 	}
 
 	// XOR A, L
@@ -940,7 +1174,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xAD);
 		auto processor = CPU(mmu);
 
-		Test8BitXOR(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitXOR(processor, processor.GetRegisterL());
 	}
 
 	// XOR A, (HL)
@@ -956,12 +1190,12 @@ namespace SHG
 
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 ^ operand2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 ^ operand2);
 	}
 
 	// XOR A, A
@@ -973,11 +1207,11 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xAF);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand);
+		processor.GetRegisterA()->SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand ^ operand);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand ^ operand);
 	}
 
 	// OR A, B
@@ -987,7 +1221,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB0);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitOR(processor, processor.GetRegisterB());
 	}
 
 	// OR A, C
@@ -997,7 +1231,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB1);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitOR(processor, processor.GetRegisterC());
 	}
 
 	// OR A, D
@@ -1007,7 +1241,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB2);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitOR(processor, processor.GetRegisterD());
 	}
 
 	// OR A, E
@@ -1017,7 +1251,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB3);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitOR(processor, processor.GetRegisterE());
 	}
 
 	// OR A, H
@@ -1027,7 +1261,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB4);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitOR(processor, processor.GetRegisterH());
 	}
 
 	// OR A, L
@@ -1037,7 +1271,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB5);
 		auto processor = CPU(mmu);
 
-		Test8BitOR(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitOR(processor, processor.GetRegisterL());
 	}
 
 	// OR A, (HL)
@@ -1053,12 +1287,12 @@ namespace SHG
 
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		processor.GetRegister(CPURegisterID::HL).SetData(address);
+		processor.GetRegisterA()->SetData(operand1);
+		processor.GetRegisterHL()->SetData(address);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 | operand2);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand1 | operand2);
 	}
 
 	// OR A, A
@@ -1070,11 +1304,11 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB7);
 		auto processor = CPU(mmu);
 
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand);
+		processor.GetRegisterA()->SetData(operand);
 
 		processor.Cycle();
 
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand | operand);
+		EXPECT_EQ(processor.GetRegisterA()->GetData(), operand | operand);
 	}
 
 	// CP A, B
@@ -1084,7 +1318,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB8);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::BC).GetHighRegister());
+		Test8BitCompare(processor, processor.GetRegisterB());
 	}
 
 	// CP A, C
@@ -1094,7 +1328,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xB9);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::BC).GetLowRegister());
+		Test8BitCompare(processor, processor.GetRegisterC());
 	}
 
 	// CP A, D
@@ -1104,7 +1338,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xBA);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::DE).GetHighRegister());
+		Test8BitCompare(processor, processor.GetRegisterD());
 	}
 
 	// CP A, E
@@ -1114,7 +1348,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xBB);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::DE).GetLowRegister());
+		Test8BitCompare(processor, processor.GetRegisterE());
 	}
 
 	// CP A, H
@@ -1124,7 +1358,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xBC);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::HL).GetHighRegister());
+		Test8BitCompare(processor, processor.GetRegisterH());
 	}
 
 	// CP A, L
@@ -1134,7 +1368,7 @@ namespace SHG
 		auto mmu = CreatePresetMemoryManagementUnit(0xBD);
 		auto processor = CPU(mmu);
 
-		Test8BitCompare(processor, processor.GetRegister(CPURegisterID::HL).GetLowRegister());
+		Test8BitCompare(processor, processor.GetRegisterL());
 	}
 
 	// CP A, (HL)
@@ -1346,258 +1580,6 @@ namespace SHG
 
 		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
 		processor.Cycle();
-
-		EXPECT_EQ(processor.GetZeroFlag(), 1);
-	}
-
-	void Test8BitAddition(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 2;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2);
-	}
-
-	void Test16BitAddition(CPU& processor, Register16& targetRegister)
-	{
-		uint16_t operand1 = 300;
-		uint16_t operand2 = 500;
-
-		processor.GetRegister(CPURegisterID::HL).SetData(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Add);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::HL).GetData(), operand1 + operand2);
-	}
-
-	void Test8BitSubtraction(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 7;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Subtract);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2);
-	}
-
-	void Test8BitAND(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 2;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AND);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 & operand2);
-	}
-
-	void Test8BitXOR(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 2;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::XOR);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 ^ operand2);
-	}
-
-	void Test8BitOR(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 2;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::OR);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 | operand2);
-	}
-
-	void Test8BitAddWithCarry(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 2;
-		uint8_t operand2 = 5;
-		uint8_t carryFlag = 1;
-
-		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::AddWithCarry);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 + operand2 + carryFlag);
-	}
-
-	void Test8BitSubtractWithCarry(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 8;
-		uint8_t operand2 = 5;
-		uint8_t carryFlag = 1;
-
-		processor.SetCarryFlag((bool)carryFlag);
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::SubtractWithCarry);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(processor.GetRegister(CPURegisterID::AF).GetHighByte(), operand1 - operand2 - carryFlag);
-	}
-
-	void Test8BitIncrement(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand = 5;
-
-		targetRegister.SetData(operand);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
-		EXPECT_EQ(prevInstruction.data[0], operand);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(targetRegister.GetData(), operand + 1);
-	}
-
-	void Test16BitIncrement(CPU& processor, Register16& targetRegister)
-	{
-		uint8_t operand = 5;
-
-		targetRegister.SetData(operand);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Increment);
-		EXPECT_EQ(prevInstruction.data[0], operand);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
-
-		EXPECT_EQ(targetRegister.GetData(), operand + 1);
-	}
-
-	void Test8BitDecrement(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand = 5;
-
-		targetRegister.SetData(operand);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
-		EXPECT_EQ(prevInstruction.data[0], operand);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::EightBitRegisterData);
-
-		EXPECT_EQ(targetRegister.GetData(), operand - 1);
-	}
-
-	void Test16BitDecrement(CPU& processor, Register16& targetRegister)
-	{
-		uint8_t operand = 5;
-
-		targetRegister.SetData(operand);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Decrement);
-		EXPECT_EQ(prevInstruction.data[0], operand);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::SixteenBitRegisterData);
-
-		EXPECT_EQ(targetRegister.GetData(), operand - 1);
-	}
-
-	void Test8BitCompare(CPU& processor, Register8& targetRegister)
-	{
-		uint8_t operand1 = 5;
-		uint8_t operand2 = 5;
-
-		processor.GetRegister(CPURegisterID::AF).SetHighByte(operand1);
-		targetRegister.SetData(operand2);
-
-		processor.Cycle();
-
-		CPUInstruction prevInstruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(prevInstruction.instructionType, CPUInstructionType::Compare);
-		EXPECT_EQ(prevInstruction.data[0], operand1);
-		EXPECT_EQ(prevInstruction.data[1], operand2);
-		EXPECT_EQ(prevInstruction.storageType, CPUInstructionStorageType::None);
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}

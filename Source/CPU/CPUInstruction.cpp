@@ -54,7 +54,7 @@ namespace SHG
 		case CPUInstructionType::SetCarryFlag:
 			return "Set Carry Flag";
 		case CPUInstructionType::OnesComplement:
-			return "Ones Complement";
+			return "Ones Complement (CPL)";
 		case CPUInstructionType::RotateLeft:
 			return "Rotate Left";
 		case CPUInstructionType::RotateRight:
@@ -93,6 +93,12 @@ namespace SHG
 			return "Enable Interrupts (EI)";
 		case CPUInstructionType::ReturnAndEnableInterrupts:
 			return "Return and Enable Interrupts (RETI)";
+		case CPUInstructionType::NOP:
+			return "NOP";
+		case CPUInstructionType::STOP:
+			return "STOP";
+		case CPUInstructionType::HALT:
+			return "HALT";
 		default:
 			Logger::WriteError("Invalid instruction type encountered.");
 			assert(false);

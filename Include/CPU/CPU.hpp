@@ -78,6 +78,7 @@ namespace SHG
 		/// <param name="enabled"></param>
 		void SetCarryFlag(bool enabled);
 
+		void SetInterruptMasterEnableFlag(bool enable);
 		bool GetInterruptMasterEnableFlag();
 
 		Register8* GetRegisterA();
@@ -127,7 +128,7 @@ namespace SHG
 		uint8_t GenerateDataFromOpcode(uint8_t opcode);
 		Register8* Get8BitRegisterFromOpcode(uint8_t opcode);
 
-		bool ShouldEnableCarryFlag(const CPUInstruction& instruction, int operationResult);
+		bool ShouldEnableCarryFlag(CPUInstructionStorageType storageType, int operationResult);
 		bool ShouldEnableHalfCarryFlag(uint16_t operand1, uint16_t operand2);
 
 		void Create8BitIncrementInstruction(CPUInstruction& instruction, Register8* targetRegister);
