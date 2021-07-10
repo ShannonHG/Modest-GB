@@ -36,6 +36,7 @@ namespace SHG
 
 		file.close();
 
+		InitMBC();
 		Logger::Write("ROM Loaded successfully");
 		return true;
 	}
@@ -50,8 +51,27 @@ namespace SHG
 			address++;
 		}
 
+		InitMBC();
 		Logger::Write("ROM Loaded successfully");
 		return true;
+	}
+
+	void Cartridge::InitMBC()
+	{
+		if (memoryBankController != NULL)
+		{
+			Logger::Write("[Cartridge] Initializing MBC");
+			if (GetRAMSize() > 0)
+			{
+				Logger::Write("[Cartridge] Attaching RAM to MBC");
+				memoryBankController->AttachRAM(ram);
+			}
+			if (GetROMSize() > 0)
+			{
+				Logger::Write("[Cartridge] Attaching ROM to MBC");
+				memoryBankController->AttachROM(rom);
+			}
+		}
 	}
 
 	void Cartridge::DecodeROMByte(uint8_t byte, uint16_t address)
@@ -256,6 +276,7 @@ namespace SHG
 
 	bool Cartridge::IsAddressAvailable(uint16_t address)
 	{
-		return memoryBankController != NULL && memoryBankController->IsAddressAvailable(address);
+		return (memoryBankController != NULL && memoryBankController->IsAddressAvailable(address)) ||
+			(memoryBankControllerType == MemoryBankControllerType::None && rom.size() > address);
 	}
 }

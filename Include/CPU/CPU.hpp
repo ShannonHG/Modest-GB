@@ -3,172 +3,684 @@
 #include <array>
 #include <map>
 #include <vector>
-#include "CPUInstruction.hpp"
-#include "Memory/MemoryManagementUnit.hpp"
-#include "CPU/CPURegisterID.hpp"
+#include <sstream>
+#include "CPU/CPUInstruction.hpp"
+#include "Memory/DataStorageDevice.hpp"
 #include "Memory/Register16.hpp"
 
 namespace SHG
 {
-	/// <summary>
-	/// Data structure representing a GameBoy's central processing unit.
-	/// </summary>
 	class CPU
 	{
 	public:
-		CPU(MemoryManagementUnit& mmu);
-
-		/// <summary>
-		/// Returns the 16-bit register with the specified ID
-		/// </summary>
-		/// <param name="registerID"></param>
-		/// <returns></returns>
-		Register16& GetRegister(CPURegisterID registerID);
-
-		/// <summary>
-		/// Perform a single instruction cycle, and returns the duration of the executed instruction.
-		/// </summary>
+		CPU(DataStorageDevice& memoryManagementUnit);
 		uint32_t Cycle();
+		void ResetToDefaultState();
 
-		/// <summary>
-		/// Returns the value of the zero flag.
-		/// </summary>
-		/// <returns></returns>
 		uint8_t GetZeroFlag();
-
-		/// <summary>
-		/// Returns the value of the subtraction flag.
-		/// </summary>
-		/// <returns></returns>
 		uint8_t GetSubtractionFlag();
-
-		/// <summary>
-		/// Returns the value of the half carry flag.
-		/// </summary>
-		/// <returns></returns>
 		uint8_t GetHalfCarryFlag();
-
-		/// <summary>
-		/// Returns the value of the carry flag.
-		/// </summary>
-		/// <returns></returns>
 		uint8_t GetCarryFlag();
 
-		/// <summary>
-		/// Sets the value of the zero flag.
-		/// </summary>
-		/// <param name="enabled"></param>
-		void SetZeroFlag(bool enabled);
+		void ChangeZeroFlag(bool isSet);
+		void ChangeSubtractionFlag(bool isSet);
+		void ChangeHalfCarryFlag(bool isSet);
+		void ChangeCarryFlag(bool isSet);
 
-		/// <summary>
-		/// Sets the value of the subtraction flag.
-		/// </summary>
-		/// <param name="enabled"></param>
-		void SetSubtractionFlag(bool enabled);
-
-		/// <summary>
-		/// Sets the value of the half carry flag.
-		/// </summary>
-		/// <param name="enabled"></param>
-		void SetHalfCarryFlag(bool enabled);
-
-		/// <summary>
-		/// Sets the value of the carry flag.
-		/// </summary>
-		/// <param name="enabled"></param>
-		void SetCarryFlag(bool enabled);
-
-		void SetInterruptMasterEnableFlag(bool enable);
+		void ChangeInterruptMasterEnableFlag(bool isSet);
 		bool GetInterruptMasterEnableFlag();
 
-		Register8* GetRegisterA();
-		Register8* GetRegisterF();
-		Register8* GetRegisterB();
-		Register8* GetRegisterC();
-		Register8* GetRegisterD();
-		Register8* GetRegisterE();
-		Register8* GetRegisterH();
-		Register8* GetRegisterL();
+		Register8& GetRegisterA();
+		Register8& GetRegisterF();
+		Register8& GetRegisterB();
+		Register8& GetRegisterC();
+		Register8& GetRegisterD();
+		Register8& GetRegisterE();
+		Register8& GetRegisterH();
+		Register8& GetRegisterL();
 
-		Register16* GetRegisterAF();
-		Register16* GetRegisterBC();
-		Register16* GetRegisterDE();
-		Register16* GetRegisterHL();
+		Register16& GetRegisterAF();
+		Register16& GetRegisterBC();
+		Register16& GetRegisterDE();
+		Register16& GetRegisterHL();
 
-		Register16* GetProgramCounter();
-		Register16* GetStackPointer();
+		Register16& GetProgramCounter();
+		Register16& GetStackPointer();
 
-		CPUInstruction GetPreviouslyExecutedInstruction();
+		CPUInstruction GetCurrentInstruction();
+		void HandleInterrupts();
+
+		void PrintRegisterInfo();
 
 	private:
-		MemoryManagementUnit& memoryManagementUnit;
-		std::map<CPURegisterID, Register16> registers;
+		DataStorageDevice& memoryManagementUnit;
+
+		Register16 regAF;
+		Register16 regBC;
+		Register16 regDE;
+		Register16 regHL;
+		Register16 programCounter;
+		Register16 stackPointer;
 
 		bool interruptMasterEnableFlag;
+		CPUInstruction* currentInstruction;
 
-		Register16* regAF;
-		Register16* regBC;
-		Register16* regDE;
-		Register16* regHL;
-		Register16* programCounter;
-		Register16* stackPointer;
+		static std::map<uint8_t, CPUInstruction> BasicInstructionSet;
+		static std::map<uint8_t, CPUInstruction> CBPrefixedInstructionSet;
 
-		CPUInstruction previouslyExecutedInstruction;
-
-		uint8_t Fetch8Bit();
-		uint16_t Fetch16Bit();
-
-		CPUInstruction Decode(uint8_t opcode);
-		uint32_t Execute(const CPUInstruction& instruction);
-
-		void DecodeCBPrefixedInstruction(CPUInstruction& instruction);
-		void DecodeLoadAndStoreInstruction(CPUInstruction& instruction);
-		void DecodeArithmeticInstruction(CPUInstruction& instruction);
-
-		uint8_t GenerateDataFromOpcode(uint8_t opcode);
-		Register8* Get8BitRegisterFromOpcode(uint8_t opcode);
-
-		bool ShouldEnableCarryFlag(CPUInstructionStorageType storageType, int operationResult);
-		bool ShouldEnableHalfCarryFlag(uint16_t operand1, uint16_t operand2);
-
-		void Create8BitIncrementInstruction(CPUInstruction& instruction, Register8* targetRegister);
-		void Create8BitIncrementInstruction(CPUInstruction& instruction, uint16_t targetAddress);
-		void Create16BitIncrementInstruction(CPUInstruction& instruction, Register16* targetRegister);
-		void Create16BitIncrementInstruction(CPUInstruction& instruction, uint16_t targetAddress);
-		
-		void Create8BitDecrementInstruction(CPUInstruction& instruction, Register8* targetRegister);
-		void Create16BitDecrementInstruction(CPUInstruction& instruction, Register16* targetRegister);
-		void Create8BitDecrementInstruction(CPUInstruction& instruction, uint16_t targetAddress);
-
-		void Create8BitLoadInstruction(CPUInstruction& instruction, Register8* targetRegister, uint8_t data);
-		void Create8BitLoadInstruction(CPUInstruction& instruction, uint16_t targetAddress, uint8_t data);
-		void Create16BitLoadInstruction(CPUInstruction& instruction, Register16* targetRegister, uint16_t data);
-		void Create16BitLoadInstruction(CPUInstruction& instruction, uint16_t targetAddress, uint16_t data);
-
-		void Create8BitAddInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-		void Create16BitAddInstruction(CPUInstruction& instruction, Register16* storageRegister, uint16_t operand);
-		void Create8BitAddWithCarryInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-	
-		void Create8BitSubtractInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-		void Create8BitSubtractWithCarryInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-
-		void Create8BitXORInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-		void Create8BitORInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-		void Create8BitANDInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-		void Create8BitCompareInstruction(CPUInstruction& instruction, Register8* storageRegister, uint8_t operand);
-
-		void CreateStandardJumpInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags);
-		void CreateRelativeJumpInstruction(CPUInstruction& instruction, uint8_t data, std::vector<CPUFlag> flags);
-
-		void CreateCallInstruction(CPUInstruction& instruction, uint16_t data, std::vector<CPUFlag> flags);
-		void CreateRestartInstruction(CPUInstruction& instruction, uint8_t data);
-		void CreateReturnInstruction(CPUInstruction& instruction, std::vector<CPUFlag> flags);
-		void CreateInterruptDisableInstruction(CPUInstruction& instruction);
-		void CreateInterruptEnableInstruction(CPUInstruction& instruction);
-
-		void CreatePopInstruction(CPUInstruction& instruction, uint16_t data);
-		void CreatePushInstruction(CPUInstruction& instruction, uint16_t data);
+		uint8_t Fetch8();
+		uint16_t Fetch16();
+		CPUInstruction* Decode(uint8_t opcode);
 
 		void Set16BitDataInMemory(uint16_t address, uint16_t data);
+		uint16_t Get16BitDataFromMemory(uint16_t address);
+		
+		void NOP();
+		void LD_RR_U16(Register16& reg);
+		void LD_ADDR_RR_R(Register16& addressReg, Register8& sourceReg);
+		void LD_R_U8(Register8& reg);
+		void LD_ADDR_U16_RR(Register16& sourceReg);
+		void INC_RR(Register16& reg);
+		void INC_R(Register8& reg);
+		void DEC_R(Register8& reg);
+		void RLC_R(Register8& reg);
+		void ADD_RR_RR(Register16& destinationReg, Register16& sourceReg);
+		void LD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void DEC_RR(Register16& reg);
+		void RRC_R(Register8& reg);
+		void STOP();
+		void RL_R(Register8& reg);
+		void JR_I8(bool areFlagsSet = true);
+		void RR_R(Register8& reg);
+		void LD_ADDR_RR_INC_R(Register16& addressReg, Register8& sourceReg);
+		void DAA();
+		void LD_R_ADDR_RR_INC(Register8& destinationReg, Register16& addressReg);
+		void CPL();
+		void LD_ADDR_RR_DEC_R(Register16& addressReg, Register8& sourceReg);
+		void INC_ADDR_RR(Register16& reg);
+		void DEC_ADDR_RR(Register16& reg);
+		void LD_ADDR_RR_U8(Register16& addressReg);
+		void SCF();
+		void LD_R_ADDR_RR_DEC(Register8& destinationReg, Register16& addressReg);
+		void CCF();
+		void LD_R_R(Register8& destinationReg, Register8& sourceReg);
+		void HALT();
+		void ADD_R_R(Register8& destinationReg, Register8& sourceReg);
+		void ADD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void ADC_R_R(Register8& destinationReg, Register8& sourceReg);
+		void ADC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void SUB_R_R(Register8& destinationReg, Register8& sourceReg);
+		void SUB_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void SBC_R_R(Register8& destinationReg, Register8& sourceReg);
+		void SBC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void AND_R_R(Register8& destinationReg, Register8& sourceReg);
+		void AND_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void XOR_R_R(Register8& destinationReg, Register8& sourceReg);
+		void XOR_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void OR_R_R(Register8& destinationReg, Register8& sourceReg);
+		void OR_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void CP_R_R(Register8& destinationReg, Register8& sourceReg);
+		void CP_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
+		void RET(bool areFlagsSet = true);
+		void POP_RR(Register16& reg);
+		void JP_U16(bool areFlagsSet = true);
+		void CALL_U16(bool areFlagsSet = true);
+		void CALL(uint16_t address);
+		void PUSH_RR(Register16& reg);
+		void ADD_R_U8(Register8& reg);
+		void RST(uint16_t address);
+		void ADC_R_U8(Register8& reg);
+		void SUB_R_U8(Register8& reg);
+		void RETI();
+		void SBC_R_U8(Register8& reg);
+		void LD_ADDR_FF00_U8_R(Register8& reg);
+		void LD_ADDR_FF00_R_R(Register8& addressReg, Register8& sourceReg);
+		void AND_R_U8(Register8& reg);
+		void ADD_RR_I8(Register16& destinationReg);
+		void JP_RR(Register16& reg, bool areFlagsSet = true);
+		void LD_ADDR_U16_R(Register8& reg);
+		void XOR_R_U8(Register8& reg);
+		void LD_R_ADDR_FF00_U8(Register8& reg);
+		void LD_R_ADDR_FF00_R(Register8& destinationReg, Register8& addressReg);
+		void DI();
+		void OR_R_U8(Register8& reg);
+		void LD_RR_RR_I8(Register16& destinationReg, Register16& sourceReg);
+		void LD_RR_RR(Register16& destinationReg, Register16& sourceReg);
+		void LD_R_ADDR_U16(Register8& destinationReg);
+		void EI();
+		void CP_R_U8(Register8& reg);
+		void RLC_ADDR_RR(Register16& addressReg);
+		void RRC_ADDR_RR(Register16& addressReg);
+		void RL_ADDR_RR(Register16& addressReg);
+		void RR_ADDR_RR(Register16& addressReg);
+		void SLA_R(Register8& reg);
+		void SRA_R(Register8& reg);
+		void SLA_ADDR_RR(Register16& addressReg);
+		void SRA_ADDR_RR(Register16& addressReg);
+		void SRL_R(Register8& reg);
+		void SRL_ADDR_RR(Register16& addressReg);
+		void SWAP_R(Register8& reg);
+		void SWAP_ADDR_RR(Register16& addressReg);
+		void BIT_N_R(uint8_t bitNum, Register8& reg);
+		void BIT_N_ADDR_RR(uint8_t bitNum, Register16& addressReg);
+		void RES_N_R(uint8_t bitNum, Register8& reg);
+		void RES_N_ADDR_RR(uint8_t bitNum, Register16& addressReg);
+		void SET_N_R(uint8_t bitNum, Register8& reg);
+		void SET_N_ADDR_RR(uint8_t bitNum, Register16& addressReg);
+
+		// Basic Instruction Set
+		
+		void Execute00();
+		void Execute01();
+		void Execute02();
+		void Execute03();
+		void Execute04();
+		void Execute05();
+		void Execute06();
+		void Execute07();
+		void Execute08();
+		void Execute09();
+		void Execute0A();
+		void Execute0B();
+		void Execute0C();
+		void Execute0D();
+		void Execute0E();
+		void Execute0F();
+		void Execute10();
+		void Execute11();
+		void Execute12();
+		void Execute13();
+		void Execute14();
+		void Execute15();
+		void Execute16();
+		void Execute17();
+		void Execute18();
+		void Execute19();
+		void Execute1A();
+		void Execute1B();
+		void Execute1C();
+		void Execute1D();
+		void Execute1E();
+		void Execute1F();
+		void Execute20();
+		void Execute21();
+		void Execute22();
+		void Execute23();
+		void Execute24();
+		void Execute25();
+		void Execute26();
+		void Execute27();
+		void Execute28();
+		void Execute29();
+		void Execute2A();
+		void Execute2B();
+		void Execute2C();
+		void Execute2D();
+		void Execute2E();
+		void Execute2F();
+		void Execute30();
+		void Execute31();
+		void Execute32();
+		void Execute33();
+		void Execute34();
+		void Execute35();
+		void Execute36();
+		void Execute37();
+		void Execute38();
+		void Execute39();
+		void Execute3A();
+		void Execute3B();
+		void Execute3C();
+		void Execute3D();
+		void Execute3E();
+		void Execute3F();
+		void Execute40();
+		void Execute41();
+		void Execute42();
+		void Execute43();
+		void Execute44();
+		void Execute45();
+		void Execute46();
+		void Execute47();
+		void Execute48();
+		void Execute49();
+		void Execute4A();
+		void Execute4B();
+		void Execute4C();
+		void Execute4D();
+		void Execute4E();
+		void Execute4F();
+		void Execute50();
+		void Execute51();
+		void Execute52();
+		void Execute53();
+		void Execute54();
+		void Execute55();
+		void Execute56();
+		void Execute57();
+		void Execute58();
+		void Execute59();
+		void Execute5A();
+		void Execute5B();
+		void Execute5C();
+		void Execute5D();
+		void Execute5E();
+		void Execute5F();
+		void Execute60();
+		void Execute61();
+		void Execute62();
+		void Execute63();
+		void Execute64();
+		void Execute65();
+		void Execute66();
+		void Execute67();
+		void Execute68();
+		void Execute69();
+		void Execute6A();
+		void Execute6B();
+		void Execute6C();
+		void Execute6D();
+		void Execute6E();
+		void Execute6F();
+		void Execute70();
+		void Execute71();
+		void Execute72();
+		void Execute73();
+		void Execute74();
+		void Execute75();
+		void Execute76();
+		void Execute77();
+		void Execute78();
+		void Execute79();
+		void Execute7A();
+		void Execute7B();
+		void Execute7C();
+		void Execute7D();
+		void Execute7E();
+		void Execute7F();
+		void Execute80();
+		void Execute81();
+		void Execute82();
+		void Execute83();
+		void Execute84();
+		void Execute85();
+		void Execute86();
+		void Execute87();
+		void Execute88();
+		void Execute89();
+		void Execute8A();
+		void Execute8B();
+		void Execute8C();
+		void Execute8D();
+		void Execute8E();
+		void Execute8F();
+		void Execute90();
+		void Execute91();
+		void Execute92();
+		void Execute93();
+		void Execute94();
+		void Execute95();
+		void Execute96();
+		void Execute97();
+		void Execute98();
+		void Execute99();
+		void Execute9A();
+		void Execute9B();
+		void Execute9C();
+		void Execute9D();
+		void Execute9E();
+		void Execute9F();
+		void ExecuteA0();
+		void ExecuteA1();
+		void ExecuteA2();
+		void ExecuteA3();
+		void ExecuteA4();
+		void ExecuteA5();
+		void ExecuteA6();
+		void ExecuteA7();
+		void ExecuteA8();
+		void ExecuteA9();
+		void ExecuteAA();
+		void ExecuteAB();
+		void ExecuteAC();
+		void ExecuteAD();
+		void ExecuteAE();
+		void ExecuteAF();
+		void ExecuteB0();
+		void ExecuteB1();
+		void ExecuteB2();
+		void ExecuteB3();
+		void ExecuteB4();
+		void ExecuteB5();
+		void ExecuteB6();
+		void ExecuteB7();
+		void ExecuteB8();
+		void ExecuteB9();
+		void ExecuteBA();
+		void ExecuteBB();
+		void ExecuteBC();
+		void ExecuteBD();
+		void ExecuteBE();
+		void ExecuteBF();
+		void ExecuteC0();
+		void ExecuteC1();
+		void ExecuteC2();
+		void ExecuteC3();
+		void ExecuteC4();
+		void ExecuteC5();
+		void ExecuteC6();
+		void ExecuteC7();
+		void ExecuteC8();
+		void ExecuteC9();
+		void ExecuteCA();
+		void ExecuteCC();
+		void ExecuteCD();
+		void ExecuteCE();
+		void ExecuteCF();
+		void ExecuteD0();
+		void ExecuteD1();
+		void ExecuteD2();
+		void ExecuteD3();
+		void ExecuteD4();
+		void ExecuteD5();
+		void ExecuteD6();
+		void ExecuteD7();
+		void ExecuteD8();
+		void ExecuteD9();
+		void ExecuteDA();
+		void ExecuteDC();
+		void ExecuteDD();
+		void ExecuteDE();
+		void ExecuteDF();
+		void ExecuteE0();
+		void ExecuteE1();
+		void ExecuteE2();
+		void ExecuteE3();
+		void ExecuteE4();
+		void ExecuteE5();
+		void ExecuteE6();
+		void ExecuteE7();
+		void ExecuteE8();
+		void ExecuteE9();
+		void ExecuteEA();
+		void ExecuteEC();
+		void ExecuteED();
+		void ExecuteEE();
+		void ExecuteEF();
+		void ExecuteF0();
+		void ExecuteF1();
+		void ExecuteF2();
+		void ExecuteF3();
+		void ExecuteF4();
+		void ExecuteF5();
+		void ExecuteF6();
+		void ExecuteF7();
+		void ExecuteF8();
+		void ExecuteF9();
+		void ExecuteFA();
+		void ExecuteFB();
+		void ExecuteFC();
+		void ExecuteFD();
+		void ExecuteFE();
+		void ExecuteFF();
+
+		// CB Prefixed Instruction Set
+
+		void ExecuteCB00();
+		void ExecuteCB01();
+		void ExecuteCB02();
+		void ExecuteCB03();
+		void ExecuteCB04();
+		void ExecuteCB05();
+		void ExecuteCB06();
+		void ExecuteCB07();
+		void ExecuteCB08();
+		void ExecuteCB09();
+		void ExecuteCB0A();
+		void ExecuteCB0B();
+		void ExecuteCB0C();
+		void ExecuteCB0D();
+		void ExecuteCB0E();
+		void ExecuteCB0F();
+		void ExecuteCB10();
+		void ExecuteCB11();
+		void ExecuteCB12();
+		void ExecuteCB13();
+		void ExecuteCB14();
+		void ExecuteCB15();
+		void ExecuteCB16();
+		void ExecuteCB17();
+		void ExecuteCB18();
+		void ExecuteCB19();
+		void ExecuteCB1A();
+		void ExecuteCB1B();
+		void ExecuteCB1C();
+		void ExecuteCB1D();
+		void ExecuteCB1E();
+		void ExecuteCB1F();
+		void ExecuteCB20();
+		void ExecuteCB21();
+		void ExecuteCB22();
+		void ExecuteCB23();
+		void ExecuteCB24();
+		void ExecuteCB25();
+		void ExecuteCB26();
+		void ExecuteCB27();
+		void ExecuteCB28();
+		void ExecuteCB29();
+		void ExecuteCB2A();
+		void ExecuteCB2B();
+		void ExecuteCB2C();
+		void ExecuteCB2D();
+		void ExecuteCB2E();
+		void ExecuteCB2F();
+		void ExecuteCB30();
+		void ExecuteCB31();
+		void ExecuteCB32();
+		void ExecuteCB33();
+		void ExecuteCB34();
+		void ExecuteCB35();
+		void ExecuteCB36();
+		void ExecuteCB37();
+		void ExecuteCB38();
+		void ExecuteCB39();
+		void ExecuteCB3A();
+		void ExecuteCB3B();
+		void ExecuteCB3C();
+		void ExecuteCB3D();
+		void ExecuteCB3E();
+		void ExecuteCB3F();
+		void ExecuteCB40();
+		void ExecuteCB41();
+		void ExecuteCB42();
+		void ExecuteCB43();
+		void ExecuteCB44();
+		void ExecuteCB45();
+		void ExecuteCB46();
+		void ExecuteCB47();
+		void ExecuteCB48();
+		void ExecuteCB49();
+		void ExecuteCB4A();
+		void ExecuteCB4B();
+		void ExecuteCB4C();
+		void ExecuteCB4D();
+		void ExecuteCB4E();
+		void ExecuteCB4F();
+		void ExecuteCB50();
+		void ExecuteCB51();
+		void ExecuteCB52();
+		void ExecuteCB53();
+		void ExecuteCB54();
+		void ExecuteCB55();
+		void ExecuteCB56();
+		void ExecuteCB57();
+		void ExecuteCB58();
+		void ExecuteCB59();
+		void ExecuteCB5A();
+		void ExecuteCB5B();
+		void ExecuteCB5C();
+		void ExecuteCB5D();
+		void ExecuteCB5E();
+		void ExecuteCB5F();
+		void ExecuteCB60();
+		void ExecuteCB61();
+		void ExecuteCB62();
+		void ExecuteCB63();
+		void ExecuteCB64();
+		void ExecuteCB65();
+		void ExecuteCB66();
+		void ExecuteCB67();
+		void ExecuteCB68();
+		void ExecuteCB69();
+		void ExecuteCB6A();
+		void ExecuteCB6B();
+		void ExecuteCB6C();
+		void ExecuteCB6D();
+		void ExecuteCB6E();
+		void ExecuteCB6F();
+		void ExecuteCB70();
+		void ExecuteCB71();
+		void ExecuteCB72();
+		void ExecuteCB73();
+		void ExecuteCB74();
+		void ExecuteCB75();
+		void ExecuteCB76();
+		void ExecuteCB77();
+		void ExecuteCB78();
+		void ExecuteCB79();
+		void ExecuteCB7A();
+		void ExecuteCB7B();
+		void ExecuteCB7C();
+		void ExecuteCB7D();
+		void ExecuteCB7E();
+		void ExecuteCB7F();
+		void ExecuteCB80();
+		void ExecuteCB81();
+		void ExecuteCB82();
+		void ExecuteCB83();
+		void ExecuteCB84();
+		void ExecuteCB85();
+		void ExecuteCB86();
+		void ExecuteCB87();
+		void ExecuteCB88();
+		void ExecuteCB89();
+		void ExecuteCB8A();
+		void ExecuteCB8B();
+		void ExecuteCB8C();
+		void ExecuteCB8D();
+		void ExecuteCB8E();
+		void ExecuteCB8F();
+		void ExecuteCB90();
+		void ExecuteCB91();
+		void ExecuteCB92();
+		void ExecuteCB93();
+		void ExecuteCB94();
+		void ExecuteCB95();
+		void ExecuteCB96();
+		void ExecuteCB97();
+		void ExecuteCB98();
+		void ExecuteCB99();
+		void ExecuteCB9A();
+		void ExecuteCB9B();
+		void ExecuteCB9C();
+		void ExecuteCB9D();
+		void ExecuteCB9E();
+		void ExecuteCB9F();
+		void ExecuteCBA0();
+		void ExecuteCBA1();
+		void ExecuteCBA2();
+		void ExecuteCBA3();
+		void ExecuteCBA4();
+		void ExecuteCBA5();
+		void ExecuteCBA6();
+		void ExecuteCBA7();
+		void ExecuteCBA8();
+		void ExecuteCBA9();
+		void ExecuteCBAA();
+		void ExecuteCBAB();
+		void ExecuteCBAC();
+		void ExecuteCBAD();
+		void ExecuteCBAE();
+		void ExecuteCBAF();
+		void ExecuteCBB0();
+		void ExecuteCBB1();
+		void ExecuteCBB2();
+		void ExecuteCBB3();
+		void ExecuteCBB4();
+		void ExecuteCBB5();
+		void ExecuteCBB6();
+		void ExecuteCBB7();
+		void ExecuteCBB8();
+		void ExecuteCBB9();
+		void ExecuteCBBA();
+		void ExecuteCBBB();
+		void ExecuteCBBC();
+		void ExecuteCBBD();
+		void ExecuteCBBE();
+		void ExecuteCBBF();
+		void ExecuteCBC0();
+		void ExecuteCBC1();
+		void ExecuteCBC2();
+		void ExecuteCBC3();
+		void ExecuteCBC4();
+		void ExecuteCBC5();
+		void ExecuteCBC6();
+		void ExecuteCBC7();
+		void ExecuteCBC8();
+		void ExecuteCBC9();
+		void ExecuteCBCA();
+		void ExecuteCBCB();
+		void ExecuteCBCC();
+		void ExecuteCBCD();
+		void ExecuteCBCE();
+		void ExecuteCBCF();
+		void ExecuteCBD0();
+		void ExecuteCBD1();
+		void ExecuteCBD2();
+		void ExecuteCBD3();
+		void ExecuteCBD4();
+		void ExecuteCBD5();
+		void ExecuteCBD6();
+		void ExecuteCBD7();
+		void ExecuteCBD8();
+		void ExecuteCBD9();
+		void ExecuteCBDA();
+		void ExecuteCBDB();
+		void ExecuteCBDC();
+		void ExecuteCBDD();
+		void ExecuteCBDE();
+		void ExecuteCBDF();
+		void ExecuteCBE0();
+		void ExecuteCBE1();
+		void ExecuteCBE2();
+		void ExecuteCBE3();
+		void ExecuteCBE4();
+		void ExecuteCBE5();
+		void ExecuteCBE6();
+		void ExecuteCBE7();
+		void ExecuteCBE8();
+		void ExecuteCBE9();
+		void ExecuteCBEA();
+		void ExecuteCBEB();
+		void ExecuteCBEC();
+		void ExecuteCBED();
+		void ExecuteCBEE();
+		void ExecuteCBEF();
+		void ExecuteCBF0();
+		void ExecuteCBF1();
+		void ExecuteCBF2();
+		void ExecuteCBF3();
+		void ExecuteCBF4();
+		void ExecuteCBF5();
+		void ExecuteCBF6();
+		void ExecuteCBF7();
+		void ExecuteCBF8();
+		void ExecuteCBF9();
+		void ExecuteCBFA();
+		void ExecuteCBFB();
+		void ExecuteCBFC();
+		void ExecuteCBFD();
+		void ExecuteCBFE();
+		void ExecuteCBFF();
 	};
 }

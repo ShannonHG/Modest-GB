@@ -357,3 +357,9 @@ MigrationBackup/
 
 # NuGet Package File 
 packages.config
+
+# Third Party Libraries
+ThirdParty/
+
+# ROMs
+ROMs/

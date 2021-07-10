@@ -59,9 +59,9 @@ namespace SHG
 		}
 		else if (address <= ROM_SWITCHABLE_BANK_END_ADDR && address >= ROM_SWITCHABLE_BANK_START_ADDR)
 		{
-			uint16_t offset = CalculatePhysicalROMAddress(GetROMBankNumber(), ROM_SWITCHABLE_BANK_START_ADDR, address);
+			/*uint16_t offset = CalculatePhysicalROMAddress(GetROMBankNumber(), ROM_SWITCHABLE_BANK_START_ADDR, address);*/
 
-			return GetByteFromROM(offset);
+			return GetByteFromROM(address);
 		}
 		else if (address <= RAM_SWITCHABLE_BANK_END_ADDR && address >= RAM_SWITCHABLE_BANK_START_ADDR)
 		{

@@ -2,19 +2,19 @@
 
 namespace SHG
 {
-	MockMemoryManagementUnit CreatePresetMemoryManagementUnit(uint8_t value)
+	Memory CreatePresetMemory(uint8_t value)
 	{
-		auto mmu = MockMemoryManagementUnit(std::numeric_limits<uint16_t>::max());
-		mmu.SetByte(0, value);
+		Memory memory = Memory(std::numeric_limits<uint16_t>::max());
+		memory.SetByte(0, value);
 
-		return mmu;
+		return memory;
 	}
 
-	MockMemoryManagementUnit CreatePresetMemoryManagementUnit(const std::vector<uint8_t>& values)
+	Memory CreatePresetMemory(const std::vector<uint8_t>& values)
 	{
-		auto mmu = MockMemoryManagementUnit(std::numeric_limits<uint16_t>::max());
-		for (int i = 0; i < values.size(); i++) mmu.SetByte(i, values[i]);
+		Memory memory = Memory(std::numeric_limits<uint16_t>::max());
+		for (int i = 0; i < values.size(); i++) memory.SetByte(i, values[i]);
 
-		return mmu;
+		return memory;
 	}
 }

@@ -1,8 +1,8 @@
 #pragma once
-#include "MockMemoryManagementUnit.hpp"
+#include "Memory/Memory.hpp"
 
 namespace SHG
 {
-	MockMemoryManagementUnit CreatePresetMemoryManagementUnit(uint8_t value);
-	MockMemoryManagementUnit CreatePresetMemoryManagementUnit(const std::vector<uint8_t>& values);
+	Memory CreatePresetMemory(uint8_t value);
+	Memory CreatePresetMemory(const std::vector<uint8_t>& values);
 }

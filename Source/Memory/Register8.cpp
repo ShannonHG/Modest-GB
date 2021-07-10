@@ -1,4 +1,5 @@
 #include "Memory/Register8.hpp"
+#include "Globals.hpp"
 
 namespace SHG
 {
@@ -9,8 +10,7 @@ namespace SHG
 
 	void Register8::SetBit(uint8_t bitNumber, bool enabled)
 	{
-		if (enabled) data |= ((uint8_t)enabled) << bitNumber;
-		else data &= ~(((uint8_t)!enabled) << bitNumber);
+		SetBitValue(data, bitNumber, enabled);
 	}
 
 	uint8_t Register8::GetBit(uint8_t bitNumber)

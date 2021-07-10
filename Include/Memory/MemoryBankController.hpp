@@ -3,11 +3,11 @@
 #include <vector>
 #include <string>
 #include "Globals.hpp"
-#include "Memory/MemoryManagementUnit.hpp"
+#include "Memory/DataStorageDevice.hpp"
 
 namespace SHG
 {
-	class MemoryBankController : public MemoryManagementUnit
+	class MemoryBankController : public DataStorageDevice
 	{
 	public:
 		static const uint16_t ROM_BANK_SIZE;

@@ -49,23 +49,20 @@ namespace SHG
 		// memory bank controller in the address range 0x4000 to 0x7FFF
 
 		uint32_t virtualAddressRangeStart = 0x4000;
-		uint32_t targetVirtualAddress = 0x4000;
-		uint32_t physicalAddress = MemoryBankController::CalculatePhysicalROMAddress(targetROMBankNum, virtualAddressRangeStart, targetVirtualAddress);
+		uint32_t taretAddress = 0x4000;
 
 		uint8_t byte1 = mbc.GetByte(virtualAddressRangeStart);
-		EXPECT_EQ(byte1, rom[physicalAddress]);
+		EXPECT_EQ(byte1, rom[taretAddress]);
 
-		targetVirtualAddress = virtualAddressRangeStart + offset;
-		physicalAddress = MemoryBankController::CalculatePhysicalROMAddress(targetROMBankNum, virtualAddressRangeStart, targetVirtualAddress);
+		taretAddress = virtualAddressRangeStart + offset;
 
-		uint8_t byte2 = mbc.GetByte(targetVirtualAddress);
-		EXPECT_EQ(byte2, rom[physicalAddress]);
+		uint8_t byte2 = mbc.GetByte(taretAddress);
+		EXPECT_EQ(byte2, rom[taretAddress]);
 
-		targetVirtualAddress = virtualAddressRangeStart + (offset * 2);
-		physicalAddress = MemoryBankController::CalculatePhysicalROMAddress(targetROMBankNum, virtualAddressRangeStart, targetVirtualAddress);
+		taretAddress = virtualAddressRangeStart + (offset * 2);
 
-		uint8_t byte3 = mbc.GetByte(targetVirtualAddress);
-		EXPECT_EQ(byte3, rom[physicalAddress]);
+		uint8_t byte3 = mbc.GetByte(taretAddress);
+		EXPECT_EQ(byte3, rom[taretAddress]);
 	}
 
 	TEST(MBC1, SelectsCorrectRAMBank)

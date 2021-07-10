@@ -46,6 +46,6 @@ namespace SHG
 		void Decrement();
 
 	protected:
-		uint8_t data;
+		uint8_t data = 0;
 	};
 }

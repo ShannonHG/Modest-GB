@@ -3,7 +3,7 @@
 
 namespace SHG
 {
-	class MemoryManagementUnit
+	class DataStorageDevice
 	{
 	public: 
 		/// <summary>

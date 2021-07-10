@@ -22,6 +22,7 @@ namespace SHG
 	};
 
 	// Catridge header memory bank controller type codes
+
 	const uint8_t CH_ROM_ONLY_CODE = 0x00;
 	const uint8_t CH_MBC1_CODE = 0x01;
 	const uint8_t CH_MBC1_RAM_CODE = 0x02;
@@ -50,6 +51,7 @@ namespace SHG
 	const uint8_t CH_HuC1_RAM_BATTERY_CODE = 0xFF;
 
 	// Catridge header RAM type codes
+
 	const uint8_t CH_NO_RAM = 0x00; // No RAM
 	const uint8_t CH_UNUSED_RAM = 0x01; // Unused
 	const uint8_t CH_8KB_RAM = 0x02; // 1 bank
@@ -58,6 +60,7 @@ namespace SHG
 	const uint8_t CH_64KB_RAM = 0x05; // 8 banks of 8 KiB each
 
 	// Catridge header ROM type codes
+
 	const uint8_t CH_32KB_ROM = 0x00; // 2 banks of 16 KiB each
 	const uint8_t CH_64KB_ROM = 0x01; // 4 banks of 16 KiB each
 	const uint8_t CH_128KB_ROM = 0x02; // 8 banks of 16 KiB each
@@ -69,6 +72,7 @@ namespace SHG
 	const uint8_t CH_8MB_ROM = 0x08; // 512 banks of 16 KiB each
 
 	// Catridge header addresses
+
 	static const uint16_t CH_CGB_FLAG_ADDRESS = 0x0143;
 	static const uint16_t CH_MEMORY_BANK_TYPE_ADDRESS = 0x0147;
 	static const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
@@ -77,7 +81,7 @@ namespace SHG
 	/// <summary>
 	/// Data structure representing a GameBoy cartridge.
 	/// </summary>
-	class Cartridge : public MemoryManagementUnit
+	class Cartridge : public DataStorageDevice
 	{
 	public:
 		/// <summary>
@@ -132,5 +136,6 @@ namespace SHG
 		void DecodeROMSize(uint8_t byte);
 		void DecodeRAMSize(uint8_t byte);
 		void DecodeROMByte(uint8_t byte, uint16_t address);
+		void InitMBC();
 	};
 }

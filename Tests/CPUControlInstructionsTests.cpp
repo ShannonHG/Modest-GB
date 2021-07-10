@@ -8,62 +8,47 @@ namespace SHG
 	// Opcode: 0x00
 	TEST(CPUControlInstructions, NOP)
 	{
-		auto mmu = CreatePresetMemoryManagementUnit(0x00);
-		auto processor = CPU(mmu);
+		Memory memory = CreatePresetMemory(0x00);
+		auto processor = CPU(memory);
 
 		processor.Cycle();
 
-		CPUInstruction instruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(instruction.instructionType, CPUInstructionType::NOP);
-		EXPECT_EQ(instruction.storageType, CPUInstructionStorageType::None);
+		// TODO: Implement
 	}
 
 	// STOP
 	// Opcode: 0x10
 	TEST(CPUControlInstructions, STOP)
 	{
-		auto mmu = CreatePresetMemoryManagementUnit(0x10);
-		auto processor = CPU(mmu);
+		Memory memory = CreatePresetMemory(0x10);
+		auto processor = CPU(memory);
 
 		processor.Cycle();
 
-		CPUInstruction instruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(instruction.instructionType, CPUInstructionType::STOP);
-		EXPECT_EQ(instruction.storageType, CPUInstructionStorageType::None);
+		// TODO: Implement
 	}
 
 	// HALT
 	// Opcode: 0x76
 	TEST(CPUControlInstructions, HALT)
 	{
-		auto mmu = CreatePresetMemoryManagementUnit(0x76);
-		auto processor = CPU(mmu);
+		Memory memory = CreatePresetMemory(0x76);
+		auto processor = CPU(memory);
 
 		processor.Cycle();
 
-		CPUInstruction instruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(instruction.instructionType, CPUInstructionType::HALT);
-		EXPECT_EQ(instruction.storageType, CPUInstructionStorageType::None);
+		// TODO: Implement
 	}
 
 	// DI
 	// Opcode: 0xF3
 	TEST(CPUControlInstructions, DI)
 	{
-		auto mmu = CreatePresetMemoryManagementUnit(0xF3);
-		auto processor = CPU(mmu);
+		Memory memory = CreatePresetMemory(0xF3);
+		auto processor = CPU(memory);
 
-		processor.SetInterruptMasterEnableFlag(true);
+		processor.ChangeInterruptMasterEnableFlag(true);
 		processor.Cycle();
-
-		CPUInstruction instruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(instruction.instructionType, CPUInstructionType::DisableInterrupts);
-		EXPECT_EQ(instruction.storageType, CPUInstructionStorageType::None);
-
 		EXPECT_EQ(processor.GetInterruptMasterEnableFlag(), false);
 	}
 
@@ -71,16 +56,11 @@ namespace SHG
 	// Opcode: 0xFB
 	TEST(CPUControlInstructions, EI)
 	{
-		auto mmu = CreatePresetMemoryManagementUnit(0xFB);
-		auto processor = CPU(mmu);
+		Memory memory = CreatePresetMemory(0xFB);
+		auto processor = CPU(memory);
 
-		processor.SetInterruptMasterEnableFlag(false);
+		processor.ChangeInterruptMasterEnableFlag(false);
 		processor.Cycle();
-
-		CPUInstruction instruction = processor.GetPreviouslyExecutedInstruction();
-
-		EXPECT_EQ(instruction.instructionType, CPUInstructionType::EnableInterrupts);
-		EXPECT_EQ(instruction.storageType, CPUInstructionStorageType::None);
 
 		EXPECT_EQ(processor.GetInterruptMasterEnableFlag(), true);
 	}
