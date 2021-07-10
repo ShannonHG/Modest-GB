@@ -12,6 +12,7 @@
 #include "Graphics/Display.hpp"
 #include "Graphics/PPU.hpp"
 #include "Globals.hpp"
+#include "CPU/Timer.hpp"
 
 using namespace SHG;
 
@@ -37,6 +38,8 @@ int main(int argc, char* argv[])
 
 	Logger::Write("Setting log level to '" + LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
 
+	auto memoryMap = MemoryMap();
+
 	Cartridge cartridge;
 	cartridge.LoadFromFile(config.romFilePath);
 
@@ -48,8 +51,8 @@ int main(int argc, char* argv[])
 	auto ioRegisters = Memory(128);
 	auto hram = Memory(127);
 	auto interruptEnableRegister = Memory(1);
+	auto timer = Timer(memoryMap);
 
-	auto memoryMap = MemoryMap();
 	memoryMap.AssignDeviceToAddressRange(cartridge, 0x0000, 0x7FFF);
 	memoryMap.AssignDeviceToAddressRange(vram, 0x8000, 0x9FFF);
 	memoryMap.AssignDeviceToAddressRange(cartridge, 0xA000, 0xBFFF);
@@ -57,7 +60,8 @@ int main(int argc, char* argv[])
 	memoryMap.AssignDeviceToAddressRange(echoRAM, 0xE000, 0xFDFF);
 	memoryMap.AssignDeviceToAddressRange(restrictedMem, 0xFEA0, 0xFEFF);
 	memoryMap.AssignDeviceToAddressRange(oam, 0xFE00, 0xFE9F);
-	memoryMap.AssignDeviceToAddressRange(ioRegisters, 0xFF00, 0xFF7F);
+	memoryMap.AssignDeviceToAddressRange(timer, 0xFF04, 0xFF07);
+	memoryMap.AssignDeviceToAddressRange(ioRegisters, 0xFF08, 0xFF7F);
 	memoryMap.AssignDeviceToAddressRange(hram, 0xFF80, 0xFFFE);
 	memoryMap.AssignDeviceToAddressRange(interruptEnableRegister, 0xFFFF, 0xFFFF);
 
@@ -137,8 +141,8 @@ int main(int argc, char* argv[])
 		cycle = false;*/
 
 		uint32_t duration = processor.Cycle();
-		for (int i = 0; i < duration; i++) ppu.Cycle();
-
+		timer.Update(duration);
+		/*for (int i = 0; i < duration; i++) ppu.Cycle();*/
 		processor.HandleInterrupts();
 
 	/*	auto currentTime = std::chrono::high_resolution_clock::now();

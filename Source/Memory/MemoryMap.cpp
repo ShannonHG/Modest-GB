@@ -123,8 +123,8 @@ namespace SHG
 			{
 				blarggOutStream = std::ofstream(std::filesystem::current_path().string() + "/BlarggTestResult.log", std::ios::out);
 			}
-
-			blarggOutStream << (char)GetByte(0xFF01);
+			blarggOutStream << std::to_string(GetByte(0xFF01));
+			//blarggOutStream << (char)GetByte(0xFF01);
 			blarggOutStream.flush();
 		}
 	}

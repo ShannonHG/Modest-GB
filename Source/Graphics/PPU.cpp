@@ -2,6 +2,7 @@
 #include <cassert>
 #include "Graphics/PPU.hpp"
 #include "Globals.hpp"
+#include "Common/Arithmetic.hpp"
 #include "SDL.h"
 #include "Logger.hpp"
 
@@ -37,7 +38,7 @@ namespace SHG
 			uint8_t interruptEnable = memoryManagementUnit.GetByte(0xFFFF);
 			if ((interruptEnable >> 1) & 1)
 			{
-				SetBitValue(interruptFlag, 1, true);
+				ChangeBit(interruptFlag, 1, true);
 				memoryManagementUnit.SetByte(0xFF0F, interruptFlag);
 			}
 		}
@@ -125,8 +126,8 @@ namespace SHG
 			SetLCDStatusMode(LCDStatusModes::VBlank);
 			uint8_t interruptFlag = memoryManagementUnit.GetByte(0xFF0F);
 			uint8_t interruptEnable = memoryManagementUnit.GetByte(0xFFFF);
-			SetBitValue(interruptFlag, 0, true);
-			SetBitValue(interruptEnable, 0, true);
+			ChangeBit(interruptFlag, 0, true);
+			ChangeBit(interruptEnable, 0, true);
 			memoryManagementUnit.SetByte(0xFF0F, interruptFlag);
 			memoryManagementUnit.SetByte(0xFFFF, interruptEnable);
 			//Logger::Write("[PPU] Entering VBlank");
@@ -146,22 +147,22 @@ namespace SHG
 	void PPU::SetLCDControlFlag(LCDControlFlags flag, bool value)
 	{
 		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_CONTROL_REGISTER_ADDRESS);
-		SetBitValue(statusRegister, (uint8_t)flag, value);
+		ChangeBit(statusRegister, (uint8_t)flag, value);
 		memoryManagementUnit.SetByte(LCD_CONTROL_REGISTER_ADDRESS, statusRegister);
 	}
 
 	void PPU::SetLCDStatusFlag(LCDStatusFlags flag, bool value)
 	{
 		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_STATUS_REGISTER_ADDRESS);
-		SetBitValue(statusRegister, (uint8_t)flag, value);
+		ChangeBit(statusRegister, (uint8_t)flag, value);
 		memoryManagementUnit.SetByte(LCD_STATUS_REGISTER_ADDRESS, statusRegister);
 	}
 
 	void PPU::SetLCDStatusMode(LCDStatusModes mode)
 	{
 		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_STATUS_REGISTER_ADDRESS);
-		SetBitValue(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag0, ((uint8_t)mode) & 1);
-		SetBitValue(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag1, (((uint8_t)mode) & 2) >> 1);
+		ChangeBit(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag0, ((uint8_t)mode) & 1);
+		ChangeBit(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag1, (((uint8_t)mode) & 2) >> 1);
 		memoryManagementUnit.SetByte(LCD_STATUS_REGISTER_ADDRESS, statusRegister);
 	}
 

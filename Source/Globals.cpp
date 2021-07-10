@@ -14,10 +14,4 @@ namespace SHG
 
 		return "0x" + result;
 	}
-
-	void SetBitValue(uint8_t& data, uint8_t bitNumber, bool bitValue)
-	{
-		if (bitValue) data |= ((uint8_t)bitValue) << bitNumber;
-		else data &= ~(((uint8_t)!bitValue) << bitNumber);
-	}
 }

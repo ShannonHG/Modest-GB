@@ -15,5 +15,5 @@ namespace SHG
 	const uint16_t GB_VSYNC_TIME = 59730;
 
 	std::string ConvertToHexString(uint16_t data, int width);
-	void SetBitValue(uint8_t& data, uint8_t bitIndex, bool bitValue);
+	
 }

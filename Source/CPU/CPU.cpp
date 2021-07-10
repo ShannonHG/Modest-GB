@@ -7,21 +7,17 @@
 #include "Logger.hpp"
 #include "InvalidOpcodeException.hpp"
 #include "Common/Arithmetic.hpp"
+#include "CPU/Interrupts.hpp"
 
 namespace SHG
 {
-	//const uint16_t REGISTER_AF_DEFAULT = 0x01B0;
-	const uint16_t REGISTER_AF_DEFAULT = 0x11B0;
+	const uint16_t REGISTER_AF_DEFAULT = 0x01B0;
+	//const uint16_t REGISTER_AF_DEFAULT = 0x11B0;
 	const uint16_t REGISTER_BC_DEFAULT = 0x0013;
 	const uint16_t REGISTER_DE_DEFAULT = 0x00D8;
 	const uint16_t REGISTER_HL_DEFAULT = 0x014D;
 	const uint16_t STACK_POINTER_DEFAULT = 0xFFFE;
 	const uint16_t PROGRAM_COUNTER_DEFAULT = 0x0100;
-
-	const uint16_t INTERRUPT_FLAG_ADDRESS = 0xFF0F;
-	const uint16_t INTERRUPT_ENABLE_ADDRESS = 0xFFFF;
-
-	const std::array<uint8_t, 5> INTERRUPT_OPERATIONS = { 0x40, 0x48, 0x50, 0x58, 0x60 };
 
 	CPU::CPU(DataStorageDevice& memoryManagementUnit) : memoryManagementUnit(memoryManagementUnit)
 	{
@@ -81,7 +77,7 @@ namespace SHG
 				interruptMasterEnableFlag = false;
 
 				stackPointer.SetData(programCounter.GetData());
-				programCounter.SetData(INTERRUPT_OPERATIONS[i]);
+				programCounter.SetData(INTERRUPT_OPERATIONS.at(static_cast<InterruptType>(i)));
 
 				memoryManagementUnit.SetByte(INTERRUPT_FLAG_ADDRESS, 0);
 				memoryManagementUnit.SetByte(INTERRUPT_ENABLE_ADDRESS, 0);
@@ -261,22 +257,22 @@ namespace SHG
 
 	void CPU::ChangeZeroFlag(bool isSet)
 	{
-		regAF.GetLowRegister().SetBit(7, isSet);
+		regAF.GetLowRegister().ChangeBit(7, isSet);
 	}
 
 	void CPU::ChangeSubtractionFlag(bool isSet)
 	{
-		regAF.GetLowRegister().SetBit(6, isSet);
+		regAF.GetLowRegister().ChangeBit(6, isSet);
 	}
 
 	void CPU::ChangeHalfCarryFlag(bool isSet)
 	{
-		regAF.GetLowRegister().SetBit(5, isSet);
+		regAF.GetLowRegister().ChangeBit(5, isSet);
 	}
 
 	void CPU::ChangeCarryFlag(bool isSet)
 	{
-		regAF.GetLowRegister().SetBit(4, isSet);
+		regAF.GetLowRegister().ChangeBit(4, isSet);
 	}
 
 	void CPU::Set16BitDataInMemory(uint16_t address, uint16_t data)
@@ -866,7 +862,7 @@ namespace SHG
 
 	void CPU::INC_R(Register8& reg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), 1));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), 1));
 
 		reg.Increment();
 		ChangeZeroFlag(reg.GetData() == 0);
@@ -875,7 +871,7 @@ namespace SHG
 
 	void CPU::DEC_R(Register8& reg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), -1));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), -1));
 
 		reg.Decrement();
 		ChangeZeroFlag(reg.GetData() == 0);
@@ -889,7 +885,7 @@ namespace SHG
 		ChangeZeroFlag(false);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::RLC_ADDR_RR(Register16& addressReg)
@@ -901,17 +897,17 @@ namespace SHG
 		ChangeZeroFlag(false);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::ADD_RR_RR(Register16& destinationReg, Register16& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData()));
 
 		int result = destinationReg.GetData() + sourceReg.GetData();
 		destinationReg.SetData(result);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned16Bit(result));
+		ChangeCarryFlag(!IsUnsigned16Bit(result));
 	}
 
 	void CPU::LD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
@@ -931,7 +927,7 @@ namespace SHG
 		ChangeZeroFlag(false);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 
@@ -944,7 +940,7 @@ namespace SHG
 		ChangeZeroFlag(false);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::STOP()
@@ -1025,7 +1021,7 @@ namespace SHG
 		regAF.SetHighByte(result);
 		ChangeZeroFlag(result == 0);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::LD_R_ADDR_RR_INC(Register8& destinationReg, Register16& addressReg)
@@ -1050,7 +1046,7 @@ namespace SHG
 	void CPU::INC_ADDR_RR(Register16& reg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(reg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(byteAtAddress, 1));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(byteAtAddress, 1));
 
 		uint8_t result = byteAtAddress + 1;
 		memoryManagementUnit.SetByte(reg.GetData(), result);
@@ -1063,7 +1059,7 @@ namespace SHG
 	{
 
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(reg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(byteAtAddress, -1));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(byteAtAddress, -1));
 
 		uint8_t result = byteAtAddress - 1;
 		memoryManagementUnit.SetByte(reg.GetData(), result);
@@ -1109,102 +1105,102 @@ namespace SHG
 
 	void CPU::ADD_R_R(Register8& destinationReg, Register8& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData()));
 
 		int result = destinationReg.GetData() + sourceReg.GetData();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::ADD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(addressReg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), byteAtAddress));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), byteAtAddress));
 
 		int result = destinationReg.GetData() + byteAtAddress;
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::ADC_R_R(Register8& destinationReg, Register8& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData() + GetCarryFlag()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), sourceReg.GetData() + GetCarryFlag()));
 
 		int result = destinationReg.GetData() + sourceReg.GetData() + GetCarryFlag();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::ADC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(addressReg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), byteAtAddress + GetCarryFlag()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), byteAtAddress + GetCarryFlag()));
 
 		int result = destinationReg.GetData() + byteAtAddress + GetCarryFlag();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SUB_R_R(Register8& destinationReg, Register8& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -sourceReg.GetData()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -sourceReg.GetData()));
 
 		int result = destinationReg.GetData() - sourceReg.GetData();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SUB_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(addressReg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -byteAtAddress));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -byteAtAddress));
 
 		int result = destinationReg.GetData() - byteAtAddress;
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SBC_R_R(Register8& destinationReg, Register8& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -(sourceReg.GetData() + GetCarryFlag())));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -(sourceReg.GetData() + GetCarryFlag())));
 
 		int result = destinationReg.GetData() - sourceReg.GetData() - GetCarryFlag();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SBC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(addressReg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -(byteAtAddress + GetCarryFlag())));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -(byteAtAddress + GetCarryFlag())));
 
 		int result = destinationReg.GetData() - byteAtAddress - GetCarryFlag();
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::AND_R_R(Register8& destinationReg, Register8& sourceReg)
@@ -1263,23 +1259,23 @@ namespace SHG
 
 	void CPU::CP_R_R(Register8& destinationReg, Register8& sourceReg)
 	{
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -sourceReg.GetData()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -sourceReg.GetData()));
 
 		int result = destinationReg.GetData() - sourceReg.GetData();
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::CP_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
 		uint8_t byteAtAddress = memoryManagementUnit.GetByte(addressReg.GetData());
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), -byteAtAddress));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), -byteAtAddress));
 
 		int result = destinationReg.GetData() - byteAtAddress;
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::RET(bool areFlagsSet)
@@ -1324,14 +1320,14 @@ namespace SHG
 	void CPU::ADD_R_U8(Register8& reg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), operand));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), operand));
 
 		int result = reg.GetData() + operand;
 		reg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::RST(uint16_t address)
@@ -1342,27 +1338,27 @@ namespace SHG
 	void CPU::ADC_R_U8(Register8& reg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), operand + GetCarryFlag()));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), operand + GetCarryFlag()));
 
 		int result = reg.GetData() + operand + GetCarryFlag();
 		reg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SUB_R_U8(Register8& reg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), -operand));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), -operand));
 
 		int result = reg.GetData() - operand;
 		reg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::RETI()
@@ -1374,14 +1370,14 @@ namespace SHG
 	void CPU::SBC_R_U8(Register8& reg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), -(operand + GetCarryFlag())));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), -(operand + GetCarryFlag())));
 
 		int result = reg.GetData() - operand - GetCarryFlag();
 		reg.SetData(result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::LD_ADDR_FF00_U8_R(Register8& reg)
@@ -1406,14 +1402,14 @@ namespace SHG
 	void CPU::ADD_RR_I8(Register16& destinationReg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(destinationReg.GetData(), operand));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(destinationReg.GetData(), operand));
 
 		int result = destinationReg.GetData() + (int8_t)operand;
 		destinationReg.SetData(result);
 
 		ChangeZeroFlag(0);
 		ChangeSubtractionFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::JP_RR(Register16& reg, bool areFlagsSet)
@@ -1463,13 +1459,13 @@ namespace SHG
 	void CPU::LD_RR_RR_I8(Register16& destinationReg, Register16& sourceReg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(sourceReg.GetData(), operand));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(sourceReg.GetData(), operand));
 
 		int result = sourceReg.GetData() + (int8_t)operand;
 		destinationReg.SetData(result);
 		ChangeZeroFlag(0);
 		ChangeSubtractionFlag(0);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned16Bit(result));
+		ChangeCarryFlag(!IsUnsigned16Bit(result));
 	}
 
 	void CPU::LD_RR_RR(Register16& destinationReg, Register16& sourceReg)
@@ -1490,12 +1486,12 @@ namespace SHG
 	void CPU::CP_R_U8(Register8& reg)
 	{
 		uint8_t operand = Fetch8();
-		ChangeHalfCarryFlag(Arithmetic::IsHalfCarryRequired(reg.GetData(), -operand));
+		ChangeHalfCarryFlag(IsHalfCarryRequired(reg.GetData(), -operand));
 
 		int result = reg.GetData() - operand;
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(true);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SLA_R(Register8& reg)
@@ -1505,7 +1501,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SLA_ADDR_RR(Register16& addressReg)
@@ -1516,7 +1512,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SRA_R(Register8& reg)
@@ -1527,7 +1523,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SRA_ADDR_RR(Register16& addressReg)
@@ -1540,7 +1536,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SRL_R(Register8& reg)
@@ -1550,7 +1546,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SRL_ADDR_RR(Register16& addressReg)
@@ -1562,7 +1558,7 @@ namespace SHG
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
-		ChangeCarryFlag(!Arithmetic::IsUnsigned8Bit(result));
+		ChangeCarryFlag(!IsUnsigned8Bit(result));
 	}
 
 	void CPU::SWAP_R(Register8& reg)

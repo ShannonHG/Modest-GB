@@ -26,7 +26,7 @@ namespace SHG
 		/// </summary>
 		/// <param name="bitNumber"></param>
 		/// <param name="enabled"></param>
-		void SetBit(uint8_t bitNumber, bool enabled);
+		void ChangeBit(uint8_t bitIndex, bool enable);
 
 		/// <summary>
 		/// Returns the bit at the provided position.
@@ -44,6 +44,9 @@ namespace SHG
 		/// Decrements this register's data by 1.
 		/// </summary>
 		void Decrement();
+
+		void Increase(uint8_t amount);
+		void Decrease(uint8_t amount);
 
 	protected:
 		uint8_t data = 0;

@@ -39,8 +39,8 @@ namespace SHG
 
 	void Register16::SetBit(uint8_t bitNumber, bool enabled)
 	{
-		if (bitNumber < 8) lowRegister.SetBit(bitNumber, enabled);
-		else highRegister.SetBit(bitNumber - 8, enabled);
+		if (bitNumber < 8) lowRegister.ChangeBit(bitNumber, enabled);
+		else highRegister.ChangeBit(bitNumber - 8, enabled);
 	}
 
 	uint8_t Register16::GetBit(uint8_t bitNumber)
