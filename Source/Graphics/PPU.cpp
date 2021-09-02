@@ -5,6 +5,7 @@
 #include "Common/Arithmetic.hpp"
 #include "SDL.h"
 #include "Logger.hpp"
+#include "CPU/Interrupts.hpp"
 
 namespace SHG
 {
@@ -21,116 +22,177 @@ namespace SHG
 	const uint16_t BACKGROUND_PALETTE_ADDRESS = 0xFF47;
 	const uint16_t SPRITE_PALETTE_0_ADDRESS = 0xFF48;
 	const uint16_t SPRITE_PALETTE_1_ADDRESS = 0xFF49;
+	const uint8_t TILE_MAP_WIDTH = 32;
+	const uint8_t TILE_MAP_HEIGHT = 32;
 
-	PPU::PPU(Display& display, DataStorageDevice& memoryManagementUnit) : display(display), memoryManagementUnit(memoryManagementUnit), frameBuffer(FrameBuffer(GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT))
+	const uint8_t LCDC_LCD_ENABLE_INDEX = 7;
+	const uint8_t LCDC_WINDOW_TILE_MAP_INDEX = 6;
+	const uint8_t LCDC_WINDOW_ENABLED_INDEX = 5;
+	const uint8_t LCDC_BG_WINDOW_TILE_DATA_INDEX = 4;
+	const uint8_t LCDC_BG_TILE_MAP_INDEX = 3;
+	const uint8_t LCDC_OBJ_SIZE_INDEX = 2;
+	const uint8_t LCDC_OBJ_ENABLE_INDEX = 1;
+	const uint8_t LCDC_BG_WINDOW_PRIORITY_INDEX = 0;
+
+	PPU::PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram) : vram(vram), display(display), memoryManagementUnit(memoryManagementUnit), frameBuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT)
 	{
 
 	}
 
-	void PPU::Cycle()
+	void PPU::Cycle(uint32_t duration)
 	{
-		bool flag = GetLY() == GetLYC();
-		SetLCDStatusFlag(LCDStatusFlags::LYCLYFlag, flag);
-
-		if (flag)
-		{
-			uint8_t interruptFlag = memoryManagementUnit.GetByte(0xFF0F);
-			uint8_t interruptEnable = memoryManagementUnit.GetByte(0xFFFF);
-			if ((interruptEnable >> 1) & 1)
-			{
-				ChangeBit(interruptFlag, 1, true);
-				memoryManagementUnit.SetByte(0xFF0F, interruptFlag);
-			}
-		}
-
-		memoryManagementUnit.SetByte(0xFF44, currentScanLine);
-
 		uint16_t tileMapAddress = 0x9800;
 
-		uint8_t tileX = 0;
-		uint8_t tileY = 0;
-
-		uint8_t windowX = GetWX();
-
-		bool isWindowTile = GetLCDControlFlag(LCDControlFlags::WindowTileMapArea) == 1;
-		bool isBackgroundTile = GetLCDControlFlag(LCDControlFlags::BackgroundTileMapArea) == 1;
-
-		uint8_t addressMode = GetLCDControlFlag(LCDControlFlags::BackgroundAndWindowAddressMode);
-		//Logger::Write("[PPU] Tile address mode is " + std::to_string(addressMode));
-
-		uint8_t scrollX = GetSCX();
-		uint8_t scrollY = GetSCY();
-		uint16_t tileIndexOffset = 0;
-		uint16_t tileAddress = 0;
-		uint8_t tileDataHigh = 0;
-		uint8_t tileDataLow = 0;
-		std::array<PixelData, 8> pixelData;
-
-		for (int x = 0; x < GB_SCREEN_WIDTH / 8; x++)
+		for (int cycle = 0; cycle < duration; cycle++)
 		{
-			if (isWindowTile)
-			{
-				// Use address 0x9C00 if the scan line's X is inside of the window
-				if (x >= windowX && x < windowX + GB_SCREEN_WIDTH) tileMapAddress = 0x9C00;
+			// Set the current line that's about to be drawn
+			SetLY(currentScanLine);
 
-				tileX = x;
-				tileY = std::floor(currentScanLine / 8);
-			}
-			else
-			{
-				// Use address 0x9C00 if the scan line's X is not inside of the window
-				if (x < GetWX() || x >= windowX + GB_SCREEN_WIDTH) tileMapAddress = 0x9C00;
+			bool lyCompare = GetLY() == GetLYC();
+			memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, 2, lyCompare);
 
-				tileX = ((scrollX / 8) + x) & 0x1F;
-				tileY = (currentScanLine + scrollY) & 255;
+			if (lyCompare)
+			{
+				memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, 6, true);
+				RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
 			}
 
-			tileIndexOffset = (tileX * 8) + tileY;
-
-			switch (addressMode)
+			for (int x = 0; x < GB_SCREEN_WIDTH; x++)
 			{
-			case 0:
-				// Tiles with indexes 0-127 will be located in the 0x8000 - 0x87FF range, 
-				// while tiles with indexes 128-255 will be in the 0x8800 - 0x8FFF range.
-				tileAddress = TILE_DATA_START_ADDRESS + tileIndexOffset;
-				break;
-			case 1:
-				// Tiles with indexes 0-127 will be located in the 0x9000 - 0x97FF range, 
-				// while tiles with indexes 128-255 will be in the 0x8800 - 0x8FFF range.
-				tileAddress = (TILE_DATA_START_ADDRESS + 800) + (tileIndexOffset + 255);
-				break;
-			default:
-				break;
-			}
-			//Logger::Write("[PPU] Tile address: " + ConvertToHexString(tileAddress, 4));
-			tileDataHigh = memoryManagementUnit.GetByte(tileAddress);
-			tileDataLow = memoryManagementUnit.GetByte(tileAddress + 1);
-			pixelData = GetPixelDataFromScanLine((tileDataHigh << 8) | tileDataLow);
+				if (currentScanLine >= GB_SCREEN_HEIGHT) break;
 
-			for (int px = 0; px < pixelData.size(); px++)
+				bool isBackgroundTile = false;
+				if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_TILE_MAP_INDEX))
+				{
+					if (x < GetWX() || (x >= GetWX() + TILE_MAP_PIXEL_WIDTH))
+					{
+						isBackgroundTile = true;
+						tileMapAddress = 0x9C00;
+					}
+				}
+				else
+				{
+					isBackgroundTile = true;
+				}
+
+				bool isWindowTile = false;
+				if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_WINDOW_TILE_MAP_INDEX))
+				{
+					if (x >= GetWX() && (x < GetWX() + TILE_MAP_PIXEL_WIDTH))
+					{
+						isWindowTile = true;
+						tileMapAddress = 0x9C00;
+					}
+				}
+				else
+				{
+					isWindowTile = memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_WINDOW_ENABLED_INDEX);
+				}
+
+				uint8_t tileX = 0;
+				uint8_t tileY = 0;
+
+				if (isWindowTile)
+				{
+					tileX = GetWX() + x;
+					tileY = GetWY() + currentScanLine;
+				}
+				else if (isBackgroundTile)
+				{
+					tileX = static_cast<uint8_t>(std::floor(GetSCX() / 8.0f) + std::floor(x / 8.0f)) & 0x1F;
+					tileY = std::floor(((currentScanLine + GetSCY()) & 255) / 8.0f);
+				}
+
+				int tileMapIndex = tileX + tileY * TILE_MAP_WIDTH;
+
+				int tileIndex = memoryManagementUnit.GetByte(tileMapAddress + tileMapIndex);
+
+				int tileAddress = 0;
+				int tileDataOffset = (tileIndex * 16) + ((currentScanLine % 8) * 2);
+
+				if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX))
+				{
+					tileAddress = 0x8000 + tileDataOffset;
+				}
+				else
+				{
+					tileAddress = 0x9000 + (int8_t)tileDataOffset;
+				}
+
+				// TODO: Swapping the order of the pixels is a temporary hack to 
+				// address bug that causes tiles to be drawn flipped horizontally.
+				uint8_t tileDataHigh = 0;
+				uint8_t tempHigh = memoryManagementUnit.GetByte(tileAddress);
+				for (int b = 0; b < 8; b++)
+				{
+					Arithmetic::ChangeBit(tileDataHigh, b, Arithmetic::GetBit(tempHigh, 7 - b));
+				}
+
+				uint8_t tileDataLow = 0;
+				uint8_t tempLow = memoryManagementUnit.GetByte(tileAddress + 1);
+				for (int b = 0; b < 8; b++)
+				{
+					Arithmetic::ChangeBit(tileDataLow, b, Arithmetic::GetBit(tempLow, 7 - b));
+				}
+
+				int tilePixelX = x % 8;
+
+				uint16_t modifier = (1 << tilePixelX);
+
+				// The bit at the specified index in the low byte
+				// will determine the most significant bit of the color, while the bit 
+				// in the high byte will determine the least significant bit of the color.
+				uint8_t low = (tileDataLow & modifier) >> tilePixelX;
+				uint8_t high = (tileDataHigh & modifier) >> tilePixelX;
+
+				uint8_t color = 0;
+				auto colorID = static_cast<PixelColorID>((low << 1) | high);
+
+				switch (colorID)
+				{
+				case PixelColorID::Black:
+					color = 0;
+					break;
+				case PixelColorID::DarkGray:
+					color = 100;
+					break;
+				case PixelColorID::LightGray:
+					color = 175;
+					break;
+				case PixelColorID::White:
+					color = 255;
+					break;
+				default:
+					assert(false);
+					break;
+				}
+
+				frameBuffer.SetPixel(x, currentScanLine, color, color, color, 255);
+			}
+
+			memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 3);
+			memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+			memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+
+			currentScanLine++;
+			if (currentScanLine == GB_SCREEN_HEIGHT)
 			{
-				frameBuffer.SetPixel(px, currentScanLine, 20 * (int)pixelData[px].colorID);
+				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 4);
+				memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+
+				RequestInterrupt(memoryManagementUnit, InterruptType::VBlank);
 			}
-		}
 
-		currentScanLine++;
-		SetLCDStatusMode(LCDStatusModes::HBlank);
+			if (currentScanLine == GB_VBLANK_END_Y)
+			{
+				currentScanLine = 0;
+				frameBuffer.UploadData();
+				display.Draw(frameBuffer);
+				frameBuffer.Clear();
 
-		//Logger::Write("[PPU] Entering HBlank");
-
-		if (currentScanLine >= GB_SCREEN_HEIGHT)
-		{
-			currentScanLine = 0;
-			//display.Draw(frameBuffer);
-			Logger::Write("[PPU] Entering VBlank");
-			SetLCDStatusMode(LCDStatusModes::VBlank);
-			uint8_t interruptFlag = memoryManagementUnit.GetByte(0xFF0F);
-			uint8_t interruptEnable = memoryManagementUnit.GetByte(0xFFFF);
-			ChangeBit(interruptFlag, 0, true);
-			ChangeBit(interruptEnable, 0, true);
-			memoryManagementUnit.SetByte(0xFF0F, interruptFlag);
-			memoryManagementUnit.SetByte(0xFFFF, interruptEnable);
-			//Logger::Write("[PPU] Entering VBlank");
+				return;
+			}
 		}
 	}
 
@@ -142,28 +204,6 @@ namespace SHG
 	uint8_t PPU::GetLCDStatusFlag(LCDStatusFlags flag)
 	{
 		return (memoryManagementUnit.GetByte(LCD_STATUS_REGISTER_ADDRESS) >> (int)flag) & 1;
-	}
-
-	void PPU::SetLCDControlFlag(LCDControlFlags flag, bool value)
-	{
-		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_CONTROL_REGISTER_ADDRESS);
-		ChangeBit(statusRegister, (uint8_t)flag, value);
-		memoryManagementUnit.SetByte(LCD_CONTROL_REGISTER_ADDRESS, statusRegister);
-	}
-
-	void PPU::SetLCDStatusFlag(LCDStatusFlags flag, bool value)
-	{
-		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_STATUS_REGISTER_ADDRESS);
-		ChangeBit(statusRegister, (uint8_t)flag, value);
-		memoryManagementUnit.SetByte(LCD_STATUS_REGISTER_ADDRESS, statusRegister);
-	}
-
-	void PPU::SetLCDStatusMode(LCDStatusModes mode)
-	{
-		uint8_t statusRegister = memoryManagementUnit.GetByte(LCD_STATUS_REGISTER_ADDRESS);
-		ChangeBit(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag0, ((uint8_t)mode) & 1);
-		ChangeBit(statusRegister, (uint8_t)LCDStatusFlags::ModeFlag1, (((uint8_t)mode) & 2) >> 1);
-		memoryManagementUnit.SetByte(LCD_STATUS_REGISTER_ADDRESS, statusRegister);
 	}
 
 	// Scroll Y
@@ -182,6 +222,11 @@ namespace SHG
 	uint8_t PPU::GetLY()
 	{
 		return memoryManagementUnit.GetByte(LCD_LY_ADDRESS);
+	}
+
+	void PPU::SetLY(uint8_t value)
+	{
+		return memoryManagementUnit.SetByte(LCD_LY_ADDRESS, value);
 	}
 
 	// LY Compare

@@ -9,18 +9,20 @@
 #include "Graphics/PixelData.hpp"
 #include "Graphics/FrameBuffer.hpp"
 #include "LCDStatusModes.hpp"
+#include "Memory/MemoryMap.hpp"
 
 namespace SHG
 {
 	class PPU
 	{
 	public:
-		PPU(Display& display, DataStorageDevice& memoryManagementUnit);
-		void Cycle();
+		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram);
+		void Cycle(uint32_t duration);
 
 	private:
-		DataStorageDevice& memoryManagementUnit;
+		MemoryMap& memoryManagementUnit;
 		Display& display;
+		DataStorageDevice& vram;
 
 		std::queue<PixelData> backgroundPixelQueue;
 		std::queue<PixelData> spritePixelQueue;
@@ -37,6 +39,7 @@ namespace SHG
 		uint8_t GetSCY();
 		uint8_t GetSCX();
 		uint8_t GetLY();
+		void SetLY(uint8_t value);
 		uint8_t GetLYC();
 		uint8_t GetWY();
 		uint8_t GetWX();

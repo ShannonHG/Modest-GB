@@ -65,7 +65,7 @@ namespace SHG
 		}
 		else if (address <= RAM_SWITCHABLE_BANK_END_ADDR && address >= RAM_SWITCHABLE_BANK_START_ADDR)
 		{
-			if (!IsRAMEnabled()) return false;
+			if (!IsRAMEnabled()) return 0;
 			else
 			{
 				uint16_t offset = CalculatePhysicalRAMAddress(GetRAMBankNumber(), RAM_SWITCHABLE_BANK_START_ADDR, address);
@@ -74,7 +74,7 @@ namespace SHG
 			}
 		}
 
-		return true;
+		return 0;
 	}
 
 	void MBC1::SetByte(uint16_t address, uint8_t value)

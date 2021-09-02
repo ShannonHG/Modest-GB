@@ -10,7 +10,7 @@ namespace SHG
 
 	void Register8::ChangeBit(uint8_t bitIndex, bool enable)
 	{
-		SHG::ChangeBit(data, bitIndex, enable);
+		Arithmetic::ChangeBit(data, bitIndex, enable);
 	}
 
 	uint8_t Register8::GetBit(uint8_t bitNumber)

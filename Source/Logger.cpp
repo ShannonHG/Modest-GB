@@ -35,21 +35,21 @@ namespace SHG
 
 	void Logger::WriteMessage(std::string heading, std::string message, bool includeHeading)
 	{
+		//if (!LogFileStream.is_open()) InitLogFile();
 		if (includeHeading)
 		{
 			std::cout << heading << " " << message << std::endl;
+			//LogFileStream << heading << " " << message << "\n";
 		}
 		else
 		{
 			std::cout << message << std::endl;
+			//LogFileStream << message << "\n";
 		}
-
-		/*if (!LogFileStream.is_open()) InitLogFile();
-		LogFileStream << message << std::endl;*/
 	}
 
 	void Logger::WriteDivider()
 	{
-		std::cout << "---------------------------------------------------------------------------------" << std::endl;
+		if (IsLogLevelEnabled(LogLevel::Info)) std::cout << "---------------------------------------------------------------------------------" << std::endl;
 	}
 }

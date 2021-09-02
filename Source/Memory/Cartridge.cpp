@@ -14,11 +14,7 @@ namespace SHG
 
 		std::ifstream file(romFilePath, std::ios::binary);
 
-		if (!file.is_open())
-		{
-			Logger::WriteError("Invalid ROM file provided");
-			return false;
-		}
+		if (!file.is_open()) return false;
 
 		// Buffer for storing the current byte
 		char buffer[1];
@@ -37,7 +33,6 @@ namespace SHG
 		file.close();
 
 		InitMBC();
-		Logger::Write("ROM Loaded successfully");
 		return true;
 	}
 
@@ -230,7 +225,7 @@ namespace SHG
 			if (address > rom.size())
 			{
 				Logger::WriteError("Attempted to read from invalid cartridge address");
-				return false;
+				return 0;
 			}
 
 			return rom[address];

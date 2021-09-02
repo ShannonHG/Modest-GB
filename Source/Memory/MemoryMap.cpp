@@ -15,7 +15,8 @@ namespace SHG
 		}
 
 		MemoryMappedDevice* mappedDevice = GetMappedDevice(device);
-		if (mappedDevice != NULL)
+
+		if (mappedDevice != nullptr)
 		{
 			mappedDevice->ranges.push_back(MemoryMapRange(lowerBoundAddress, upperBoundAddress));
 		}
@@ -32,7 +33,7 @@ namespace SHG
 			for (MemoryMapRange range : d.ranges)
 			{
 				// Check if this device is already contained within the provided address range,
-				// or the address range is inside of this device's address range.
+				// or the provided address range is inside of this device's address range.
 				if ((range.lowerBoundAddress >= lowerBoundAddress && range.lowerBoundAddress <= upperBoundAddress) ||
 					(range.upperBoundAddress >= lowerBoundAddress && range.upperBoundAddress <= upperBoundAddress) ||
 					(lowerBoundAddress >= range.lowerBoundAddress && lowerBoundAddress <= range.upperBoundAddress) ||
@@ -50,11 +51,7 @@ namespace SHG
 	{
 		MemoryMappedDevice* mappedDevice = GetMemoryMappedDeviceForRange(address);
 		
-		if (mappedDevice == NULL) return 0;
-
-		/*Logger::Write("[MemoryMap] Getting byte at address: " + ConvertToHexString(address, 4));
-		Logger::Write("[MemoryMap] Lower bound: " + ConvertToHexString(mappedDevice->GetLowestBound(), 4));
-		Logger::Write("[MemoryMap] Upper bound: " + ConvertToHexString(mappedDevice->GetHighestBound(), 4));*/
+		if (mappedDevice == nullptr) return 0;
 
 		return mappedDevice->device.GetByte(address - mappedDevice->GetLowestBound());
 	}
@@ -65,12 +62,8 @@ namespace SHG
 
 		MemoryMappedDevice* mappedDevice = GetMemoryMappedDeviceForRange(address);
 
-		if (mappedDevice != NULL)
+		if (mappedDevice != nullptr)
 		{
-			/*Logger::Write("[MemoryMap] Setting byte at address: " + ConvertToHexString(address, 4));
-			Logger::Write("[MemoryMap] Lower bound: " + ConvertToHexString(mappedDevice->GetLowestBound(), 4));
-			Logger::Write("[MemoryMap] Upper bound: " + ConvertToHexString(mappedDevice->GetHighestBound(), 4));*/
-
 			mappedDevice->device.SetByte(address - mappedDevice->GetLowestBound(), value);
 		}
 	}
@@ -99,7 +92,7 @@ namespace SHG
 
 	bool MemoryMap::IsDeviceMapped(DataStorageDevice& device)
 	{
-		return GetMappedDevice(device) != NULL;
+		return GetMappedDevice(device) != nullptr;
 	}
 
 	MemoryMappedDevice* MemoryMap::GetMappedDevice(DataStorageDevice& device)
@@ -123,8 +116,8 @@ namespace SHG
 			{
 				blarggOutStream = std::ofstream(std::filesystem::current_path().string() + "/BlarggTestResult.log", std::ios::out);
 			}
-			blarggOutStream << std::to_string(GetByte(0xFF01));
-			//blarggOutStream << (char)GetByte(0xFF01);
+
+			blarggOutStream << (char)GetByte(0xFF01);
 			blarggOutStream.flush();
 		}
 	}

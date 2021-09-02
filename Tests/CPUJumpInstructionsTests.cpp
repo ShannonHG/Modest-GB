@@ -309,6 +309,7 @@ namespace SHG
 		Memory memory = CreatePresetMemory(0xCA);
 		auto processor = CPU(memory);
 
+		processor.ChangeZeroFlag(true);
 		TestStandardJump(processor, memory, 678);
 	}
 
@@ -319,6 +320,7 @@ namespace SHG
 		Memory memory = CreatePresetMemory(0xDA);
 		auto processor = CPU(memory);
 
+		processor.ChangeCarryFlag(true);
 		TestStandardJump(processor, memory, 700);
 	}
 

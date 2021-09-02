@@ -13,6 +13,9 @@ namespace SHG
 	const uint32_t GB_CLOCK_SPEED = 4194304;
 	const uint16_t GB_HSYNC_TIME = 9198;
 	const uint16_t GB_VSYNC_TIME = 59730;
+	const uint8_t GB_VBLANK_END_Y = 153;
+	const uint16_t TILE_MAP_PIXEL_WIDTH = 256;
+	const uint16_t TILE_MAP_PIXEL_HEIGHT = 256;
 
 	std::string ConvertToHexString(uint16_t data, int width);
 	

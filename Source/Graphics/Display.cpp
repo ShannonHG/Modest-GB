@@ -10,30 +10,24 @@ namespace SHG
 
 		window = SDL_CreateWindow("GameBoy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 		renderer = SDL_CreateRenderer(window, 0, 0);
-		surface = SDL_GetWindowSurface(window);
 	}
 
-	void Display::Draw(FrameBuffer buffer)
+	void Display::Draw(FrameBuffer& buffer)
 	{
 		Clear();
 
-		for (int x = 0; x < buffer.GetWidth(); x++)
-		{
-			for (int y = 0; y < buffer.GetHeight(); y++)
-			{
-				uint8_t color = buffer.GetPixel(x, y);
+		SDL_RenderCopy(renderer, buffer.GetTexture(), nullptr, nullptr);
+		SDL_RenderPresent(renderer);
+	}
 
-				SDL_Rect rect;
-				rect.x = x;
-				rect.y = y;
-				rect.w = 1;
-				rect.h = 1;
+	SDL_Window* Display::GetWindow()
+	{
+		return window;
+	}
 
-				SDL_SetRenderDrawColor(renderer, color, color, color, 255);
-				SDL_RenderFillRect(renderer, &rect);
-				SDL_RenderPresent(renderer);
-			}
-		}
+	SDL_Renderer* Display::GetRenderer()
+	{
+		return renderer;
 	}
 
 	void Display::Clear()

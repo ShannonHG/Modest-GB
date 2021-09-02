@@ -18,11 +18,11 @@ namespace SHG
 	void SHG::RequestInterrupt(MemoryMap& memoryMap, InterruptType interruptType)
 	{
 		uint8_t interruptEnable = memoryMap.GetByte(INTERRUPT_ENABLE_ADDRESS);
-		SetBit(interruptEnable, (uint8_t)interruptType);
+		Arithmetic::SetBit(interruptEnable, static_cast<uint8_t>(interruptType));
 		memoryMap.SetByte(INTERRUPT_ENABLE_ADDRESS, interruptEnable);
 
 		uint8_t interruptFlag = memoryMap.GetByte(INTERRUPT_FLAG_ADDRESS);
-		SetBit(interruptFlag, (uint8_t)interruptType);
+		Arithmetic::SetBit(interruptFlag, static_cast<uint8_t>(interruptType));
 		memoryMap.SetByte(INTERRUPT_FLAG_ADDRESS, interruptFlag);
 	}
 }

@@ -62,7 +62,9 @@ namespace SHG
 		Register16 programCounter;
 		Register16 stackPointer;
 
-		bool interruptMasterEnableFlag;
+		uint32_t currentCycles = 0;
+		bool isHalted = false;
+		bool interruptMasterEnableFlag = false;
 		CPUInstruction* currentInstruction;
 
 		static std::map<uint8_t, CPUInstruction> BasicInstructionSet;
@@ -121,12 +123,14 @@ namespace SHG
 		void OR_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
 		void CP_R_R(Register8& destinationReg, Register8& sourceReg);
 		void CP_R_ADDR_RR(Register8& destinationReg, Register16& addressReg);
-		void RET(bool areFlagsSet = true);
+		void RET(bool areFlagsSet);
+		void RET();
 		void POP_RR(Register16& reg);
 		void JP_U16(bool areFlagsSet = true);
 		void CALL_U16(bool areFlagsSet = true);
 		void CALL(uint16_t address);
 		void PUSH_RR(Register16& reg);
+		void POP_AF();
 		void ADD_R_U8(Register8& reg);
 		void RST(uint16_t address);
 		void ADC_R_U8(Register8& reg);
@@ -149,6 +153,10 @@ namespace SHG
 		void LD_R_ADDR_U16(Register8& destinationReg);
 		void EI();
 		void CP_R_U8(Register8& reg);
+		void RLCA();
+		void RLA();
+		void RRA();
+		void RRCA();
 		void RLC_ADDR_RR(Register16& addressReg);
 		void RRC_ADDR_RR(Register16& addressReg);
 		void RL_ADDR_RR(Register16& addressReg);

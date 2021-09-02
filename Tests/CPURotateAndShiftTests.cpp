@@ -8,7 +8,7 @@ namespace SHG
 	{
 		uint8_t data = 2;
 		uint8_t carryFlag = 1;
-		uint8_t previousHighBit = (data & 0b10000000) >> 7;
+		uint8_t previousHighBit = data >> 7;
 
 		// Shift left and set the least significant bit equal to the carry flag.
 		uint8_t expectedResult = (data << 1) | (carryFlag);
@@ -78,7 +78,7 @@ namespace SHG
 	void Test8BitArithmeticRightShift(CPU& processor, Register8& targetRegister)
 	{
 		uint8_t data = 7;
-		uint8_t expectedResult = (data >> 1) & (data & 0b10000000);
+		uint8_t expectedResult = (data >> 1) | (data & 0b10000000);
 
 		targetRegister.SetData(data);
 		processor.Cycle();
