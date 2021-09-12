@@ -113,6 +113,8 @@ namespace SHG
 			Logger::Write("Cartridge type:  'MBC2'");
 			break;
 		case CH_ROM_RAM_CODE:
+			memoryBankControllerType = MemoryBankControllerType::None;
+			Logger::Write("Cartridge type:  'ROM + RAM'");
 			break;
 		case CH_ROM_RAM_BATTERY_CODE:
 			break;
@@ -224,7 +226,7 @@ namespace SHG
 
 			if (address > rom.size())
 			{
-				Logger::WriteError("Attempted to read from invalid cartridge address");
+				Logger::WriteError("Attempted to read from invalid cartridge address: " + ConvertToHexString(address, 4));
 				return 0;
 			}
 

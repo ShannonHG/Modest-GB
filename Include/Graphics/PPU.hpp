@@ -24,12 +24,12 @@ namespace SHG
 		Display& display;
 		DataStorageDevice& vram;
 
-		std::queue<PixelData> backgroundPixelQueue;
-		std::queue<PixelData> spritePixelQueue;
-
-		uint8_t currentScanLine = 0;
+		uint8_t currentScanline = 0;
 
 		FrameBuffer frameBuffer;
+
+		void ProcessBackgroundAndWindowTiles(int scanline, std::queue<PixelData>& pixelQueue);
+		void ProcessSpriteTiles(int scanline, std::queue<PixelData>& pixelQueue);
 
 		uint8_t GetLCDControlFlag(LCDControlFlags flag);
 		void SetLCDControlFlag(LCDControlFlags flag, bool value);
@@ -43,6 +43,6 @@ namespace SHG
 		uint8_t GetLYC();
 		uint8_t GetWY();
 		uint8_t GetWX();
-		std::array<PixelData, 8> GetPixelDataFromScanLine(uint16_t scanLine);
+		std::array<PixelData, 8> GetPixelDataFromScanline(uint16_t scanLine);
 	};
 }

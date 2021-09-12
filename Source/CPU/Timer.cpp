@@ -7,14 +7,14 @@
 namespace SHG
 {
 	const uint16_t DIVIDER_INCREMENTS_PER_SECOND = 16384;
-	const float DIVIDER_INCREMENTS_PER_CYCLE = DIVIDER_INCREMENTS_PER_SECOND / (double)GB_CLOCK_SPEED;
+	const double DIVIDER_INCREMENTS_PER_CYCLE = DIVIDER_INCREMENTS_PER_SECOND / (double)GB_CLOCK_SPEED;
 
-	const uint16_t TIMER_CONTROL_MODE_0_FREQ = (GB_CLOCK_SPEED / 1024.0) / (double)GB_CLOCK_SPEED;
-	const uint16_t TIMER_CONTROL_MODE_1_FREQ = (GB_CLOCK_SPEED / 16.0) / (double)GB_CLOCK_SPEED;
-	const uint16_t TIMER_CONTROL_MODE_2_FREQ = (GB_CLOCK_SPEED / 64.0) / (double)GB_CLOCK_SPEED;
-	const uint16_t TIMER_CONTROL_MODE_3_FREQ = (GB_CLOCK_SPEED / 256.0) / (double)GB_CLOCK_SPEED;
+	const double TIMER_CONTROL_MODE_0_FREQ = (GB_CLOCK_SPEED / 1024.0) / (double)GB_CLOCK_SPEED;
+	const double TIMER_CONTROL_MODE_1_FREQ = (GB_CLOCK_SPEED / 16.0) / (double)GB_CLOCK_SPEED;
+	const double TIMER_CONTROL_MODE_2_FREQ = (GB_CLOCK_SPEED / 64.0) / (double)GB_CLOCK_SPEED;
+	const double TIMER_CONTROL_MODE_3_FREQ = (GB_CLOCK_SPEED / 256.0) / (double)GB_CLOCK_SPEED;
 
-	const std::map<uint8_t, uint16_t> TIMER_COUNTER_FREQUENCIES =
+	const std::map<uint8_t, double> TIMER_COUNTER_FREQUENCIES =
 	{
 		{0, TIMER_CONTROL_MODE_0_FREQ},
 		{1, TIMER_CONTROL_MODE_1_FREQ},
@@ -32,15 +32,14 @@ namespace SHG
 		dividerRegister += cycles * DIVIDER_INCREMENTS_PER_CYCLE;
 		if (dividerRegister > 255) dividerRegister = 0;
 
-		timerCounter += cycles * currentTimerCounterFreq;
-		if (timerCounter > 255)
-		{
-			timerCounter = timerModulo;
-			RequestInterrupt(memoryMap, InterruptType::Timer);
-		}
-		else
+		if (isClockEnabled)
 		{
 			timerCounter += cycles * currentTimerCounterFreq;
+			if (timerCounter > 255)
+			{
+				timerCounter = timerModulo;
+				RequestInterrupt(memoryMap, InterruptType::Timer);
+			}
 		}
 
 		PrintStatus();

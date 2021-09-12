@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 	{
 		Logger::CurrentLogLevel = config.logLevel;
 
-		Logger::Write("Setting ROM file path to '" + config.romFilePath + "' ");
+		Logger::WriteWarning("Setting ROM file path to '" + config.romFilePath + "' ");
 	}
 	else
 	{
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	Logger::Write("Setting log level to '" + LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
+	Logger::WriteWarning("Setting log level to '" + LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
 
 	auto memoryMap = MemoryMap();
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
 	auto vram = Memory(8 * KiB);
 	auto wram = Memory(8 * KiB);
-	auto oam = Memory(159);
+	auto oam = Memory(160);
 	auto echoRAM = Memory(122368);
 	auto restrictedMem = Memory(130464);
 	auto ioRegisters = Memory(128);
@@ -132,15 +132,9 @@ int main(int argc, char* argv[])
 	auto processor = CPU(memoryMap);
 	processor.ResetToDefaultState();
 
-	auto display = Display(256, 256);
+	auto display = Display(GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT);
 	auto ppu = PPU(display, memoryMap, vram);
 
-	//for (int i = 0x0; i <= 0x7FFF; i++)
-	//{
-	//	Logger::Write(ConvertToHexString(i, 4) + ": " + ConvertToHexString(memoryMap.GetByte(i), 2));
-	//}
-
-	//auto prevTime = std::chrono::high_resolution_clock::now();
 	bool isRunning = true;
 	bool cycle = false;
 	bool thisFrame = false;
@@ -167,7 +161,7 @@ int main(int argc, char* argv[])
 
 		uint32_t duration = processor.Cycle();
 		timer.Update(duration);
-		ppu.Cycle(duration);
+		ppu.Cycle(1);
 		processor.HandleInterrupts();
 
 		/*	auto currentTime = std::chrono::high_resolution_clock::now();

@@ -53,7 +53,7 @@ namespace SHG
 		
 		if (mappedDevice == nullptr) return 0;
 
-		return mappedDevice->device.GetByte(address - mappedDevice->GetLowestBound());
+		return mappedDevice->device.GetByte(GetNormalizedAddress(mappedDevice, address));
 	}
 
 	void MemoryMap::SetByte(uint16_t address, uint8_t value)
@@ -64,14 +64,14 @@ namespace SHG
 
 		if (mappedDevice != nullptr)
 		{
-			mappedDevice->device.SetByte(address - mappedDevice->GetLowestBound(), value);
+			mappedDevice->device.SetByte(GetNormalizedAddress(mappedDevice, address), value);
 		}
 	}
 
 	bool MemoryMap::IsAddressAvailable(uint16_t address)
 	{
 		MemoryMappedDevice* device = GetMemoryMappedDeviceForRange(address);
-		return device != NULL && device->device.IsAddressAvailable(address - device->GetLowestBound());
+		return device != NULL && device->device.IsAddressAvailable(GetNormalizedAddress(device, address));
 	}
 
 	MemoryMappedDevice* MemoryMap::GetMemoryMappedDeviceForRange(uint16_t address)
@@ -106,6 +106,11 @@ namespace SHG
 		}
 
 		return NULL;
+	}
+
+	uint16_t MemoryMap::GetNormalizedAddress(MemoryMappedDevice* mappedDevice, uint16_t address)
+	{
+		return address - mappedDevice->GetLowestBound();
 	}
 
 	void MemoryMap::ProcessBlarggTestsOutput(uint16_t address, uint8_t value)

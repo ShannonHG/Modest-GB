@@ -47,21 +47,21 @@ namespace SHG
 		/// set to <see cref="LogLevel::Log"/> or <see cref="LogLevel::Verbose"/>
 		/// </summary>
 		/// <param name="message"></param>
-		static void Write(std::string message, bool includeHeading = true);
+		static void Write(const std::string& message, bool includeHeading = true);
 
 		/// <summary>
 		/// Writes a message to the console if <see cref="CurrentLogLevel"/> is 
 		/// set to <see cref="LogLevel::Warning"/> or <see cref="LogLevel::Verbose"/>
 		/// </summary>
 		/// <param name="message"></param>
-		static void WriteWarning(std::string message, bool includeHeading = true);
+		static void WriteWarning(const std::string& message, bool includeHeading = true);
 
 		/// <summary>
 		/// Writes a message to the console if <see cref="CurrentLogLevel"/> is 
 		/// set to <see cref="LogLevel::Error"/> or <see cref="LogLevel::Verbose"/>
 		/// </summary>
 		/// <param name="message"></param>
-		static void WriteError(std::string message, bool includeHeading = true);
+		static void WriteError(const std::string& message, bool includeHeading = true);
 
 		static void WriteDivider();
 
@@ -70,6 +70,6 @@ namespace SHG
 
 		static void InitLogFile();
 		static bool IsLogLevelEnabled(LogLevel logLevel);
-		static void WriteMessage(std::string heading, std::string message, bool includeHeading);
+		static void WriteMessage(std::string heading, const std::string& message, bool includeHeading, bool writeToConsole);
 	};
 }

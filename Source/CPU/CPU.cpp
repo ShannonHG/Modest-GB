@@ -62,10 +62,11 @@ namespace SHG
 
 	void CPU::HandleInterrupts()
 	{
-		if (!interruptMasterEnableFlag) return;
-
 		uint8_t interruptFlag = memoryManagementUnit.GetByte(INTERRUPT_FLAG_ADDRESS);
 		uint8_t interruptEnable = memoryManagementUnit.GetByte(INTERRUPT_ENABLE_ADDRESS);
+
+		Logger::Write("[CPU] IF: " + ConvertToHexString(interruptFlag, 2));
+		Logger::Write("[CPU] IE: " + ConvertToHexString(interruptEnable, 2));
 
 		for (int i = 0; i < INTERRUPT_OPERATIONS.size(); i++)
 		{
@@ -75,13 +76,16 @@ namespace SHG
 			{
 				uint8_t interruptAddress = INTERRUPT_OPERATIONS.at(static_cast<InterruptType>(i));
 
-				Logger::Write("[CPU] Processing interrupt: " + ConvertToHexString(interruptAddress, 2));
+				Logger::Write("[CPU] Interrupt requested: " + ConvertToHexString(interruptAddress, 2));
 
-				CALL(interruptAddress);
+				if (interruptMasterEnableFlag)
+				{
+					Logger::Write("[CPU] Executing interrupt: " + ConvertToHexString(interruptAddress, 2));
 
-				interruptMasterEnableFlag = false;
-				memoryManagementUnit.SetByte(INTERRUPT_FLAG_ADDRESS, 0);
-				memoryManagementUnit.SetByte(INTERRUPT_ENABLE_ADDRESS, 0);
+					CALL(interruptAddress);
+					interruptMasterEnableFlag = false;
+					memoryManagementUnit.ResetBit(INTERRUPT_FLAG_ADDRESS, i);
+				}
 
 				isHalted = false;
 				return;
@@ -95,9 +99,7 @@ namespace SHG
 
 		if (isHalted)
 		{
-			Logger::WriteError("Halted");
 			currentCycles = HALT_CYCLE_COUNT;
-
 			return currentCycles;
 		}
 
@@ -113,7 +115,6 @@ namespace SHG
 		{
 			std::stringstream errorStream;
 			errorStream << "[CPU] Invalid opcode encountered: " << ConvertToHexString(opcode, 2);
-
 			throw InvalidOpcodeException(errorStream.str());
 		}
 
@@ -1516,6 +1517,7 @@ namespace SHG
 	{
 		reg.SetData(reg.GetData() & Fetch8());
 		ChangeZeroFlag(reg.GetData() == 0);
+		
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(true);
 		ChangeCarryFlag(false);

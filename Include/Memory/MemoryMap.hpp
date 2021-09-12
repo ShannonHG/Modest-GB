@@ -19,7 +19,7 @@ namespace SHG
 	private:
 		std::vector<MemoryMappedDevice> mappedDevices;
 		MemoryMappedDevice* GetMemoryMappedDeviceForRange(uint16_t address);
-
+		uint16_t GetNormalizedAddress(MemoryMappedDevice* mappedDevice, uint16_t address);
 		std::ofstream blarggOutStream;
 		void ProcessBlarggTestsOutput(uint16_t address, uint8_t value);
 	};

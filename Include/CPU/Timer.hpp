@@ -26,7 +26,7 @@ namespace SHG
 		float timerControl = 0;
 
 		bool isClockEnabled = false;
-		uint16_t currentTimerCounterFreq;
+		double currentTimerCounterFreq;
 
 		void PrintStatus();
 	};
