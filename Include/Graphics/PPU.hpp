@@ -10,6 +10,7 @@
 #include "Graphics/FrameBuffer.hpp"
 #include "LCDStatusModes.hpp"
 #include "Memory/MemoryMap.hpp"
+#include "Graphics/PixelFetcherState.hpp"
 
 namespace SHG
 {
@@ -18,15 +19,31 @@ namespace SHG
 	public:
 		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram);
 		void Cycle(uint32_t duration);
+		void Step(uint32_t duration);
 
 	private:
+		PixelFetcherState pixelFetcherState;
+
+		uint16_t currentTileIndex = 0;
+		uint8_t currentTileScanlineLow = 0;
+		uint8_t currentTileScanlineHigh = 0;
+		
+		std::queue<PixelData> backgroundPixelQueue;
+		std::queue<PixelData> spritePixelQueue;
+
 		MemoryMap& memoryManagementUnit;
 		Display& display;
 		DataStorageDevice& vram;
 
 		uint8_t currentScanline = 0;
+		uint8_t currentX = 0;
 
 		FrameBuffer frameBuffer;
+
+		void FetchTileIndex();
+		void FetchLowTileData();
+		void FetchHighTileData();
+		void PushPixelsToBackgroundPixelQueue();
 
 		void ProcessBackgroundAndWindowTiles(int scanline, std::queue<PixelData>& pixelQueue);
 		void ProcessSpriteTiles(int scanline, std::queue<PixelData>& pixelQueue);

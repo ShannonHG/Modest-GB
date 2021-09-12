@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 
 		uint32_t duration = processor.Cycle();
 		timer.Update(duration);
-		ppu.Cycle(1);
+		ppu.Step(duration);
 		processor.HandleInterrupts();
 
 		/*	auto currentTime = std::chrono::high_resolution_clock::now();
