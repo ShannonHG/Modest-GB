@@ -37,6 +37,12 @@ namespace SHG
 	const uint16_t SPRITE_PALETTE_1_ADDRESS = 0xFF49;
 	const uint8_t SPRITE_TILES_TABLE_SIZE = 40;
 
+	const uint16_t UNSIGNED_ADDRESSING_MODE_BASE_ADDRESS = 0x8000;
+	const uint16_t SIGNED_ADDRESSING_MODE_BASE_ADDRESS = 0x9000;
+
+	const uint8_t TILE_SIZE_IN_BYTES = 16;
+	const uint8_t TILE_PIXEL_WIDTH = 8;
+
 	const uint16_t TILE_DATA_START_ADDRESS = 0x8000;
 	const uint16_t TILE_DATA_END_ADDRESS = 0x97FF;
 	const uint16_t BACKGROUND_PALETTE_ADDRESS = 0xFF47;
@@ -45,10 +51,12 @@ namespace SHG
 
 	const std::map<PixelFetcherState, uint32_t> STATE_DURATIONS =
 	{
+		{PixelFetcherState::Idle, 0},
 		{PixelFetcherState::FetchingTile, 2},
 		{PixelFetcherState::FetchingLowTileData, 2},
 		{PixelFetcherState::FetchingHighTileData, 2},
 		{PixelFetcherState::Sleeping, 2},
+		{PixelFetcherState::PushingData, 1},
 	};
 
 	PPU::PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram) : vram(vram), display(display), memoryManagementUnit(memoryManagementUnit), frameBuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT)
@@ -58,6 +66,7 @@ namespace SHG
 
 	void PPU::Step(uint32_t duration)
 	{
+		if (duration == 0) return;
 		SetLY(currentScanline);
 
 		bool lyCompare = GetLY() == GetLYC();
@@ -72,115 +81,42 @@ namespace SHG
 		switch (pixelFetcherState)
 		{
 		case PixelFetcherState::Idle:
-			pixelFetcherState = PixelFetcherState::FetchingTile;
+			TransitionToPixelFetcherState(PixelFetcherState::FetchingTile, duration);
 			Step(duration);
 			break;
 		case PixelFetcherState::FetchingTile:
 			FetchTileIndex();
-
-			if (duration - STATE_DURATIONS.at(pixelFetcherState) <= 0) return;
-			else
-			{
-				duration -= STATE_DURATIONS.at(pixelFetcherState);
-				pixelFetcherState = PixelFetcherState::FetchingLowTileData;
-				Step(duration);
-			}
+			TransitionToPixelFetcherState(PixelFetcherState::FetchingLowTileData, duration);
+			Step(duration);
 			break;
 		case PixelFetcherState::FetchingLowTileData:
 			FetchLowTileData();
-
-			if (duration - STATE_DURATIONS.at(pixelFetcherState) <= 0) return;
-			else
-			{
-				duration -= STATE_DURATIONS.at(pixelFetcherState);
-				pixelFetcherState = PixelFetcherState::FetchingHighTileData;
-				Step(duration);
-			}
+			TransitionToPixelFetcherState(PixelFetcherState::FetchingHighTileData, duration);
+			Step(duration);
 			break;
 		case PixelFetcherState::FetchingHighTileData:
 			FetchHighTileData();
-
-			if (duration - STATE_DURATIONS.at(pixelFetcherState) <= 0) return;
-			else
-			{
-				duration -= STATE_DURATIONS.at(pixelFetcherState);
-				pixelFetcherState = PixelFetcherState::Sleeping;
-				Step(duration);
-			}
+			TransitionToPixelFetcherState(PixelFetcherState::Sleeping, duration);
+			Step(duration);
 			break;
 		case PixelFetcherState::Sleeping:
-			if (duration - STATE_DURATIONS.at(pixelFetcherState) <= 0) return;
-			else
-			{
-				duration -= STATE_DURATIONS.at(pixelFetcherState);
-				pixelFetcherState = PixelFetcherState::PushingData;
-				Step(duration);
-			}
+			TransitionToPixelFetcherState(PixelFetcherState::PushingData, duration);
+			Step(duration);
 			break;
 		case PixelFetcherState::PushingData:
 			PushPixelsToBackgroundPixelQueue();
-			pixelFetcherState = PixelFetcherState::Idle;
-
-			uint8_t queueSize = backgroundPixelQueue.size();
-			for (int i = 0; i < queueSize; i++)
-			{
-				PixelData data = backgroundPixelQueue.front();
-				backgroundPixelQueue.pop();
-
-				if (data.y >= GB_SCREEN_HEIGHT) continue;
-
-				uint8_t color = 0;
-				switch (data.colorID)
-				{
-				case PixelColorID::Black:
-					color = 0;
-					break;
-				case PixelColorID::DarkGray:
-					color = 100;
-					break;
-				case PixelColorID::LightGray:
-					color = 175;
-					break;
-				case PixelColorID::White:
-					color = 255;
-					break;
-				default:
-					assert(false);
-					break;
-				}
-
-				frameBuffer.SetPixel(data.x, data.y, color, color, color, 255);
-			}
 
 			if (currentX == GB_SCREEN_WIDTH)
-			{
-				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 3);
-				memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-				memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-
-				currentScanline++;
-				currentX = 0;
-			}
+				HandleHBlankEvents();
 
 			if (currentScanline == GB_SCREEN_HEIGHT)
-			{
-				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 4);
-				memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-
-				RequestInterrupt(memoryManagementUnit, InterruptType::VBlank);
-			}
+				HandleVBlankEvents();
 
 			if (currentScanline == GB_VBLANK_END_Y)
-			{
-				currentScanline = 0;
-				frameBuffer.UploadData();
-				display.Draw(frameBuffer);
-				frameBuffer.Clear();
+				RenderQueuedPixels();
 
-				return;
-			}
-
+			TransitionToPixelFetcherState(PixelFetcherState::Idle, duration);
+			Step(duration);
 			break;
 		}
 	}
@@ -189,7 +125,7 @@ namespace SHG
 	{
 		uint16_t tileMapAddress = DEFAULT_TILE_MAP_ADDRESS;
 		uint8_t endX = std::clamp(currentX + 8, 0, (int)GB_SCREEN_WIDTH);
-		
+
 		for (uint8_t x = currentX; x < endX; x++)
 		{
 			bool isBackgroundTile = false;
@@ -229,8 +165,9 @@ namespace SHG
 
 			if (isWindowTile)
 			{
-				tileX = GetWX() + x;
+				tileX = (GetWX() - 7) + x;
 				tileY = GetWY() + currentScanline;
+				return;
 			}
 			else if (isBackgroundTile)
 			{
@@ -239,54 +176,30 @@ namespace SHG
 			}
 
 			int tileMapIndex = tileX + tileY * TILE_MAP_WIDTH;
-			currentTileIndex = memoryManagementUnit.GetByte(tileMapAddress + tileMapIndex);
+			currentBackgroundTileIndex = memoryManagementUnit.GetByte(tileMapAddress + tileMapIndex);
 		}
 	}
 	void PPU::FetchLowTileData()
 	{
-		int tileAddress = 0;
-		int tileDataOffset = (currentTileIndex * 16) + ((currentScanline % 8) * 2);
-
-		if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX))
-		{
-			tileAddress = 0x8000 + tileDataOffset;
-		}
-		else
-		{
-			tileAddress = 0x9000 + (int8_t)tileDataOffset;
-		}
-
 		// TODO: Swapping the order of the pixels is a temporary hack to 
 		// address bug that causes tiles to be drawn flipped horizontally.
-		currentTileScanlineLow = 0;
-		uint8_t tempLow = memoryManagementUnit.GetByte(tileAddress + 1);
+		currentBackgroundTileScanlineLow = 0;
+		uint8_t tempLow = memoryManagementUnit.GetByte(GetCurrentBackgroundTileAddress() + 1);
 		for (int b = 0; b < 8; b++)
 		{
-			Arithmetic::ChangeBit(currentTileScanlineLow, b, Arithmetic::GetBit(tempLow, 7 - b));
+			Arithmetic::ChangeBit(currentBackgroundTileScanlineLow, b, Arithmetic::GetBit(tempLow, 7 - b));
 		}
 	}
 
 	void PPU::FetchHighTileData()
 	{
-		int tileAddress = 0;
-		int tileDataOffset = (currentTileIndex * 16) + ((currentScanline % 8) * 2);
-
-		if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX))
-		{
-			tileAddress = 0x8000 + tileDataOffset;
-		}
-		else
-		{
-			tileAddress = 0x9000 + (int8_t)tileDataOffset;
-		}
-
 		// TODO: Swapping the order of the pixels is a temporary hack to 
 		// address bug that causes tiles to be drawn flipped horizontally.
-		currentTileScanlineHigh = 0;
-		uint8_t tempHigh = memoryManagementUnit.GetByte(tileAddress);
+		currentBackgroundTileScanlineHigh = 0;
+		uint8_t tempHigh = memoryManagementUnit.GetByte(GetCurrentBackgroundTileAddress());
 		for (int b = 0; b < 8; b++)
 		{
-			Arithmetic::ChangeBit(currentTileScanlineHigh, b, Arithmetic::GetBit(tempHigh, 7 - b));
+			Arithmetic::ChangeBit(currentBackgroundTileScanlineHigh, b, Arithmetic::GetBit(tempHigh, 7 - b));
 		}
 	}
 
@@ -303,8 +216,8 @@ namespace SHG
 			// The bit at the specified index in the low byte
 			// will determine the most significant bit of the color, while the bit 
 			// in the high byte will determine the least significant bit of the color.
-			uint8_t low = (currentTileScanlineLow & modifier) >> tilePixelX;
-			uint8_t high = (currentTileScanlineHigh & modifier) >> tilePixelX;
+			uint8_t low = (currentBackgroundTileScanlineLow & modifier) >> tilePixelX;
+			uint8_t high = (currentBackgroundTileScanlineHigh & modifier) >> tilePixelX;
 
 			PixelData pixelData;
 
@@ -318,216 +231,73 @@ namespace SHG
 		currentX += increment;
 	}
 
-	void PPU::Cycle(uint32_t duration)
+	int32_t PPU::GetCurrentBackgroundTileAddress()
 	{
-		// TODO: Implement OAM - DMA transfer
-		for (int cycle = 0; cycle < duration; cycle++)
+		bool isUnsignedAddressingMode = memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX);
+
+		int tileIndex = isUnsignedAddressingMode ? currentBackgroundTileIndex : (int8_t)currentBackgroundTileIndex;
+		int tileDataOffset = (tileIndex * TILE_SIZE_IN_BYTES) + ((currentScanline % TILE_PIXEL_WIDTH) * 2);
+
+		return tileDataOffset + (isUnsignedAddressingMode ? UNSIGNED_ADDRESSING_MODE_BASE_ADDRESS : SIGNED_ADDRESSING_MODE_BASE_ADDRESS);
+	}
+
+	void PPU::HandleHBlankEvents()
+	{
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 3);
+		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
+
+		currentScanline++;
+		currentX = 0;
+
+		uint8_t queueSize = backgroundPixelQueue.size();
+		for (int i = 0; i < queueSize; i++)
 		{
-			std::queue<PixelData> backgroundPixelQueue;
-			std::queue<PixelData> spritePixelQueue;
+			PixelData data = backgroundPixelQueue.front();
+			backgroundPixelQueue.pop();
 
-			// Set the current line that's about to be drawn
-			SetLY(currentScanline);
+			if (data.y >= GB_SCREEN_HEIGHT) continue;
 
-			bool lyCompare = GetLY() == GetLYC();
-			memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, 2, lyCompare);
+			// TODO: Properly implement palettes
+			uint8_t color = GetColorFromID(data.colorID);
 
-			if (lyCompare)
-			{
-				memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, 6, true);
-				RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
-			}
-
-			if (currentScanline < GB_SCREEN_HEIGHT)
-			{
-				ProcessBackgroundAndWindowTiles(currentScanline, backgroundPixelQueue);
-				uint8_t queueSize = backgroundPixelQueue.size();
-				for (int i = 0; i < queueSize; i++)
-				{
-					PixelData data = backgroundPixelQueue.front();
-					backgroundPixelQueue.pop();
-
-					uint8_t color = 0;
-					switch (data.colorID)
-					{
-					case PixelColorID::Black:
-						color = 0;
-						break;
-					case PixelColorID::DarkGray:
-						color = 100;
-						break;
-					case PixelColorID::LightGray:
-						color = 175;
-						break;
-					case PixelColorID::White:
-						color = 255;
-						break;
-					default:
-						assert(false);
-						break;
-					}
-
-					frameBuffer.SetPixel(data.x, data.y, color, color, color, 255);
-				}
-
-				if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, 1))
-				{
-					ProcessSpriteTiles(currentScanline, spritePixelQueue);
-					uint8_t spritePixelQueueSize = spritePixelQueue.size();
-					for (int i = 0; i < spritePixelQueueSize; i++)
-					{
-						PixelData data = spritePixelQueue.front();
-						spritePixelQueue.pop();
-
-						uint8_t color = 0;
-						switch (data.colorID)
-						{
-						case PixelColorID::Black:
-							color = 0;
-							break;
-						case PixelColorID::DarkGray:
-							color = 100;
-							break;
-						case PixelColorID::LightGray:
-							color = 175;
-							break;
-						case PixelColorID::White:
-							color = 255;
-							break;
-						default:
-							assert(false);
-							break;
-						}
-
-						frameBuffer.SetPixel(data.x, data.y, color, color, color, 255);
-					}
-				}
-			}
-
-			memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 3);
-			memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-			memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-
-			currentScanline++;
-			if (currentScanline == GB_SCREEN_HEIGHT)
-			{
-				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 4);
-				memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-				memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-
-				RequestInterrupt(memoryManagementUnit, InterruptType::VBlank);
-			}
-
-			if (currentScanline == GB_VBLANK_END_Y)
-			{
-				currentScanline = 0;
-				frameBuffer.UploadData();
-				display.Draw(frameBuffer);
-				frameBuffer.Clear();
-
-				return;
-			}
+			frameBuffer.SetPixel(data.x, data.y, color, color, color, 255);
 		}
 	}
 
-	void PPU::ProcessBackgroundAndWindowTiles(int scanline, std::queue<PixelData>& pixelQueue)
+	void PPU::HandleVBlankEvents()
 	{
-		assert(scanline < GB_SCREEN_HEIGHT);
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 4);
+		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
 
-		uint16_t tileMapAddress = DEFAULT_TILE_MAP_ADDRESS;
-		for (int x = 0; x < GB_SCREEN_WIDTH; x++)
+		RequestInterrupt(memoryManagementUnit, InterruptType::VBlank);
+		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
+	}
+
+	void PPU::RenderQueuedPixels()
+	{
+		currentScanline = 0;
+		frameBuffer.UploadData();
+		display.Draw(frameBuffer);
+		frameBuffer.Clear();
+	}
+
+	uint8_t PPU::GetColorFromID(PixelColorID id)
+	{
+		switch (id)
 		{
-			bool isBackgroundTile = false;
-			if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_TILE_MAP_INDEX))
-			{
-				if (x < GetWX() || (x >= GetWX() + TILE_MAP_PIXEL_WIDTH))
-				{
-					isBackgroundTile = true;
-					tileMapAddress = 0x9C00;
-				}
-			}
-			else
-			{
-				isBackgroundTile = true;
-			}
-
-			bool isWindowTile = false;
-			if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_WINDOW_TILE_MAP_INDEX))
-			{
-				if (x >= GetWX() && (x < GetWX() + TILE_MAP_PIXEL_WIDTH))
-				{
-					isWindowTile = true;
-					tileMapAddress = 0x9C00;
-				}
-			}
-			else
-			{
-				isWindowTile = memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_WINDOW_ENABLED_INDEX);
-			}
-
-			uint8_t tileX = 0;
-			uint8_t tileY = 0;
-
-			if (isWindowTile)
-			{
-				tileX = GetWX() + x;
-				tileY = GetWY() + scanline;
-			}
-			else if (isBackgroundTile)
-			{
-				tileX = static_cast<uint8_t>(std::floor(GetSCX() / 8.0f) + std::floor(x / 8.0f)) & 0x1F;
-				tileY = std::floor(((scanline + GetSCY()) & 255) / 8.0f);
-			}
-
-			int tileMapIndex = tileX + tileY * TILE_MAP_WIDTH;
-
-			int tileIndex = memoryManagementUnit.GetByte(tileMapAddress + tileMapIndex);
-
-			int tileAddress = 0;
-			int tileDataOffset = (tileIndex * 16) + ((scanline % 8) * 2);
-
-			if (memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX))
-			{
-				tileAddress = 0x8000 + tileDataOffset;
-			}
-			else
-			{
-				tileAddress = 0x9000 + (int8_t)tileDataOffset;
-			}
-
-			// TODO: Swapping the order of the pixels is a temporary hack to 
-			// address bug that causes tiles to be drawn flipped horizontally.
-			uint8_t tileDataHigh = 0;
-			uint8_t tempHigh = memoryManagementUnit.GetByte(tileAddress);
-			for (int b = 0; b < 8; b++)
-			{
-				Arithmetic::ChangeBit(tileDataHigh, b, Arithmetic::GetBit(tempHigh, 7 - b));
-			}
-
-			uint8_t tileDataLow = 0;
-			uint8_t tempLow = memoryManagementUnit.GetByte(tileAddress + 1);
-			for (int b = 0; b < 8; b++)
-			{
-				Arithmetic::ChangeBit(tileDataLow, b, Arithmetic::GetBit(tempLow, 7 - b));
-			}
-
-			int tilePixelX = x % 8;
-
-			uint16_t modifier = (1 << tilePixelX);
-
-			// The bit at the specified index in the low byte
-			// will determine the most significant bit of the color, while the bit 
-			// in the high byte will determine the least significant bit of the color.
-			uint8_t low = (tileDataLow & modifier) >> tilePixelX;
-			uint8_t high = (tileDataHigh & modifier) >> tilePixelX;
-
-			PixelData pixelData;
-
-			pixelData.x = x;
-			pixelData.y = scanline;
-			pixelData.colorID = static_cast<PixelColorID>((low << 1) | high);
-
-			pixelQueue.push(pixelData);
+		case PixelColorID::Black:
+			return 0;
+		case PixelColorID::DarkGray:
+			return 100;
+		case PixelColorID::LightGray:
+			return 175;
+		case PixelColorID::White:
+			return 255;
+		default:
+			assert(false);
 		}
 	}
 
@@ -553,7 +323,7 @@ namespace SHG
 			uint8_t flags = memoryManagementUnit.GetByte(attributeAddress + 3);
 
 			// TODO: Swapping the order of the pixels is a temporary hack to 
-			// address bug that causes tiles to be drawn flipped horizontally.
+			// address bug that causes tiles to be flipped horizontally when rendered.
 			uint8_t tileDataHigh = 0;
 			uint8_t tempHigh = memoryManagementUnit.GetByte(tileAddress);
 
@@ -595,6 +365,13 @@ namespace SHG
 				pixelQueue.push(data);
 			}
 		}
+	}
+
+	void PPU::TransitionToPixelFetcherState(PixelFetcherState targetState, uint32_t& duration)
+	{
+		int32_t result = duration - STATE_DURATIONS.at(pixelFetcherState);
+		duration = result <= 0 ? 0 : result;
+		pixelFetcherState = targetState;
 	}
 
 	uint8_t PPU::GetLCDControlFlag(LCDControlFlags flag)

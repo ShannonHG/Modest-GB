@@ -18,15 +18,15 @@ namespace SHG
 	{
 	public:
 		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram);
-		void Cycle(uint32_t duration);
 		void Step(uint32_t duration);
+		void DrawBackgroundMap(Display& targetDisplay);
 
 	private:
-		PixelFetcherState pixelFetcherState;
+		PixelFetcherState pixelFetcherState = PixelFetcherState::Idle;
 
-		uint16_t currentTileIndex = 0;
-		uint8_t currentTileScanlineLow = 0;
-		uint8_t currentTileScanlineHigh = 0;
+		uint16_t currentBackgroundTileIndex = 0;
+		uint8_t currentBackgroundTileScanlineLow = 0;
+		uint8_t currentBackgroundTileScanlineHigh = 0;
 		
 		std::queue<PixelData> backgroundPixelQueue;
 		std::queue<PixelData> spritePixelQueue;
@@ -44,6 +44,12 @@ namespace SHG
 		void FetchLowTileData();
 		void FetchHighTileData();
 		void PushPixelsToBackgroundPixelQueue();
+		void TransitionToPixelFetcherState(PixelFetcherState targetState, uint32_t& duration);
+		void RenderQueuedPixels();
+		void HandleHBlankEvents();
+		void HandleVBlankEvents();
+		uint8_t GetColorFromID(PixelColorID id);
+		int32_t GetCurrentBackgroundTileAddress();
 
 		void ProcessBackgroundAndWindowTiles(int scanline, std::queue<PixelData>& pixelQueue);
 		void ProcessSpriteTiles(int scanline, std::queue<PixelData>& pixelQueue);
