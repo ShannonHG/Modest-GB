@@ -1,9 +1,9 @@
-#include "Graphics/FrameBuffer.hpp"
+#include "Graphics/Framebuffer.hpp"
 #include "Logger.hpp"
 
 namespace SHG
 {
-	FrameBuffer::FrameBuffer(Display& display, int width, int height) : width(width), height(height)
+	Framebuffer::Framebuffer(Display& display, int width, int height) : width(width), height(height)
 	{
 		uint32_t format = SDL_GetWindowPixelFormat(display.GetWindow());
 		pixelFormat = SDL_AllocFormat(format);
@@ -11,7 +11,7 @@ namespace SHG
 		pixels = std::vector<uint32_t>(width * height);
 	}
 
-	void FrameBuffer::UploadData()
+	void Framebuffer::UploadData()
 	{
 		void* lockedPixels;
 		int pitch;
@@ -23,38 +23,38 @@ namespace SHG
 		SDL_UnlockTexture(texture);
 	}
 
-	void FrameBuffer::Clear()
+	void Framebuffer::Clear()
 	{
 		std::memset(pixels.data(), 0, sizeof(uint32_t) * pixels.size());
 		UploadData();
 	}
 
-	void FrameBuffer::Destroy()
+	void Framebuffer::Destroy()
 	{
 		SDL_FreeFormat(pixelFormat);
 	}
 
-	SDL_Texture* FrameBuffer::GetTexture()
+	SDL_Texture* Framebuffer::GetTexture()
 	{
 		return texture;
 	}
 
-	uint32_t FrameBuffer::GetPixel(int x, int y)
+	uint32_t Framebuffer::GetPixel(int x, int y)
 	{
 		return pixels[x + y * width];
 	}
 
-	void FrameBuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
 		pixels[x + y * width] = SDL_MapRGBA(pixelFormat, r, g, b, a);
 	}
 
-	int FrameBuffer::GetWidth()
+	int Framebuffer::GetWidth()
 	{
 		return width;
 	}
 
-	int FrameBuffer::GetHeight()
+	int Framebuffer::GetHeight()
 	{
 		return height;
 	}

@@ -7,10 +7,11 @@
 #include "Graphics/LCDStatusFlags.hpp"
 #include "Graphics/Display.hpp"
 #include "Graphics/PixelData.hpp"
-#include "Graphics/FrameBuffer.hpp"
+#include "Graphics/Framebuffer.hpp"
 #include "LCDStatusModes.hpp"
 #include "Memory/MemoryMap.hpp"
 #include "Graphics/PixelFetcherState.hpp"
+#include "Graphics/TileMapType.hpp"
 
 namespace SHG
 {
@@ -19,7 +20,7 @@ namespace SHG
 	public:
 		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram);
 		void Step(uint32_t duration);
-		void DrawBackgroundMap(Display& targetDisplay);
+		void DrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, TileMapType tileMapType);
 
 	private:
 		PixelFetcherState pixelFetcherState = PixelFetcherState::Idle;
@@ -35,23 +36,21 @@ namespace SHG
 		Display& display;
 		DataStorageDevice& vram;
 
-		uint8_t currentScanline = 0;
-		uint8_t currentX = 0;
+		uint8_t currentScanlineY = 0;
+		uint8_t currentScanlineX = 0;
 
-		FrameBuffer frameBuffer;
+		Framebuffer framebuffer;
 
-		void FetchTileIndex();
-		void FetchLowTileData();
-		void FetchHighTileData();
-		void PushPixelsToBackgroundPixelQueue();
+		uint16_t FetchTileIndex(uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, TileMapType tileMapType, bool ignoreScrolling=false);
+		uint8_t FetchTileData(uint16_t address);
+		void GetPixelsFromTileScanline(uint8_t rawScanlineDataLow, uint8_t rawScanlineDataHigh, uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, std::queue<PixelData>& pixelQueue);
 		void TransitionToPixelFetcherState(PixelFetcherState targetState, uint32_t& duration);
 		void RenderQueuedPixels();
 		void HandleHBlankEvents();
 		void HandleVBlankEvents();
 		uint8_t GetColorFromID(PixelColorID id);
-		int32_t GetCurrentBackgroundTileAddress();
+		int32_t GetBackgroundTileAddress(uint16_t tileIndex, uint8_t scanlineX, uint8_t scanlineY);
 
-		void ProcessBackgroundAndWindowTiles(int scanline, std::queue<PixelData>& pixelQueue);
 		void ProcessSpriteTiles(int scanline, std::queue<PixelData>& pixelQueue);
 
 		uint8_t GetLCDControlFlag(LCDControlFlags flag);

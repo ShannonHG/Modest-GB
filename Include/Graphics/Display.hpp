@@ -2,15 +2,16 @@
 #include <array>
 #include "Graphics/FrameBuffer.hpp"
 #include "SDL.h"
+#include <string>
 
 namespace SHG
 {
-	class FrameBuffer;
+	class Framebuffer;
 	class Display
 	{
 	public: 
-		Display(int width, int height);
-		void Draw(FrameBuffer& buffer);
+		Display(const std::string& title, int width, int height);
+		void Draw(Framebuffer& buffer);
 		SDL_Window* GetWindow();
 		SDL_Renderer* GetRenderer();
 	private:

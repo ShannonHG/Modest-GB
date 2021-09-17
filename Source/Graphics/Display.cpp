@@ -3,16 +3,16 @@
 
 namespace SHG
 {
-	Display::Display(int width, int height)
+	Display::Display(const std::string& title, int width, int height)
 	{
 		screenWidth = width;
 		screenHeight = height;
 
-		window = SDL_CreateWindow("GameBoy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
+		window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 		renderer = SDL_CreateRenderer(window, 0, 0);
 	}
 
-	void Display::Draw(FrameBuffer& buffer)
+	void Display::Draw(Framebuffer& buffer)
 	{
 		Clear();
 

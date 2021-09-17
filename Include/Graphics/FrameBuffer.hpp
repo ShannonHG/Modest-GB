@@ -6,10 +6,10 @@
 namespace SHG
 {
 	class Display;
-	class FrameBuffer
+	class Framebuffer
 	{
 	public:
-		FrameBuffer(Display& display, int width, int height);
+		Framebuffer(Display& display, int width, int height);
 
 		SDL_Texture* texture;
 

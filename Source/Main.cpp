@@ -13,6 +13,7 @@
 #include "Graphics/PPU.hpp"
 #include "Globals.hpp"
 #include "CPU/Timer.hpp"
+#include "Graphics/TileMapType.hpp"
 
 using namespace SHG;
 
@@ -132,8 +133,18 @@ int main(int argc, char* argv[])
 	auto processor = CPU(memoryMap);
 	processor.ResetToDefaultState();
 
-	auto display = Display(GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT);
+	auto display = Display("GameBoy Emulator", GB_SCREEN_WIDTH * 3, GB_SCREEN_HEIGHT * 3);
 	auto ppu = PPU(display, memoryMap, vram);
+
+	auto debugBackgroundMapDisplay = Display("Background Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	auto debugBackgroundFramebuffer = Framebuffer(debugBackgroundMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	uint8_t debugBackgroundScanlineX = 0;
+	uint8_t debugBackgroundScanlineY = 0;
+
+	auto debugWindowMapDisplay = Display("Window Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	auto debugWindowFramebuffer = Framebuffer(debugWindowMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	uint8_t debugWindowScanlineX = 0;
+	uint8_t debugWindowScanlineY = 0;
 
 	bool isRunning = true;
 	bool cycle = false;
@@ -162,6 +173,8 @@ int main(int argc, char* argv[])
 		uint32_t duration = processor.Cycle();
 		timer.Update(duration);
 		ppu.Step(duration);
+		ppu.DrawTileMap(debugBackgroundMapDisplay, debugBackgroundFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
+		ppu.DrawTileMap(debugWindowMapDisplay, debugWindowFramebuffer, debugWindowScanlineX, debugWindowScanlineY, TileMapType::WindowOnly);
 		processor.HandleInterrupts();
 
 		/*	auto currentTime = std::chrono::high_resolution_clock::now();
