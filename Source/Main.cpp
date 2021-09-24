@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
 	auto oam = Memory(160);
 	auto echoRAM = Memory(122368);
 	auto restrictedMem = Memory(130464);
-	auto ioRegisters = Memory(128);
+	auto ioRegisters = Memory(127);
+	auto dmaTransferRegister = DMATransferRegister();
 	auto hram = Memory(127);
 	auto interruptEnableRegister = Memory(1);
 	auto timer = Timer(memoryMap);
@@ -70,7 +71,9 @@ int main(int argc, char* argv[])
 	memoryMap.AssignDeviceToAddressRange(oam, 0xFE00, 0xFE9F);
 	memoryMap.AssignDeviceToAddressRange(serialOutput, 0xFF00, 0xFF03);
 	memoryMap.AssignDeviceToAddressRange(timer, 0xFF04, 0xFF07);
-	memoryMap.AssignDeviceToAddressRange(ioRegisters, 0xFF08, 0xFF7F);
+	memoryMap.AssignDeviceToAddressRange(ioRegisters, 0xFF08, 0xFF45);
+	memoryMap.AssignDeviceToAddressRange(dmaTransferRegister, 0xFF46, 0xFF46);
+	memoryMap.AssignDeviceToAddressRange(ioRegisters, 0xFF47, 0xFF7F);
 	memoryMap.AssignDeviceToAddressRange(hram, 0xFF80, 0xFFFE);
 	memoryMap.AssignDeviceToAddressRange(interruptEnableRegister, 0xFFFF, 0xFFFF);
 
@@ -133,22 +136,32 @@ int main(int argc, char* argv[])
 	auto processor = CPU(memoryMap);
 	processor.ResetToDefaultState();
 
-	auto display = Display("GameBoy Emulator", GB_SCREEN_WIDTH * 3, GB_SCREEN_HEIGHT * 3);
-	auto ppu = PPU(display, memoryMap, vram);
+	std::string windowTitle = "Game Boy Emulator";
+	auto display = Display(windowTitle, GB_SCREEN_WIDTH * 3, GB_SCREEN_HEIGHT * 3);
+	auto ppu = PPU(display, memoryMap, vram, dmaTransferRegister);
 
-	auto debugBackgroundMapDisplay = Display("Background Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	auto debugBackgroundFramebuffer = Framebuffer(debugBackgroundMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	uint8_t debugBackgroundScanlineX = 0;
-	uint8_t debugBackgroundScanlineY = 0;
+	//auto debugBackgroundMapDisplay = Display("Background Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	//auto debugBackgroundFramebuffer = Framebuffer(debugBackgroundMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	//uint8_t debugBackgroundScanlineX = 0;
+	//uint8_t debugBackgroundScanlineY = 0;
 
-	auto debugWindowMapDisplay = Display("Window Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	auto debugWindowFramebuffer = Framebuffer(debugWindowMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	uint8_t debugWindowScanlineX = 0;
-	uint8_t debugWindowScanlineY = 0;
+	//auto debugWindowMapDisplay = Display("Window Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	//auto debugWindowFramebuffer = Framebuffer(debugWindowMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
+	//uint8_t debugWindowScanlineX = 0;
+	//uint8_t debugWindowScanlineY = 0;
+
+	//uint8_t spriteFramebufferWidth = 116;
+	//uint8_t spriteFramebufferHeight = 44;
+	//auto debugSpritesDisplay = Display("Sprites", spriteFramebufferWidth * 3, spriteFramebufferHeight * 3);
+	//auto debugSpritesFramebuffer = Framebuffer(debugSpritesDisplay, spriteFramebufferWidth, spriteFramebufferHeight);
+	//uint8_t debugSpriteIndex = 0;
+	//uint8_t debugSpriteScanline = 0;
 
 	bool isRunning = true;
-	bool cycle = false;
 	bool thisFrame = false;
+
+	auto prevTime = std::chrono::system_clock::now();
+	double timeSinceTitleUpdate = 0;
 
 	while (isRunning)
 	{
@@ -160,28 +173,29 @@ int main(int argc, char* argv[])
 				isRunning = false;
 				return 0;
 			}
-
-			if (e.type == SDL_KEYDOWN)
-			{
-				if (e.key.keysym.sym == SDLK_RETURN)
-				{
-					cycle = true;
-				}
-			}
 		}
 
-		uint32_t duration = processor.Cycle();
+		uint32_t duration =  processor.Cycle();
 		timer.Update(duration);
-		ppu.Step(duration);
-		ppu.DrawTileMap(debugBackgroundMapDisplay, debugBackgroundFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
+		ppu.Cycle(duration);
+		/*ppu.DrawTileMap(debugBackgroundMapDisplay, debugBackgroundFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
 		ppu.DrawTileMap(debugWindowMapDisplay, debugWindowFramebuffer, debugWindowScanlineX, debugWindowScanlineY, TileMapType::WindowOnly);
+		ppu.DrawSprites(debugSpritesDisplay, debugSpritesFramebuffer, debugSpriteIndex, debugSpriteScanline);*/
 		processor.HandleInterrupts();
 
-		/*	auto currentTime = std::chrono::high_resolution_clock::now();
-			auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime);
+		auto currentTime = std::chrono::system_clock::now();
+		auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime);
 
-			Logger::Write("Cycles Per Second: " + std::to_string(1 / deltaTime.count()));
-			prevTime = currentTime;*/
+		double fps = 1.0 / deltaTime.count();
+		timeSinceTitleUpdate += deltaTime.count();
+
+		if (timeSinceTitleUpdate >= 1)
+		{
+			display.SetWindowTitle(windowTitle + " " + std::to_string(fps) + " FPS");
+			timeSinceTitleUpdate = 0;
+		}
+
+		prevTime = currentTime;
 	}
 
 	return 0;

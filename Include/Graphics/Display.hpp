@@ -14,6 +14,7 @@ namespace SHG
 		void Draw(Framebuffer& buffer);
 		SDL_Window* GetWindow();
 		SDL_Renderer* GetRenderer();
+		void SetWindowTitle(const std::string& title);
 	private:
 		int screenWidth = 0;
 		int screenHeight = 0;

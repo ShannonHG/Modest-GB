@@ -10,7 +10,6 @@ namespace SHG
 		int y;
 		PixelColorID colorID;
 		uint8_t palette;
-		uint8_t spritePriority;
 		uint8_t backgroundPriority;
 	};
 }

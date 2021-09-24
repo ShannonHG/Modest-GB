@@ -8,8 +8,14 @@ namespace SHG
 		screenWidth = width;
 		screenHeight = height;
 
+		
 		window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 		renderer = SDL_CreateRenderer(window, 0, 0);
+	}
+
+	void Display::SetWindowTitle(const std::string& title)
+	{
+		SDL_SetWindowTitle(window, title.c_str());
 	}
 
 	void Display::Draw(Framebuffer& buffer)
