@@ -157,6 +157,11 @@ int main(int argc, char* argv[])
 	//uint8_t debugSpriteIndex = 0;
 	//uint8_t debugSpriteScanline = 0;
 
+	auto debugTilesDisplay = Display("Tiles", 256 * 2, 96 * 2);
+	auto debugTilesFramebuffer = Framebuffer(debugTilesDisplay, 256, 96);
+	uint16_t debugTilesScanlineX = 0;
+	uint16_t debugTilesScanlineY = 0;
+
 	bool isRunning = true;
 	bool thisFrame = false;
 
@@ -181,6 +186,7 @@ int main(int argc, char* argv[])
 		/*ppu.DrawTileMap(debugBackgroundMapDisplay, debugBackgroundFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
 		ppu.DrawTileMap(debugWindowMapDisplay, debugWindowFramebuffer, debugWindowScanlineX, debugWindowScanlineY, TileMapType::WindowOnly);
 		ppu.DrawSprites(debugSpritesDisplay, debugSpritesFramebuffer, debugSpriteIndex, debugSpriteScanline);*/
+		ppu.DrawAllTiles(debugTilesDisplay, debugTilesFramebuffer, debugTilesScanlineX, debugTilesScanlineY);
 		processor.HandleInterrupts();
 
 		auto currentTime = std::chrono::system_clock::now();

@@ -23,13 +23,14 @@ namespace SHG
 		void Cycle(uint32_t duration);
 		void DrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, TileMapType tileMapType);
 		void DrawSprites(Display& display, Framebuffer& framebuffer, uint8_t& spriteIndex, uint8_t& scanlineY);
+		void DrawAllTiles(Display& display, Framebuffer& framebuffer, uint16_t& scanlineX, uint16_t& scanlineY);
 	private:
 		enum class PPUMode
 		{
-			HBlank = 0,
-			VBlank = 1,
-			SearchingOAM = 2,
-			LCDTransfer = 3
+			HBlank = 0, // 87 - 204 cycles
+			VBlank = 1, // 4560 cycles
+			SearchingOAM = 2, // 80 cycles
+			LCDTransfer = 3 // 172 - 289 cycles
 		};
 
 		enum class PixelFetcherState
@@ -65,7 +66,7 @@ namespace SHG
 
 		std::chrono::system_clock::time_point frameStartTime;
 
-		uint8_t currentModeElapsedTime = 0;
+		uint16_t currentModeElapsedTime = 0;
 
 		uint8_t currentScanline = 0;
 		uint8_t currentScanlineX = 0;
@@ -116,6 +117,7 @@ namespace SHG
 		void GetPixelsFromTileScanline(uint8_t rawScanlineDataLow, uint8_t rawScanlineDataHigh, uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, std::queue<PixelData>& pixelQueue);
 
 		void RefreshLY();
+		void RefreshLYCompare();
 
 		void ChangeLCDControlBit(uint8_t bitIndex, bool isSet);
 		bool GetLCDControlBit(uint8_t bitIndex);

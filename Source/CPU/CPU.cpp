@@ -436,12 +436,12 @@ namespace SHG
 		{ 0x6D, CPUInstruction("LD L, L", 4, &CPU::Execute6D) },
 		{ 0x6E, CPUInstruction("LD L, (HL)", 8, &CPU::Execute6E) },
 		{ 0x6F, CPUInstruction("LD L, A", 4, &CPU::Execute6F) },
-		{ 0x70, CPUInstruction("LD (HL), B", 4, &CPU::Execute70) },
-		{ 0x71, CPUInstruction("LD (HL), C", 4, &CPU::Execute71) },
-		{ 0x72, CPUInstruction("LD (HL), D", 4, &CPU::Execute72) },
-		{ 0x73, CPUInstruction("LD (HL), E", 4, &CPU::Execute73) },
-		{ 0x74, CPUInstruction("LD (HL), H", 4, &CPU::Execute74) },
-		{ 0x75, CPUInstruction("LD (HL), L", 4, &CPU::Execute75) },
+		{ 0x70, CPUInstruction("LD (HL), B", 8, &CPU::Execute70) },
+		{ 0x71, CPUInstruction("LD (HL), C", 8, &CPU::Execute71) },
+		{ 0x72, CPUInstruction("LD (HL), D", 8, &CPU::Execute72) },
+		{ 0x73, CPUInstruction("LD (HL), E", 8, &CPU::Execute73) },
+		{ 0x74, CPUInstruction("LD (HL), H", 8, &CPU::Execute74) },
+		{ 0x75, CPUInstruction("LD (HL), L", 8, &CPU::Execute75) },
 		{ 0x76, CPUInstruction("HALT", 4, &CPU::Execute76) },
 		{ 0x77, CPUInstruction("LD (HL), A", 8, &CPU::Execute77) },
 		{ 0x78, CPUInstruction("LD A, B", 4, &CPU::Execute78) },
@@ -706,7 +706,7 @@ namespace SHG
 		{ 0x83, CPUInstruction("RES 0, E", 8, &CPU::ExecuteCB83) },
 		{ 0x84, CPUInstruction("RES 0, H", 8, &CPU::ExecuteCB84) },
 		{ 0x85, CPUInstruction("RES 0, L", 8, &CPU::ExecuteCB85) },
-		{ 0x86, CPUInstruction("RES 0, (HL)", 12, &CPU::ExecuteCB86) },
+		{ 0x86, CPUInstruction("RES 0, (HL)", 16, &CPU::ExecuteCB86) },
 		{ 0x87, CPUInstruction("RES 0, A", 8, &CPU::ExecuteCB87) },
 		{ 0x88, CPUInstruction("RES 1, B", 8, &CPU::ExecuteCB88) },
 		{ 0x89, CPUInstruction("RES 1, C", 8, &CPU::ExecuteCB89) },
@@ -714,7 +714,7 @@ namespace SHG
 		{ 0x8B, CPUInstruction("RES 1, E", 8, &CPU::ExecuteCB8B) },
 		{ 0x8C, CPUInstruction("RES 1, H", 8, &CPU::ExecuteCB8C) },
 		{ 0x8D, CPUInstruction("RES 1, L", 8, &CPU::ExecuteCB8D) },
-		{ 0x8E, CPUInstruction("RES 1, (HL)", 12, &CPU::ExecuteCB8E) },
+		{ 0x8E, CPUInstruction("RES 1, (HL)", 16, &CPU::ExecuteCB8E) },
 		{ 0x8F, CPUInstruction("RES 1, A", 8, &CPU::ExecuteCB8F) },
 		{ 0x90, CPUInstruction("RES 2, B", 8, &CPU::ExecuteCB90) },
 		{ 0x91, CPUInstruction("RES 2, C", 8, &CPU::ExecuteCB91) },
@@ -722,7 +722,7 @@ namespace SHG
 		{ 0x93, CPUInstruction("RES 2, E", 8, &CPU::ExecuteCB93) },
 		{ 0x94, CPUInstruction("RES 2, H", 8, &CPU::ExecuteCB94) },
 		{ 0x95, CPUInstruction("RES 2, L", 8, &CPU::ExecuteCB95) },
-		{ 0x96, CPUInstruction("RES 2, (HL)", 12, &CPU::ExecuteCB96) },
+		{ 0x96, CPUInstruction("RES 2, (HL)", 16, &CPU::ExecuteCB96) },
 		{ 0x97, CPUInstruction("RES 2, A", 8, &CPU::ExecuteCB97) },
 		{ 0x98, CPUInstruction("RES 3, B", 8, &CPU::ExecuteCB98) },
 		{ 0x99, CPUInstruction("RES 3, C", 8, &CPU::ExecuteCB99) },
@@ -730,7 +730,7 @@ namespace SHG
 		{ 0x9B, CPUInstruction("RES 3, E", 8, &CPU::ExecuteCB9B) },
 		{ 0x9C, CPUInstruction("RES 3, H", 8, &CPU::ExecuteCB9C) },
 		{ 0x9D, CPUInstruction("RES 3, L", 8, &CPU::ExecuteCB9D) },
-		{ 0x9E, CPUInstruction("RES 3, (HL)", 12, &CPU::ExecuteCB9E) },
+		{ 0x9E, CPUInstruction("RES 3, (HL)", 16, &CPU::ExecuteCB9E) },
 		{ 0x9F, CPUInstruction("RES 3, A", 8, &CPU::ExecuteCB9F) },
 		{ 0xA0, CPUInstruction("RES 4, B", 8, &CPU::ExecuteCBA0) },
 		{ 0xA1, CPUInstruction("RES 4, C", 8, &CPU::ExecuteCBA1) },
@@ -738,7 +738,7 @@ namespace SHG
 		{ 0xA3, CPUInstruction("RES 4, E", 8, &CPU::ExecuteCBA3) },
 		{ 0xA4, CPUInstruction("RES 4, H", 8, &CPU::ExecuteCBA4) },
 		{ 0xA5, CPUInstruction("RES 4, L", 8, &CPU::ExecuteCBA5) },
-		{ 0xA6, CPUInstruction("RES 4, (HL)", 12, &CPU::ExecuteCBA6) },
+		{ 0xA6, CPUInstruction("RES 4, (HL)", 16, &CPU::ExecuteCBA6) },
 		{ 0xA7, CPUInstruction("RES 4, A", 8, &CPU::ExecuteCBA7) },
 		{ 0xA8, CPUInstruction("RES 5, B", 8, &CPU::ExecuteCBA8) },
 		{ 0xA9, CPUInstruction("RES 5, C", 8, &CPU::ExecuteCBA9) },
@@ -746,7 +746,7 @@ namespace SHG
 		{ 0xAB, CPUInstruction("RES 5, E", 8, &CPU::ExecuteCBAB) },
 		{ 0xAC, CPUInstruction("RES 5, H", 8, &CPU::ExecuteCBAC) },
 		{ 0xAD, CPUInstruction("RES 5, L", 8, &CPU::ExecuteCBAD) },
-		{ 0xAE, CPUInstruction("RES 5, (HL)", 12, &CPU::ExecuteCBAE) },
+		{ 0xAE, CPUInstruction("RES 5, (HL)", 16, &CPU::ExecuteCBAE) },
 		{ 0xAF, CPUInstruction("RES 5, A", 8, &CPU::ExecuteCBAF) },
 		{ 0xB0, CPUInstruction("RES 6, B", 8, &CPU::ExecuteCBB0) },
 		{ 0xB1, CPUInstruction("RES 6, C", 8, &CPU::ExecuteCBB1) },
@@ -754,7 +754,7 @@ namespace SHG
 		{ 0xB3, CPUInstruction("RES 6, E", 8, &CPU::ExecuteCBB3) },
 		{ 0xB4, CPUInstruction("RES 6, H", 8, &CPU::ExecuteCBB4) },
 		{ 0xB5, CPUInstruction("RES 6, L", 8, &CPU::ExecuteCBB5) },
-		{ 0xB6, CPUInstruction("RES 6, (HL)", 12, &CPU::ExecuteCBB6) },
+		{ 0xB6, CPUInstruction("RES 6, (HL)", 16, &CPU::ExecuteCBB6) },
 		{ 0xB7, CPUInstruction("RES 6, A", 8, &CPU::ExecuteCBB7) },
 		{ 0xB8, CPUInstruction("RES 7, B", 8, &CPU::ExecuteCBB8) },
 		{ 0xB9, CPUInstruction("RES 7, C", 8, &CPU::ExecuteCBB9) },
@@ -762,7 +762,7 @@ namespace SHG
 		{ 0xBB, CPUInstruction("RES 7, E", 8, &CPU::ExecuteCBBB) },
 		{ 0xBC, CPUInstruction("RES 7, H", 8, &CPU::ExecuteCBBC) },
 		{ 0xBD, CPUInstruction("RES 7, L", 8, &CPU::ExecuteCBBD) },
-		{ 0xBE, CPUInstruction("RES 7, (HL)", 12, &CPU::ExecuteCBBE) },
+		{ 0xBE, CPUInstruction("RES 7, (HL)", 16, &CPU::ExecuteCBBE) },
 		{ 0xBF, CPUInstruction("RES 7, A", 8, &CPU::ExecuteCBBF) },
 		{ 0xC0, CPUInstruction("SET 0, B", 8, &CPU::ExecuteCBC0) },
 		{ 0xC1, CPUInstruction("SET 0, C", 8, &CPU::ExecuteCBC1) },
@@ -1539,7 +1539,12 @@ namespace SHG
 
 	void CPU::JP_RR(Register16& reg, bool areFlagsSet)
 	{
-		if (areFlagsSet) programCounter.SetData(reg.GetData());
+		if (areFlagsSet)
+		{
+			programCounter.SetData(reg.GetData());
+			currentCycles = 16;
+		}
+		else currentCycles = 12;
 	}
 
 	void CPU::LD_ADDR_U16_R(Register8& reg)

@@ -89,6 +89,8 @@ namespace SHG
 	{
 		if (duration == 0) return;
 
+		RefreshLY();
+
 		duration = ExecuteDMATransferCycle(duration);
 
 		switch (currentMode)
@@ -113,6 +115,7 @@ namespace SHG
 	uint32_t PPU::HandleHBlankMode(uint32_t duration)
 	{
 		currentScanlineElapsedTime += duration;
+		currentModeElapsedTime += duration;
 
 		if (currentScanlineElapsedTime >= CYCLES_PER_SCANLINE)
 		{
@@ -120,9 +123,11 @@ namespace SHG
 			duration = currentScanlineElapsedTime - CYCLES_PER_SCANLINE;
 
 			currentScanline++;
-			RefreshLY();
 			currentScanlineX = 0;
 			currentScanlineElapsedTime = 0;
+
+			//Logger::WriteError("HBlank length: " + std::to_string(currentModeElapsedTime));
+			currentModeElapsedTime = 0;
 
 			if (currentScanline == GB_SCREEN_HEIGHT)
 				EnterVBlankMode();
@@ -136,16 +141,19 @@ namespace SHG
 	uint32_t PPU::HandleVBlankMode(uint32_t duration)
 	{
 		currentScanlineElapsedTime += duration;
+		currentModeElapsedTime += duration;
 
 		if (currentScanlineElapsedTime >= CYCLES_PER_SCANLINE)
 		{
 			// Save the leftover cycles
 			duration = currentScanlineElapsedTime - CYCLES_PER_SCANLINE;
-			currentScanline++;
 			currentScanlineElapsedTime = 0;
 
 			if (currentScanline == GB_VBLANK_END_Y)
 			{
+				//Logger::WriteError("VBlank length: " + std::to_string(currentModeElapsedTime));
+				currentModeElapsedTime = 0;
+
 				/*auto currentTime = std::chrono::system_clock::now();
 				auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - frameStartTime).count();
 
@@ -154,9 +162,11 @@ namespace SHG
 				currentScanline = 0;
 				DrawFrameBuffer();
 				EnterOAMSearchMode();
+
+				return duration;
 			}
 
-			RefreshLY();
+			currentScanline++;
 		}
 
 		return duration;
@@ -165,11 +175,11 @@ namespace SHG
 	uint32_t PPU::HandleLCDTransferMode(uint32_t duration)
 	{
 		currentScanlineElapsedTime += STATE_DURATIONS.at(pixelFetcherState);
+		currentModeElapsedTime += STATE_DURATIONS.at(pixelFetcherState);
 
 		switch (pixelFetcherState)
 		{
 		case PixelFetcherState::FetchingTile:
-			RefreshLY();
 			currentPixelFetcherTileIndex = FetchTileMapIndex(currentScanlineX, currentScanline, GB_SCREEN_WIDTH, TileMapType::BackgroundAndWindow);
 			duration = TransitionToPixelFetcherState(PixelFetcherState::FetchingLowTileData, duration);
 			break;
@@ -190,19 +200,30 @@ namespace SHG
 
 			// Increase the X position based on how many pixels were added to the queue.
 			// The number of added pixels should generally be 8, but this handles the case where that's not true.
-			currentScanlineX += tileMapPixelQueue.size() - queueSize;
+			uint8_t diff = tileMapPixelQueue.size() - queueSize;
+			currentScanlineX += diff;
 
 			duration = TransitionToPixelFetcherState(PixelFetcherState::FetchingTile, duration);
 
 			if (currentScanlineX == GB_SCREEN_WIDTH)
 			{
-				if (GetLCDControlBit(LCDC_OBJ_ENABLE_INDEX))
+				currentScanlineElapsedTime += 2;
+				currentModeElapsedTime += 2;
+
+				// TODO: Remove hardcoded values and account for number of sprites
+				if (currentModeElapsedTime >= 172)
 				{
-					GetSpritePixelsForScanline(spritesOnCurrentScanline, currentScanlineX, currentScanline, spritePixelQueue);
-					spritesOnCurrentScanline.clear();
+					if (GetLCDControlBit(LCDC_OBJ_ENABLE_INDEX))
+					{
+						GetSpritePixelsForScanline(spritesOnCurrentScanline, currentScanlineX, currentScanline, spritePixelQueue);
+						spritesOnCurrentScanline.clear();
+					}
+
+					//Logger::WriteError("LCD transfer end scan line elapsed time: " + std::to_string(currentScanlineElapsedTime));
+					//Logger::WriteError("LCD transfer length: " + std::to_string(currentModeElapsedTime));
+					currentModeElapsedTime = 0;
+					EnterHBlankMode();
 				}
-				
-				EnterHBlankMode();
 			}
 
 			break;
@@ -294,6 +315,8 @@ namespace SHG
 			// TODO: Revisit
 			tileX = (windowX - 7) + scanlineX;
 			tileY = windowX + scanlineY;
+			//tileX = static_cast<uint8_t>(std::floor((std::max((int)(windowX - 7), 0) + scanlineX) / 8.0));
+			//tileY = static_cast<uint8_t>(std::floor(windowX + scanlineY) / 8.0);
 		}
 		else if (isBackgroundTile && isBackgroundTilesEnabled)
 		{
@@ -396,12 +419,25 @@ namespace SHG
 
 	void PPU::EnterOAMSearchMode()
 	{
+		//Logger::WriteError("OAM search scanline time start: " + std::to_string(currentScanlineElapsedTime));
 		currentMode = PPUMode::SearchingOAM;
+
+		ChangeLCDStatusBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, true);
+		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+
+		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
 	}
 
 	void PPU::EnterLCDTransferMode()
 	{
+		//Logger::WriteError("LCD transfer scanline time start: " + std::to_string(currentScanlineElapsedTime));
 		currentMode = PPUMode::LCDTransfer;
+
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+
+		//frameStartTime = std::chrono::system_clock::now();
 	}
 
 	void PPU::DrawFrameBuffer()
@@ -439,11 +475,9 @@ namespace SHG
 
 	uint32_t PPU::FetchSpritesOnScanline(uint8_t scanlineY, std::vector<Sprite>& sprites, uint32_t duration)
 	{
-		uint32_t elapsedTime = 0;
-		for (; currentSpriteIndex < MAX_SPRITE_COUNT; currentSpriteIndex++)
+		while (currentSpriteIndex < MAX_SPRITE_COUNT)
 		{
-			if (duration < 2)
-				return duration;
+			currentModeElapsedTime += 2;
 
 			Sprite sprite = FetchSpriteAtIndex(currentSpriteIndex);
 
@@ -453,20 +487,25 @@ namespace SHG
 			if (spriteScanline >= 0 && spriteScanline < 8)
 				sprites.push_back(sprite);
 
-			elapsedTime += 2;
+			currentScanlineElapsedTime += 2;
+			currentSpriteIndex++;
 
-			if ((int)(duration - elapsedTime) <= 0)
-				return 0;
+			if ((int)(duration - 2) <= 0)
+			{
+				if (currentSpriteIndex == MAX_SPRITE_COUNT)
+					break;
+				else
+					return 0;
+			}
 
-
-			duration -= elapsedTime;
+			duration -= 2;
 		}
 
-		currentMode = PPUMode::LCDTransfer;
-
-		//frameStartTime = std::chrono::system_clock::now();
-
+		currentModeElapsedTime = 0;
 		currentSpriteIndex = 0;
+		EnterLCDTransferMode();
+
+		return duration;
 	}
 
 	void PPU::GetSpritePixelsForScanline(const std::vector<Sprite>& spritesOnCurrentScanline, uint8_t scanlineX, uint8_t scanlineY, std::queue<PixelData>& pixelQueue)
@@ -612,10 +651,69 @@ namespace SHG
 		}
 	}
 
+	void PPU::DrawAllTiles(Display& display, Framebuffer& framebuffer, uint16_t& scanlineX, uint16_t& scanlineY)
+	{
+		uint16_t tileDataAddress = 0x8000;
+		uint16_t maxTiles = 384;
+		uint16_t width = 32 * TILE_WIDTH_IN_PIXELS;
+		uint16_t height = 12 * TILE_HEIGHT_IN_PIXELS;
+
+		uint16_t tileIndex = std::floor(scanlineX / 8.0) + (std::floor(scanlineY / 8.0) * 32);
+		//Logger::WriteError("Tile index: " + std::to_string(tileIndex));
+	/*	if (tileIndex == 32)
+		{
+			Logger::WriteError("Scanline X: " + std::to_string(scanlineX));
+			Logger::WriteError("Scanline Y: " + std::to_string(scanlineY));
+			return;
+		}*/
+
+		uint16_t scanlineAddress = tileDataAddress + (tileIndex * TILE_SIZE_IN_BYTES) + ((scanlineY % 8) * 2);
+
+		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
+		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
+
+		for (uint8_t px = 0; px < 8; px++)
+		{
+			uint8_t flippedX = 7 - px;
+			uint16_t modifier = (1 << flippedX);
+
+			// The bit at the specified index in the low byte
+			// will determine the most significant bit of the color, while the bit 
+			// in the high byte will determine the least significant bit of the color.
+			uint8_t low = (tileDataLow & modifier) >> flippedX;
+			uint8_t high = (tileDataHigh & modifier) >> flippedX;
+
+			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
+
+			framebuffer.SetPixel(scanlineX + px, scanlineY, color, color, color, 255);
+		}
+
+		scanlineX += TILE_WIDTH_IN_PIXELS;
+
+		if (scanlineX >= width)
+		{
+			scanlineY++;
+			scanlineX = 0;
+		}
+
+		if (scanlineY >= height)
+		{
+			framebuffer.UploadData();
+			display.Draw(framebuffer);
+			framebuffer.Clear();
+
+			scanlineY = 0;
+		}
+	}
+
 	void PPU::RefreshLY()
 	{
 		memoryManagementUnit.SetByte(LY_ADDRESS, currentScanline);
+		RefreshLYCompare();
+	}
 
+	void PPU::RefreshLYCompare()
+	{
 		bool lyCompare = currentScanline == memoryManagementUnit.GetByte(LYC_ADDRESS);
 		ChangeLCDStatusBit(LCD_STATUS_LY_COMPARE_FLAG_INDEX, lyCompare);
 
@@ -630,7 +728,7 @@ namespace SHG
 	{
 		memoryManagementUnit.ChangeBit(LCD_CONTROL_REGISTER_ADDRESS, bitIndex, isSet);
 	}
-	
+
 	bool PPU::GetLCDControlBit(uint8_t bitIndex)
 	{
 		return memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, bitIndex);
@@ -640,7 +738,7 @@ namespace SHG
 	{
 		memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, bitIndex, isSet);
 	}
-	
+
 	bool PPU::GetLCDStatusBit(uint8_t bitIndex)
 	{
 		return memoryManagementUnit.GetBit(LCD_STATUS_REGISTER_ADDRESS, bitIndex);
