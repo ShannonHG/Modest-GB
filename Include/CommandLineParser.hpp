@@ -6,13 +6,6 @@
 
 namespace SHG
 {
-		/// <summary>
-		/// Parses the given command line arguments, and stores relevant information in the config object.
-		/// Returns false if no ROM file is provided.
-		/// </summary>
-		/// <param name="argCount"></param>
-		/// <param name="args"></param>
-		/// <param name="config"></param>
-		/// <returns></returns>
-		bool TryParseCommandLineArguments(int argCount, char* args[], AppConfig* config);
+		void ParseCommandLineOptions(int argCount, char* args[], AppConfig& config);
+		bool ParseROMFilePath(int argCount, char* args[], std::string& outFilePath);
 }

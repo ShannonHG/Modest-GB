@@ -3,7 +3,9 @@
 
 namespace SHG
 {
-	Framebuffer::Framebuffer(Display& display, int width, int height) : width(width), height(height)
+	Framebuffer::Framebuffer() {}
+
+	Framebuffer::Framebuffer(Display& display, uint16_t width, uint16_t height) : width(width), height(height)
 	{
 		uint32_t format = SDL_GetWindowPixelFormat(display.GetWindow());
 		pixelFormat = SDL_AllocFormat(format);
@@ -39,12 +41,12 @@ namespace SHG
 		return texture;
 	}
 
-	uint32_t Framebuffer::GetPixel(int x, int y)
+	uint32_t Framebuffer::GetPixel(uint16_t x, uint16_t y)
 	{
 		return pixels[x + y * width];
 	}
 
-	void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void Framebuffer::SetPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
 		pixels[x + y * width] = SDL_MapRGBA(pixelFormat, r, g, b, a);
 	}

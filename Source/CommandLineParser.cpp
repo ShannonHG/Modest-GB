@@ -4,41 +4,57 @@
 
 namespace SHG
 {
+	const uint8_t ROM_FILE_PATH_INDEX = 1;
 	const char OPTION_PREFIX = '-';
 	const std::string LOG_LEVEL_OPTION = "loglevel";
+	const std::string SYSTEM_STATUS_DEBUG_OPTION = "logsystemevents";
+	const std::string BACKGROUND_MAP_OPTION = "debugbackgroundmap";
+	const std::string WINDOW_MAP_OPTION = "debugwindowmap";
+	const std::string SPRITES_OPTION = "debugsprites";
+	const std::string TILES_OPTION = "debugtiles";
 
-	const std::vector<std::string> OPTIONS = 
+	const std::vector<std::string> OPTIONS =
 	{
-		LOG_LEVEL_OPTION,
+		SYSTEM_STATUS_DEBUG_OPTION,
+		BACKGROUND_MAP_OPTION,
+		WINDOW_MAP_OPTION,
+		SPRITES_OPTION,
+		TILES_OPTION
 	};
 
-	bool ParseArgumentValue(std::string argKey, std::string argValue, AppConfig* config);
-	bool ParseLogLevel(std::string argValue, LogLevel* logLevel);
-	std::string ConvertStringToLowercase(std::string s);
+	void ConvertStringToLowercase(std::string& s);
 
-	bool TryParseCommandLineArguments(int argCount, char* args[], AppConfig* config)
+	bool ParseROMFilePath(int argCount, char* args[], std::string& outFilePath)
 	{
 		// args[0] is the program execution command
 		// args[1] is expected to be the ROM file. If no ROM is provided, then stop.
 		if (argCount < 2)
-		{
-			Logger::WriteError("No ROM file provided");
 			return false;
-		}
 
-		config->romFilePath = args[1];
+		outFilePath = args[ROM_FILE_PATH_INDEX];
+		return true;
+	}
+
+	void ParseCommandLineOptions(int argCount, char* args[], AppConfig& outConfig)
+	{
+		outConfig.romFilePath = args[1];
 
 		std::vector<std::string> parsedOptions;
 
-		for (int i = 2; i < argCount; i += 2)
+		for (int i = ROM_FILE_PATH_INDEX + 1; i < argCount; i++)
 		{
 			std::string currentArg = args[i];
 
+			size_t substrIndex = currentArg.find(OPTION_PREFIX);
+
+			// If the argument does not begin with a hypen, then it is not a valid option.
+			if (substrIndex == std::string::npos) continue;
+
 			// Grab the substring that represents the option's name
-			std::string option = currentArg.substr(currentArg.find(OPTION_PREFIX) + 1, currentArg.size());
+			std::string option = currentArg.substr(substrIndex + 1, currentArg.size());
 
 			// Ignore case
-			option = ConvertStringToLowercase(option);
+			ConvertStringToLowercase(option);
 
 			// Validate the option
 			if (std::find(OPTIONS.begin(), OPTIONS.end(), option) == OPTIONS.end())
@@ -54,58 +70,38 @@ namespace SHG
 				continue;
 			}
 
-			// Check if the option has a value associated with it
-			if (i == argCount - 1)
+			if (option == SYSTEM_STATUS_DEBUG_OPTION)
 			{
-				Logger::WriteWarning("Ignoring option '" + option + "' since no value was provided");
-				break;
+				outConfig.isSystemStatusLoggingEnabled = true;
+				Logger::WriteInfo("System status logging enabled");
+			}
+			else if (option == BACKGROUND_MAP_OPTION)
+			{
+				outConfig.isBackgroundTileMapDebuggingEnabled = true;
+				Logger::WriteInfo("Background tile map debugging enabled");
+			}
+			else if (option == WINDOW_MAP_OPTION)
+			{
+				outConfig.isWindowTileMapDebuggingEnabled = true;
+				Logger::WriteInfo("Window tile map debugging enabled");
+			}
+			else if (option == SPRITES_OPTION)
+			{
+				outConfig.isSpriteDebuggingEnabled = true;
+				Logger::WriteInfo("Sprite debugging enabled");
+			}
+			else if (option == TILES_OPTION)
+			{
+				outConfig.isGenericTileDebuggingEnabled = true;
+				Logger::WriteInfo("Tile debugging enabled");
 			}
 
-			// Read the option's value, ignoring its case
-			std::string optionValue = ConvertStringToLowercase(args[i + 1]);
-
-			// Try to load the argument value into the appropriate config field
-			if (!ParseArgumentValue(option, optionValue, config))
-			{
-				Logger::WriteWarning("Invalid value given for option '" + option + "'");
-			}
-			else
-			{
-				parsedOptions.push_back(option);
-			}
+			parsedOptions.push_back(option);
 		}
-
-		return true;
 	}
 
-	bool ParseArgumentValue(std::string option, std::string optionValue, AppConfig* result)
+	void ConvertStringToLowercase(std::string& s)
 	{
-		if (option == LOG_LEVEL_OPTION)
-		{
-			return ParseLogLevel(optionValue, &result->logLevel);
-		}
-
-		return false;
-	}
-
-	bool ParseLogLevel(std::string optionValue, LogLevel* logLevel)
-	{
-		// Confirm that the option's value exists in the LOG_LEVEL_STRINGS map
-		if (LOG_LEVEL_STRINGS_TO_ENUMS.find(optionValue) == LOG_LEVEL_STRINGS_TO_ENUMS.end())
-		{
-			return false;
-		}
-
-		*logLevel = LOG_LEVEL_STRINGS_TO_ENUMS.at(optionValue);
-		return true;
-	}
-
-	std::string ConvertStringToLowercase(std::string s)
-	{
-		std::string result = s;
-
-		for (char& c : result) c = std::tolower(c);
-
-		return result;
+		for (char& c : s) c = std::tolower(c);
 	}
 }

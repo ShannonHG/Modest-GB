@@ -2,7 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
+#include "Common/MemoryUnits.hpp"
 #include "Memory/DataStorageDevice.hpp"
 
 namespace SHG

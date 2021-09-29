@@ -10,12 +10,19 @@ namespace SHG
 	class Display
 	{
 	public: 
-		Display(const std::string& title, int width, int height);
+		Display();
+		Display(const std::string& title, int x, int y, int width, int height);
 		void Draw(Framebuffer& buffer);
 		SDL_Window* GetWindow();
 		SDL_Renderer* GetRenderer();
 		void SetWindowTitle(const std::string& title);
+		int GetWindowX();
+		int GetWindowY();
+		int GetWidth();
+		int GetHeight();
 	private:
+		int x = 0;
+		int y = 0;
 		int screenWidth = 0;
 		int screenHeight = 0;
 		SDL_Window* window = NULL;

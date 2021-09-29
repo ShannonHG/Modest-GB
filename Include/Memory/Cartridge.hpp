@@ -2,7 +2,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "Globals.hpp"
+#include "Common/Arithmetic.hpp"
 #include "Memory/MemoryBankController.hpp"
 
 namespace SHG

@@ -5,8 +5,6 @@
 #include <chrono>
 #include "Memory/Memory.hpp"
 #include "Graphics/PixelColorID.hpp"
-#include "Graphics/LCDControlFlags.hpp"
-#include "Graphics/LCDStatusFlags.hpp"
 #include "Graphics/Display.hpp"
 #include "Graphics/PixelData.hpp"
 #include "Graphics/Framebuffer.hpp"
@@ -21,9 +19,14 @@ namespace SHG
 	public:
 		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram, DMATransferRegister& dmaRegister);
 		void Cycle(uint32_t duration);
-		void DrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, TileMapType tileMapType);
-		void DrawSprites(Display& display, Framebuffer& framebuffer, uint8_t& spriteIndex, uint8_t& scanlineY);
-		void DrawAllTiles(Display& display, Framebuffer& framebuffer, uint16_t& scanlineX, uint16_t& scanlineY);
+		void DebugDrawBackgroundTileMap();
+		void DebugDrawWindowTileMap();
+		void DebugDrawSprites();
+		void DebugDrawTiles();
+		void AttachDisplayForWindowDebugging(Display* display);
+		void AttachDisplayForBackgroundDebugging(Display* display);
+		void AttachDisplayForSpriteDebugging(Display* display);
+		void AttachDisplayForTileDebugging(Display* display);
 	private:
 		enum class PPUMode
 		{
@@ -83,25 +86,44 @@ namespace SHG
 		std::queue<PixelData> spritePixelQueue;
 
 		MemoryMap& memoryManagementUnit;
-		Display& display;
+		Display& mainDisplay;
 		DataStorageDevice& vram;
 
 		DMATransferRegister& dmaRegister;
 		uint8_t dmaTransferElapsedTime = 0;
 
-		Framebuffer framebuffer;
+		Framebuffer mainFramebuffer;
+
+		Display* debugWindowTileMapDisplay;
+		Display* debugBackgroundTileMapDisplay;
+		Display* debugSpriteDisplay;
+		Display* debugGenericTileDisplay;
+
+		Framebuffer debugWindowTileMapFramebuffer;
+		Framebuffer debugBackgroundTileMapFramebuffer;
+		Framebuffer debugSpriteFramebuffer;
+		Framebuffer debugGenericTileFramebuffer;
+
+		uint8_t debugBackgroundScanlineX = 0;
+		uint8_t debugBackgroundScanlineY = 0;
+		uint8_t debugWindowScanlineX = 0;
+		uint8_t debugWindowScanlineY = 0;
+		uint8_t debugSpriteIndex = 0;
+		uint8_t debugSpriteScanline = 0;
+		uint16_t debugTilesScanlineX = 0;
+		uint16_t debugTilesScanlineY = 0;
 
 		void ExecutePixelFetcherCycle(uint32_t& duration);
 		uint32_t ExecuteDMATransferCycle(uint32_t duration);
 
 		int32_t GetTileAddressFromTileMaps(uint16_t tileIndex, uint8_t scanlineX, uint8_t scanlineY);
-		uint16_t FetchTileMapIndex(uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, TileMapType tileMapType, bool ignoreScrolling=false);
+		uint16_t FetchTileMapIndex(uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, TileMapType tileMapType, bool ignoreScrolling = false);
 		uint32_t TransitionToPixelFetcherState(PixelFetcherState targetState, uint32_t duration);
 
 		uint32_t FetchSpritesOnScanline(uint8_t scanlineY, std::vector<Sprite>& sprites, uint32_t duration);
 		Sprite FetchSpriteAtIndex(uint8_t index);
 		void GetSpritePixelsForScanline(const std::vector<Sprite>& spritesOnScanline, uint8_t scanlineX, uint8_t scanlineY, std::queue<PixelData>& pixelQueue);
-		
+
 		uint32_t HandleHBlankMode(uint32_t duration);
 		uint32_t HandleVBlankMode(uint32_t duration);
 		uint32_t HandleLCDTransferMode(uint32_t duration);
@@ -123,5 +145,7 @@ namespace SHG
 		bool GetLCDControlBit(uint8_t bitIndex);
 		void ChangeLCDStatusBit(uint8_t bitIndex, bool isSet);
 		bool GetLCDStatusBit(uint8_t bitIndex);
+
+		void DebugDrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanline, TileMapType tileMapType);
 	};
 }

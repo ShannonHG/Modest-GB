@@ -1,7 +1,11 @@
 #include <filesystem>
+#include <ctime>
+#include <locale>
 #include <iostream>
 #include "Logger.hpp"
 #include <fstream>
+#include <string>
+#include <iostream>
 
 namespace SHG
 {
@@ -10,51 +14,62 @@ namespace SHG
 	const std::string WARNING_MESSAGE_HEADER = "[WARNING]";
 	const std::string ERROR_MESSAGE_HEADER = "[ERROR]";
 
-	LogLevel Logger::CurrentLogLevel = LogLevel::Verbose;
-	std::ofstream Logger::LogFileStream;
+	std::ofstream logFileStream;
+	std::array<char, 100> logDateTimeBuffer;
 
-	void Logger::Write(const std::string& message, bool includeHeading)
+	bool Logger::IsSystemEventLoggingEnabled = false;
+
+	void Logger::WriteInfo(const std::string& message, const std::string& header)
 	{
-		if (IsLogLevelEnabled(LogLevel::Info)) WriteMessage(INFO_MESSAGE_HEADER, message, includeHeading, false);
+		WriteMessage(INFO_MESSAGE_HEADER, message, true, header);
 	}
 
-	void Logger::WriteWarning(const std::string& message, bool includeHeading)
+	void Logger::WriteWarning(const std::string& message, const std::string& header)
 	{
-		if (IsLogLevelEnabled(LogLevel::Warning)) WriteMessage(WARNING_MESSAGE_HEADER, message, includeHeading, true);
+		WriteMessage(WARNING_MESSAGE_HEADER, message, true, header);
 	}
 
-	void Logger::WriteError(const std::string& message, bool includeHeading)
+	void Logger::WriteError(const std::string& message, const std::string& header)
 	{
-		if (IsLogLevelEnabled(LogLevel::Error)) WriteMessage(ERROR_MESSAGE_HEADER, message, includeHeading, true);
+		WriteMessage(ERROR_MESSAGE_HEADER, message, true, header);
 	}
 
-	bool Logger::IsLogLevelEnabled(LogLevel logLevel)
+	void Logger::WriteSystemEvent(const std::string& message, const std::string& header)
 	{
-		return (CurrentLogLevel == LogLevel::Verbose && logLevel != LogLevel::Silent) || CurrentLogLevel == logLevel;
+		if (IsSystemEventLoggingEnabled) WriteMessage(ERROR_MESSAGE_HEADER, message, false, header);
 	}
 
 	void Logger::InitLogFile()
 	{
-		LogFileStream = std::ofstream(std::filesystem::current_path().string() + "/" + LOG_FILE_NAME, std::ios::out);
+		logFileStream = std::ofstream(std::filesystem::current_path().string() + "/" + LOG_FILE_NAME, std::ios::out);
 	}
 
-	void Logger::WriteMessage(std::string heading, const std::string& message, bool includeHeading, bool writeToConsole)
+	void Logger::WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader)
 	{
-		if (!LogFileStream.is_open()) InitLogFile();
-		if (includeHeading)
-		{
-			if (writeToConsole) std::cout << heading << " " << message << std::endl;
-			LogFileStream << heading << " " << message << "\n";
-		}
-		else
-		{
-			if (writeToConsole) std::cout << " " << message << std::endl;
-			LogFileStream << message << "\n";
-		}
-	}
+		if (!logFileStream.is_open()) InitLogFile();
 
-	void Logger::WriteDivider()
-	{
-		if (!IsLogLevelEnabled(LogLevel::Silent)) LogFileStream << "---------------------------------------------------------------------------------" << "\n";
+		std::time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		std::tm dateTime{};
+
+		// Some compilers complain about localtime() being unsafe due to thread-safety issues, 
+		// so depending on the platform, use the respective safe alternative.
+#if defined(__unix__)
+		localtime_r(&rawTime, &dateTime)
+#elif defined(_MSC_VER)
+		localtime_s(&dateTime, &rawTime);
+#else
+		dateTime = *std::localtime(&rawTime);
+#endif
+
+		// %F %T = Y-m-d H:M
+		std::strftime(&logDateTimeBuffer[0], logDateTimeBuffer.size(), "%F %T", &dateTime);
+
+		std::stringstream messageStream;
+		messageStream << &logDateTimeBuffer[0] << " " << heading << (customHeader.empty() ? customHeader : " " + customHeader) << ": " << message;
+
+		if (writeToConsole) std::cout << messageStream.str() << std::endl;
+
+		// TODO: std::endl will force the stream to be flushed and immediately written to file, consider removing this.
+		logFileStream << messageStream.str() << std::endl;
 	}
 }

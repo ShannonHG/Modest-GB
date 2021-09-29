@@ -1,11 +1,14 @@
 #include <map>
 #include "CPU/Timer.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "CPU/Interrupts.hpp"
 #include "Logger.hpp"
+#include "Common/GBSpecs.hpp"
 
 namespace SHG
 {
+	const std::string TIMER_MESSAGE_HEADER = "[TIMER]";
+
 	const uint16_t DIVIDER_INCREMENTS_PER_SECOND = 16384;
 	const double DIVIDER_INCREMENTS_PER_CYCLE = DIVIDER_INCREMENTS_PER_SECOND / (double)GB_CLOCK_SPEED;
 
@@ -92,14 +95,9 @@ namespace SHG
 
 	void Timer::PrintStatus()
 	{
-		Logger::Write("\n[TIMER]", false);
-		Logger::WriteDivider();
-
-		Logger::Write("(DIV): " + ConvertToHexString(std::floor(dividerRegister), 2) +
-			" (TIMA): " + ConvertToHexString(std::floor(timerCounter), 2) +
-			" (TMA) " + ConvertToHexString(timerModulo, 2) +
-			" (TAC) " + ConvertToHexString(timerControl, 2), false);
-
-		Logger::WriteDivider();
+		Logger::WriteSystemEvent("(DIV) "+ ConvertToHexString(std::floor(dividerRegister), 2) + 
+			" (TIMA) " + ConvertToHexString(std::floor(timerCounter), 2) + 
+			" (TMA) " + ConvertToHexString(timerModulo, 2) + 
+			" (TAC) " + ConvertToHexString(timerControl, 2), TIMER_MESSAGE_HEADER);
 	}
 }

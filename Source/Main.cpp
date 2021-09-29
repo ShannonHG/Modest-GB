@@ -11,9 +11,10 @@
 #include "CPU/CPU.hpp"
 #include "Graphics/Display.hpp"
 #include "Graphics/PPU.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "CPU/Timer.hpp"
 #include "Graphics/TileMapType.hpp"
+#include "Common/GBSpecs.hpp"
 
 using namespace SHG;
 
@@ -21,27 +22,18 @@ int main(int argc, char* argv[])
 {
 	AppConfig config;
 
-	if (TryParseCommandLineArguments(argc, argv, &config))
+	if (ParseROMFilePath(argc, argv, config.romFilePath))
 	{
-		Logger::CurrentLogLevel = config.logLevel;
-
-		Logger::WriteWarning("Setting ROM file path to '" + config.romFilePath + "' ");
+		Logger::WriteInfo("ROM file path: '" + config.romFilePath + "' ");
 	}
 	else
 	{
+		Logger::WriteError("No ROM file provided. Exiting...");
 		return 0;
 	}
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-	{
-		// TODO: Print SDL error
-		Logger::WriteError("[Display] SDL failed to initialize!");
-		return 0;
-	}
-
-	Logger::WriteWarning("Setting log level to '" + LOG_LEVEL_ENUMS_TO_STRINGS.at(config.logLevel) + "'");
-
-	auto memoryMap = MemoryMap();
+	ParseCommandLineOptions(argc, argv, config);
+	Logger::IsSystemEventLoggingEnabled = config.isSystemStatusLoggingEnabled;
 
 	Cartridge cartridge;
 	if (!cartridge.LoadFromFile(config.romFilePath))
@@ -50,16 +42,28 @@ int main(int argc, char* argv[])
 		return 0;
 	};
 
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		// TODO: Print SDL error
+		Logger::WriteError("[Display] SDL failed to initialize!");
+		return 0;
+	}
+
+	auto memoryMap = MemoryMap();
+
+	auto processor = CPU(memoryMap);
+	processor.ResetToDefaultState();
+
+	auto timer = Timer(memoryMap);
+	auto dmaTransferRegister = DMATransferRegister();
 	auto vram = Memory(8 * KiB);
 	auto wram = Memory(8 * KiB);
 	auto oam = Memory(160);
 	auto echoRAM = Memory(122368);
 	auto restrictedMem = Memory(130464);
 	auto ioRegisters = Memory(127);
-	auto dmaTransferRegister = DMATransferRegister();
 	auto hram = Memory(127);
 	auto interruptEnableRegister = Memory(1);
-	auto timer = Timer(memoryMap);
 	auto serialOutput = Memory(4);
 
 	memoryMap.AssignDeviceToAddressRange(cartridge, 0x0000, 0x7FFF);
@@ -133,40 +137,46 @@ int main(int argc, char* argv[])
 	memoryMap.SetByte(0xFF70, 0xFF);
 	memoryMap.SetByte(0xFFFF, 0x00);
 
-	auto processor = CPU(memoryMap);
-	processor.ResetToDefaultState();
+	std::string mainWindowTitle = "Game Boy Emulator";
+	auto mainDisplay = Display(mainWindowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GB_SCREEN_WIDTH * 3, GB_SCREEN_HEIGHT * 3);
+	auto ppu = PPU(mainDisplay, memoryMap, vram, dmaTransferRegister);
 
-	std::string windowTitle = "Game Boy Emulator";
-	auto display = Display(windowTitle, GB_SCREEN_WIDTH * 3, GB_SCREEN_HEIGHT * 3);
-	auto ppu = PPU(display, memoryMap, vram, dmaTransferRegister);
+	Display debugWindowMapDisplay;
+	Display debugBackgroundMapDisplay;
+	Display debugSpritesDisplay;
+	Display debugTilesDisplay;
 
-	//auto debugBackgroundMapDisplay = Display("Background Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	//auto debugBackgroundFramebuffer = Framebuffer(debugBackgroundMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	//uint8_t debugBackgroundScanlineX = 0;
-	//uint8_t debugBackgroundScanlineY = 0;
+	if (config.isWindowTileMapDebuggingEnabled)
+	{
+		debugWindowMapDisplay = Display("Window Tile Map", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 256);
+		ppu.AttachDisplayForWindowDebugging(&debugWindowMapDisplay);
+	}
 
-	//auto debugWindowMapDisplay = Display("Window Tile Map", TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	//auto debugWindowFramebuffer = Framebuffer(debugWindowMapDisplay, TILE_MAP_PIXEL_WIDTH, TILE_MAP_PIXEL_HEIGHT);
-	//uint8_t debugWindowScanlineX = 0;
-	//uint8_t debugWindowScanlineY = 0;
+	if (config.isBackgroundTileMapDebuggingEnabled)
+	{
+		debugBackgroundMapDisplay = Display("Background Tile Map", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 256);
+		ppu.AttachDisplayForBackgroundDebugging(&debugBackgroundMapDisplay);
+	}
 
-	//uint8_t spriteFramebufferWidth = 116;
-	//uint8_t spriteFramebufferHeight = 44;
-	//auto debugSpritesDisplay = Display("Sprites", spriteFramebufferWidth * 3, spriteFramebufferHeight * 3);
-	//auto debugSpritesFramebuffer = Framebuffer(debugSpritesDisplay, spriteFramebufferWidth, spriteFramebufferHeight);
-	//uint8_t debugSpriteIndex = 0;
-	//uint8_t debugSpriteScanline = 0;
+	if (config.isSpriteDebuggingEnabled)
+	{
+		uint8_t spriteFramebufferWidth = 116;
+		uint8_t spriteFramebufferHeight = 44;
+		debugSpritesDisplay = Display("Sprites", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, spriteFramebufferWidth * 3, spriteFramebufferHeight * 3);
+		ppu.AttachDisplayForSpriteDebugging(&debugSpritesDisplay);
+	}
 
-	auto debugTilesDisplay = Display("Tiles", 256 * 2, 96 * 2);
-	auto debugTilesFramebuffer = Framebuffer(debugTilesDisplay, 256, 96);
-	uint16_t debugTilesScanlineX = 0;
-	uint16_t debugTilesScanlineY = 0;
+	if (config.isGenericTileDebuggingEnabled)
+	{
+		debugTilesDisplay = Display("Tiles", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256 * 2, 96 * 2);
+		ppu.AttachDisplayForTileDebugging(&debugTilesDisplay);
+	}
 
 	bool isRunning = true;
 	bool thisFrame = false;
 
 	auto prevTime = std::chrono::system_clock::now();
-	double timeSinceTitleUpdate = 0;
+	double secondsSinceTitleUpdate = 0;
 
 	while (isRunning)
 	{
@@ -183,22 +193,24 @@ int main(int argc, char* argv[])
 		uint32_t duration =  processor.Cycle();
 		timer.Update(duration);
 		ppu.Cycle(duration);
-		/*ppu.DrawTileMap(debugBackgroundMapDisplay, debugBackgroundFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
-		ppu.DrawTileMap(debugWindowMapDisplay, debugWindowFramebuffer, debugWindowScanlineX, debugWindowScanlineY, TileMapType::WindowOnly);
-		ppu.DrawSprites(debugSpritesDisplay, debugSpritesFramebuffer, debugSpriteIndex, debugSpriteScanline);*/
-		ppu.DrawAllTiles(debugTilesDisplay, debugTilesFramebuffer, debugTilesScanlineX, debugTilesScanlineY);
+
+		if (config.isWindowTileMapDebuggingEnabled) ppu.DebugDrawWindowTileMap();
+		if (config.isBackgroundTileMapDebuggingEnabled) ppu.DebugDrawBackgroundTileMap();
+		if (config.isSpriteDebuggingEnabled) ppu.DebugDrawSprites();
+		if (config.isGenericTileDebuggingEnabled) ppu.DebugDrawTiles();
+
 		processor.HandleInterrupts();
 
 		auto currentTime = std::chrono::system_clock::now();
 		auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime);
 
 		double fps = 1.0 / deltaTime.count();
-		timeSinceTitleUpdate += deltaTime.count();
+		secondsSinceTitleUpdate += deltaTime.count();
 
-		if (timeSinceTitleUpdate >= 1)
+		if (secondsSinceTitleUpdate >= 1)
 		{
-			display.SetWindowTitle(windowTitle + " " + std::to_string(fps) + " FPS");
-			timeSinceTitleUpdate = 0;
+			mainDisplay.SetWindowTitle(mainWindowTitle + " " + std::to_string(fps) + " FPS");
+			secondsSinceTitleUpdate = 0;
 		}
 
 		prevTime = currentTime;

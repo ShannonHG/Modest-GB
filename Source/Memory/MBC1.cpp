@@ -1,7 +1,7 @@
 #include <sstream>
 #include "Memory/MBC1.hpp"
 #include "Logger.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 
 namespace SHG
 {

@@ -1,11 +1,12 @@
 #include <iostream>
 #include <cassert>
 #include "Graphics/PPU.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "Common/Arithmetic.hpp"
 #include "SDL.h"
 #include "Logger.hpp"
 #include "CPU/Interrupts.hpp"
+#include "Common/GBSpecs.hpp"
 
 namespace SHG
 {
@@ -60,6 +61,10 @@ namespace SHG
 	const uint16_t BACKGROUND_PALETTE_ADDRESS = 0xFF47;
 	const uint8_t TILE_MAP_WIDTH = 32;
 	const uint8_t TILE_MAP_HEIGHT = 32;
+	const uint16_t TILE_MAP_PIXEL_WIDTH = 256;
+	const uint16_t TILE_MAP_PIXEL_HEIGHT = 256;
+
+	const uint8_t VBLANK_END_Y = 153;
 
 	const uint16_t DMA_TRANSFER_REGISTER_ADDRESS = 0xFF46;
 	const uint16_t DMA_TRANSFER_DESTINATION_START_ADDRESS = 0xFE00;
@@ -67,6 +72,15 @@ namespace SHG
 
 	const uint16_t CYCLES_PER_SCANLINE = 456;
 	const uint8_t HBLANK_DURATION = 208;
+
+	const uint16_t DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_WIDTH = TILE_MAP_PIXEL_WIDTH;
+	const uint16_t DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_HEIGHT = TILE_MAP_PIXEL_HEIGHT;
+	const uint16_t DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_WIDTH = TILE_MAP_PIXEL_WIDTH;
+	const uint16_t DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_HEIGHT = TILE_MAP_PIXEL_HEIGHT;
+	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_WIDTH = 116;
+	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_HEIGHT = 44;
+	const uint16_t DEBUG_TILE_FRAMEBUFFER_WIDTH = 256;
+	const uint16_t DEBUG_TILE_FRAMEBUFFER_HEIGHT = 96;
 
 	const std::map<PPU::PixelFetcherState, uint32_t> PPU::STATE_DURATIONS =
 	{
@@ -79,8 +93,8 @@ namespace SHG
 	};
 
 	PPU::PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram, DMATransferRegister& dmaRegister) :
-		vram(vram), display(display), memoryManagementUnit(memoryManagementUnit),
-		framebuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT), dmaRegister(dmaRegister)
+		vram(vram), mainDisplay(display), memoryManagementUnit(memoryManagementUnit),
+		mainFramebuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT), dmaRegister(dmaRegister)
 	{
 
 	}
@@ -149,7 +163,7 @@ namespace SHG
 			duration = currentScanlineElapsedTime - CYCLES_PER_SCANLINE;
 			currentScanlineElapsedTime = 0;
 
-			if (currentScanline == GB_VBLANK_END_Y)
+			if (currentScanline == VBLANK_END_Y)
 			{
 				//Logger::WriteError("VBlank length: " + std::to_string(currentModeElapsedTime));
 				currentModeElapsedTime = 0;
@@ -387,7 +401,7 @@ namespace SHG
 			// TODO: Properly implement palettes
 			uint8_t color = GetColorFromID(data.colorID);
 
-			framebuffer.SetPixel(data.x, data.y, color, color, color, 255);
+			mainFramebuffer.SetPixel(data.x, data.y, color, color, color, 255);
 		}
 
 		while (spritePixelQueue.size() > 0)
@@ -401,7 +415,7 @@ namespace SHG
 			// TODO: Properly implement palettes
 			uint8_t color = GetColorFromID(data.colorID);
 
-			framebuffer.SetPixel(data.x, data.y, color, color, color, 255);
+			mainFramebuffer.SetPixel(data.x, data.y, color, color, color, 255);
 		}
 	}
 
@@ -442,9 +456,9 @@ namespace SHG
 
 	void PPU::DrawFrameBuffer()
 	{
-		framebuffer.UploadData();
-		display.Draw(framebuffer);
-		framebuffer.Clear();
+		mainFramebuffer.UploadData();
+		mainDisplay.Draw(mainFramebuffer);
+		mainFramebuffer.Clear();
 	}
 
 	uint8_t PPU::GetColorFromID(PixelColorID id)
@@ -559,153 +573,6 @@ namespace SHG
 		return sprite;
 	}
 
-	void PPU::DrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, TileMapType tileMapType)
-	{
-		uint16_t tileIndex = FetchTileMapIndex(scanlineX, scanlineY, TILE_MAP_PIXEL_WIDTH, tileMapType, true);
-
-		uint8_t low = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanlineY) + 1);
-		uint8_t high = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanlineY));
-
-		auto pixelQueue = std::queue<PixelData>();
-		GetPixelsFromTileScanline(low, high, scanlineX, scanlineY, TILE_MAP_PIXEL_WIDTH, pixelQueue);
-
-		uint16_t x = scanlineX;
-		uint16_t y = scanlineY;
-
-		x += pixelQueue.size();
-
-		while (pixelQueue.size() > 0)
-		{
-			PixelData data = pixelQueue.front();
-			pixelQueue.pop();
-
-			uint8_t color = GetColorFromID(data.colorID);
-
-			framebuffer.SetPixel(data.x, data.y, color, color, color, 255);
-		}
-
-		if (x == TILE_MAP_PIXEL_WIDTH)
-		{
-			x = 0;
-			y++;
-		}
-
-		if (y == TILE_MAP_PIXEL_HEIGHT)
-		{
-			framebuffer.UploadData();
-			display.Draw(framebuffer);
-			framebuffer.Clear();
-			scanlineY = 0;
-		}
-
-		scanlineX = x;
-		scanlineY = y;
-	}
-
-	void PPU::DrawSprites(Display& display, Framebuffer& framebuffer, uint8_t& spriteIndex, uint8_t& scanline)
-	{
-		Sprite sprite = FetchSpriteAtIndex(spriteIndex);
-
-		uint8_t spriteSpacing = 12;
-		uint16_t scanlineAddress = sprite.tileAddress + (scanline * 2);
-
-		// TODO: Swapping the order of the pixels is a temporary hack to 
-		// address bug that causes tiles to be flipped horizontally when rendered.
-		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
-		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
-
-		auto pixelQueue = std::queue<PixelData>();
-		for (uint8_t scanlineX = 0; scanlineX < 8; scanlineX++)
-		{
-			uint16_t modifier = (1 << scanlineX);
-
-			// The bit at the specified index in the low byte
-			// will determine the most significant bit of the color, while the bit 
-			// in the high byte will determine the least significant bit of the color.
-			uint8_t low = (tileDataLow & modifier) >> scanlineX;
-			uint8_t high = (tileDataHigh & modifier) >> scanlineX;
-
-			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
-
-			// Evenly space out sprites across the screen
-			uint8_t xOffset = (spriteIndex % MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
-			uint8_t yOffset = std::floor(spriteIndex / (double)MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
-
-			framebuffer.SetPixel(scanlineX + xOffset, scanline + yOffset, color, color, color, 255);
-		}
-
-		scanline++;
-
-		if (scanline >= TILE_HEIGHT_IN_PIXELS)
-		{
-			spriteIndex++;
-			scanline = 0;
-		}
-
-		if (spriteIndex == MAX_SPRITE_COUNT)
-		{
-			framebuffer.UploadData();
-			display.Draw(framebuffer);
-			framebuffer.Clear();
-			spriteIndex = 0;
-		}
-	}
-
-	void PPU::DrawAllTiles(Display& display, Framebuffer& framebuffer, uint16_t& scanlineX, uint16_t& scanlineY)
-	{
-		uint16_t tileDataAddress = 0x8000;
-		uint16_t maxTiles = 384;
-		uint16_t width = 32 * TILE_WIDTH_IN_PIXELS;
-		uint16_t height = 12 * TILE_HEIGHT_IN_PIXELS;
-
-		uint16_t tileIndex = std::floor(scanlineX / 8.0) + (std::floor(scanlineY / 8.0) * 32);
-		//Logger::WriteError("Tile index: " + std::to_string(tileIndex));
-	/*	if (tileIndex == 32)
-		{
-			Logger::WriteError("Scanline X: " + std::to_string(scanlineX));
-			Logger::WriteError("Scanline Y: " + std::to_string(scanlineY));
-			return;
-		}*/
-
-		uint16_t scanlineAddress = tileDataAddress + (tileIndex * TILE_SIZE_IN_BYTES) + ((scanlineY % 8) * 2);
-
-		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
-		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
-
-		for (uint8_t px = 0; px < 8; px++)
-		{
-			uint8_t flippedX = 7 - px;
-			uint16_t modifier = (1 << flippedX);
-
-			// The bit at the specified index in the low byte
-			// will determine the most significant bit of the color, while the bit 
-			// in the high byte will determine the least significant bit of the color.
-			uint8_t low = (tileDataLow & modifier) >> flippedX;
-			uint8_t high = (tileDataHigh & modifier) >> flippedX;
-
-			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
-
-			framebuffer.SetPixel(scanlineX + px, scanlineY, color, color, color, 255);
-		}
-
-		scanlineX += TILE_WIDTH_IN_PIXELS;
-
-		if (scanlineX >= width)
-		{
-			scanlineY++;
-			scanlineX = 0;
-		}
-
-		if (scanlineY >= height)
-		{
-			framebuffer.UploadData();
-			display.Draw(framebuffer);
-			framebuffer.Clear();
-
-			scanlineY = 0;
-		}
-	}
-
 	void PPU::RefreshLY()
 	{
 		memoryManagementUnit.SetByte(LY_ADDRESS, currentScanline);
@@ -742,5 +609,179 @@ namespace SHG
 	bool PPU::GetLCDStatusBit(uint8_t bitIndex)
 	{
 		return memoryManagementUnit.GetBit(LCD_STATUS_REGISTER_ADDRESS, bitIndex);
+	}
+
+	void PPU::AttachDisplayForWindowDebugging(Display* display)
+	{
+		debugWindowTileMapDisplay = display;
+		debugWindowTileMapFramebuffer = Framebuffer(*display, DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_WIDTH, DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_HEIGHT);
+	}
+
+	void PPU::AttachDisplayForBackgroundDebugging(Display* display)
+	{
+		debugBackgroundTileMapDisplay = display;
+		debugBackgroundTileMapFramebuffer = Framebuffer(*display, DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_WIDTH, DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_HEIGHT);
+	}
+
+	void PPU::AttachDisplayForSpriteDebugging(Display* display)
+	{
+		debugSpriteDisplay = display;
+		debugSpriteFramebuffer = Framebuffer(*display, DEBUG_SPRITE_FRAMEBUFFER_WIDTH, DEBUG_SPRITE_FRAMEBUFFER_HEIGHT);
+	}
+
+	void PPU::AttachDisplayForTileDebugging(Display* display)
+	{
+		debugGenericTileDisplay = display;
+		debugGenericTileFramebuffer = Framebuffer(*display, DEBUG_TILE_FRAMEBUFFER_WIDTH, DEBUG_TILE_FRAMEBUFFER_HEIGHT);
+	}
+
+	void PPU::DebugDrawBackgroundTileMap()
+	{
+		DebugDrawTileMap(*debugBackgroundTileMapDisplay, debugBackgroundTileMapFramebuffer, debugBackgroundScanlineX, debugBackgroundScanlineY, TileMapType::BackgroundOnly);
+	}
+
+	void PPU::DebugDrawWindowTileMap()
+	{
+		DebugDrawTileMap(*debugWindowTileMapDisplay, debugWindowTileMapFramebuffer, debugWindowScanlineX, debugWindowScanlineY, TileMapType::WindowOnly);
+	}
+
+	void PPU::DebugDrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanline, TileMapType tileMapType)
+	{
+		uint16_t tileIndex = FetchTileMapIndex(scanlineX, scanline, TILE_MAP_PIXEL_WIDTH, tileMapType, true);
+
+		uint8_t low = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline) + 1);
+		uint8_t high = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline));
+
+		auto pixelQueue = std::queue<PixelData>();
+		GetPixelsFromTileScanline(low, high, scanlineX, scanline, TILE_MAP_PIXEL_WIDTH, pixelQueue);
+
+		uint16_t x = scanlineX;
+		uint16_t y = scanline;
+
+		x += pixelQueue.size();
+
+		while (pixelQueue.size() > 0)
+		{
+			PixelData data = pixelQueue.front();
+			pixelQueue.pop();
+
+			uint8_t color = GetColorFromID(data.colorID);
+
+			framebuffer.SetPixel(data.x, data.y, color, color, color, 255);
+		}
+
+		if (x == TILE_MAP_PIXEL_WIDTH)
+		{
+			x = 0;
+			y++;
+		}
+
+		if (y == TILE_MAP_PIXEL_HEIGHT)
+		{
+			framebuffer.UploadData();
+			display.Draw(framebuffer);
+			framebuffer.Clear();
+			scanline = 0;
+		}
+
+		scanlineX = x;
+		scanline = y;
+	}
+
+	void PPU::DebugDrawSprites()
+	{
+		Sprite sprite = FetchSpriteAtIndex(debugSpriteIndex);
+
+		uint8_t spriteSpacing = 12;
+		uint16_t scanlineAddress = sprite.tileAddress + (debugSpriteScanline * 2);
+
+		// TODO: Swapping the order of the pixels is a temporary hack to 
+		// address bug that causes tiles to be flipped horizontally when rendered.
+		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
+		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
+
+		auto pixelQueue = std::queue<PixelData>();
+		for (uint8_t scanlineX = 0; scanlineX < 8; scanlineX++)
+		{
+			uint16_t modifier = (1 << scanlineX);
+
+			// The bit at the specified index in the low byte
+			// will determine the most significant bit of the color, while the bit 
+			// in the high byte will determine the least significant bit of the color.
+			uint8_t low = (tileDataLow & modifier) >> scanlineX;
+			uint8_t high = (tileDataHigh & modifier) >> scanlineX;
+
+			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
+
+			// Evenly space out sprites across the screen
+			uint8_t xOffset = (debugSpriteIndex % MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
+			uint8_t yOffset = std::floor(debugSpriteIndex / (double)MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
+
+			debugSpriteFramebuffer.SetPixel(scanlineX + xOffset, debugSpriteScanline + yOffset, color, color, color, 255);
+		}
+
+		debugSpriteScanline++;
+
+		if (debugSpriteScanline >= TILE_HEIGHT_IN_PIXELS)
+		{
+			debugSpriteIndex++;
+			debugSpriteScanline = 0;
+		}
+
+		if (debugSpriteIndex == MAX_SPRITE_COUNT)
+		{
+			debugSpriteFramebuffer.UploadData();
+			debugSpriteDisplay->Draw(debugSpriteFramebuffer);
+			debugSpriteFramebuffer.Clear();
+			debugSpriteIndex = 0;
+		}
+	}
+
+	void PPU::DebugDrawTiles()
+	{
+		uint16_t tileDataAddress = 0x8000;
+		uint16_t maxTiles = 384;
+		uint16_t width = 32 * TILE_WIDTH_IN_PIXELS;
+		uint16_t height = 12 * TILE_HEIGHT_IN_PIXELS;
+
+		uint16_t tileIndex = std::floor(debugTilesScanlineX / 8.0) + (std::floor(debugTilesScanlineY / 8.0) * 32);
+
+		uint16_t scanlineAddress = tileDataAddress + (tileIndex * TILE_SIZE_IN_BYTES) + ((debugTilesScanlineY % 8) * 2);
+
+		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
+		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
+
+		for (uint8_t px = 0; px < 8; px++)
+		{
+			uint8_t flippedX = 7 - px;
+			uint16_t modifier = (1 << flippedX);
+
+			// The bit at the specified index in the low byte
+			// will determine the most significant bit of the color, while the bit 
+			// in the high byte will determine the least significant bit of the color.
+			uint8_t low = (tileDataLow & modifier) >> flippedX;
+			uint8_t high = (tileDataHigh & modifier) >> flippedX;
+
+			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
+
+			debugGenericTileFramebuffer.SetPixel(debugTilesScanlineX + px, debugTilesScanlineY, color, color, color, 255);
+		}
+
+		debugTilesScanlineX += TILE_WIDTH_IN_PIXELS;
+
+		if (debugTilesScanlineX >= width)
+		{
+			debugTilesScanlineY++;
+			debugTilesScanlineX = 0;
+		}
+
+		if (debugTilesScanlineY >= height)
+		{
+			debugGenericTileFramebuffer.UploadData();
+			debugGenericTileDisplay->Draw(debugGenericTileFramebuffer);
+			debugGenericTileFramebuffer.Clear();
+
+			debugTilesScanlineY = 0;
+		}
 	}
 }

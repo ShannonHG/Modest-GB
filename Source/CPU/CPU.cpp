@@ -2,7 +2,7 @@
 #include <string>
 #include <iomanip>
 #include <variant>
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "CPU/CPU.hpp"
 #include "Logger.hpp"
 #include "InvalidOpcodeException.hpp"
@@ -11,6 +11,8 @@
 
 namespace SHG
 {
+	const std::string CPU_MESSAGE_HEADER = "[CPU]";
+
 	const uint16_t REGISTER_AF_DEFAULT = 0x0110;
 	const uint16_t REGISTER_BC_DEFAULT = 0x0013;
 	const uint16_t REGISTER_DE_DEFAULT = 0x00D8;
@@ -37,27 +39,26 @@ namespace SHG
 
 	void CPU::PrintRegisterInfo()
 	{
-		std::stringstream messageStream;
+		Logger::WriteSystemEvent("(z) " + std::to_string((int)GetZeroFlag()) +
+			" (n) " + std::to_string((int)GetSubtractionFlag()) +
+			" (h) " + std::to_string((int)GetHalfCarryFlag()) +
+			" (c) " + std::to_string((int)GetCarryFlag()), CPU_MESSAGE_HEADER);
 
-		messageStream << "(A): " << ConvertToHexString(GetRegisterA().GetData(), 2) << " ";
-		messageStream << "(F): " << ConvertToHexString(GetRegisterF().GetData(), 2) << " ";
-		messageStream << "(B): " << ConvertToHexString(GetRegisterB().GetData(), 2) << " ";
-		messageStream << "(C): " << ConvertToHexString(GetRegisterC().GetData(), 2) << " ";
-		messageStream << "(D): " << ConvertToHexString(GetRegisterD().GetData(), 2) << " ";
-		messageStream << "(E): " << ConvertToHexString(GetRegisterE().GetData(), 2) << " ";
-		messageStream << "(H): " << ConvertToHexString(GetRegisterH().GetData(), 2) << " ";
-		messageStream << "(L): " << ConvertToHexString(GetRegisterL().GetData(), 2) << " ";
-		messageStream << std::endl;
+		Logger::WriteSystemEvent("(A) " + ConvertToHexString(GetRegisterA().GetData(), 2) +
+			" (F) " + ConvertToHexString(GetRegisterF().GetData(), 2) +
+			" (B) " + ConvertToHexString(GetRegisterB().GetData(), 2) +
+			" (C) " + ConvertToHexString(GetRegisterC().GetData(), 2) +
+			" (D) " + ConvertToHexString(GetRegisterD().GetData(), 2) + 
+			" (E) " + ConvertToHexString(GetRegisterE().GetData(), 2) + 
+			" (H) " + ConvertToHexString(GetRegisterH().GetData(), 2) + 
+			" (L) " + ConvertToHexString(GetRegisterL().GetData(), 2), CPU_MESSAGE_HEADER);
 
-		messageStream << "(AF): " << ConvertToHexString(GetRegisterAF().GetData(), 4) << " ";
-		messageStream << "(BC): " << ConvertToHexString(GetRegisterBC().GetData(), 4) << " ";
-		messageStream << "(DE): " << ConvertToHexString(GetRegisterDE().GetData(), 4) << " ";
-		messageStream << "(HL): " << ConvertToHexString(GetRegisterHL().GetData(), 4) << " ";
-		messageStream << "(PC): " << ConvertToHexString(programCounter.GetData(), 4) << " ";
-		messageStream << "(SP): " << ConvertToHexString(stackPointer.GetData(), 4) << " ";
-		messageStream << std::endl;
-
-		Logger::Write(messageStream.str(), false);
+		Logger::WriteSystemEvent("(AF) " + ConvertToHexString(GetRegisterAF().GetData(), 4) +
+			" (BC) " + ConvertToHexString(GetRegisterBC().GetData(), 4) + 
+			" (DE) " + ConvertToHexString(GetRegisterDE().GetData(), 4) + 
+			" (HL) " + ConvertToHexString(GetRegisterHL().GetData(), 4) + 
+			" (PC) " + ConvertToHexString(programCounter.GetData(), 4) +
+			" (SP) " + ConvertToHexString(stackPointer.GetData(), 4), CPU_MESSAGE_HEADER);
 	}
 
 	void CPU::HandleInterrupts()
@@ -65,8 +66,9 @@ namespace SHG
 		uint8_t interruptFlag = memoryManagementUnit.GetByte(INTERRUPT_FLAG_ADDRESS);
 		uint8_t interruptEnable = memoryManagementUnit.GetByte(INTERRUPT_ENABLE_ADDRESS);
 
-		Logger::Write("[CPU] IF: " + ConvertToHexString(interruptFlag, 2));
-		Logger::Write("[CPU] IE: " + ConvertToHexString(interruptEnable, 2));
+		Logger::WriteSystemEvent("(IME) " + std::to_string((int)GetInterruptMasterEnableFlag()) + 
+			" (IF) " + ConvertToHexString(interruptFlag, 2) +
+			" (IE) " + ConvertToHexString(interruptEnable, 2), CPU_MESSAGE_HEADER);
 
 		for (int i = 0; i < INTERRUPT_OPERATIONS.size(); i++)
 		{
@@ -76,12 +78,10 @@ namespace SHG
 			{
 				uint8_t interruptAddress = INTERRUPT_OPERATIONS.at(static_cast<InterruptType>(i));
 
-				Logger::Write("[CPU] Interrupt requested: " + ConvertToHexString(interruptAddress, 2));
+				Logger::WriteSystemEvent("(interrupt request) " + ConvertToHexString(interruptAddress, 2), CPU_MESSAGE_HEADER);
 
 				if (interruptMasterEnableFlag)
 				{
-					Logger::Write("[CPU] Executing interrupt: " + ConvertToHexString(interruptAddress, 2));
-
 					CALL(interruptAddress);
 					interruptMasterEnableFlag = false;
 					memoryManagementUnit.ResetBit(INTERRUPT_FLAG_ADDRESS, i);
@@ -103,28 +103,19 @@ namespace SHG
 			return currentCycles;
 		}
 
-		Logger::Write("\n[CPU]", false);
-		Logger::WriteDivider();
-
 		PrintRegisterInfo();
 
 		uint8_t opcode = Fetch8();
 		currentInstruction = Decode(opcode);
 
 		if (currentInstruction == nullptr)
-		{
-			std::stringstream errorStream;
-			errorStream << "[CPU] Invalid opcode encountered: " << ConvertToHexString(opcode, 2);
-			throw InvalidOpcodeException(errorStream.str());
-		}
+			throw InvalidOpcodeException("[CPU] Invalid opcode encountered: " + ConvertToHexString(opcode, 2));
 
 		currentCycles = currentInstruction->cycles;
 
-		Logger::Write("Executing: " + std::string(currentInstruction->mnemonic), false);
+		Logger::WriteSystemEvent("(execute) " + std::string(currentInstruction->mnemonic), CPU_MESSAGE_HEADER);
 
 		(this->*(currentInstruction->operation))();
-
-		Logger::WriteDivider();
 
 		return currentCycles;
 	}
@@ -136,23 +127,16 @@ namespace SHG
 		uint16_t address = programCounter.GetData();
 		programCounter.Increment();
 
-		std::stringstream messageStream;
-
 		// If, for some reason, the memory address is not available
 		// then execution should be stopped since this indicates a severe issue.
 		// TODO: This can potentially affect performance, since it will cause the memory map
 		// to loop through its memory mapped devices.
 		if (!memoryManagementUnit.IsAddressAvailable(address))
-		{
-			messageStream << "[CPU] Failed to fetch data from " << ConvertToHexString(address, 4) << ". Memory address is inaccessible.";
-
-			throw std::out_of_range(messageStream.str());
-		}
+			throw std::out_of_range("[CPU] Failed to fetch data from " + ConvertToHexString(address, 4) + ". Memory address is inaccessible.");
 
 		uint8_t result = memoryManagementUnit.GetByte(address);
 
-		messageStream << "Fetched: " << ConvertToHexString(result, 2);
-		Logger::Write(messageStream.str(), false);
+		Logger::WriteSystemEvent("(fetch) " + ConvertToHexString(result, 2), CPU_MESSAGE_HEADER);
 
 		return result;
 	}
@@ -1517,7 +1501,7 @@ namespace SHG
 	{
 		reg.SetData(reg.GetData() & Fetch8());
 		ChangeZeroFlag(reg.GetData() == 0);
-		
+
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(true);
 		ChangeCarryFlag(false);

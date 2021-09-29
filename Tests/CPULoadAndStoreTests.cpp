@@ -1,7 +1,7 @@
 #include "CPU/CPU.hpp"
 #include "gtest/gtest.h"
 #include "Memory/Memory.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "Logger.hpp"
 #include "CPUTestGlobals.hpp"
 

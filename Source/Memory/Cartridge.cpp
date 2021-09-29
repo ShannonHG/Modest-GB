@@ -10,8 +10,6 @@ namespace SHG
 {
 	bool Cartridge::LoadFromFile(std::string romFilePath)
 	{
-		Logger::Write("Attempting to load ROM: " + romFilePath);
-
 		std::ifstream file(romFilePath, std::ios::binary);
 
 		if (!file.is_open()) return false;
@@ -47,7 +45,7 @@ namespace SHG
 		}
 
 		InitMBC();
-		Logger::Write("ROM Loaded successfully");
+		Logger::WriteInfo("ROM Loaded successfully");
 		return true;
 	}
 
@@ -55,15 +53,15 @@ namespace SHG
 	{
 		if (memoryBankController != NULL)
 		{
-			Logger::Write("[Cartridge] Initializing MBC");
+			Logger::WriteInfo("[Cartridge] Initializing MBC");
 			if (GetRAMSize() > 0)
 			{
-				Logger::Write("[Cartridge] Attaching RAM to MBC");
+				Logger::WriteInfo("[Cartridge] Attaching RAM to MBC");
 				memoryBankController->AttachRAM(ram);
 			}
 			if (GetROMSize() > 0)
 			{
-				Logger::Write("[Cartridge] Attaching ROM to MBC");
+				Logger::WriteInfo("[Cartridge] Attaching ROM to MBC");
 				memoryBankController->AttachROM(rom);
 			}
 		}
@@ -75,7 +73,7 @@ namespace SHG
 		{
 		case CH_CGB_FLAG_ADDRESS:
 			// If the most significant bit is enabled, then CGB mode is enabled.
-			if ((byte & 0b10000000) == 0b10000000) Logger::Write("CGB mode is enabled");
+			if ((byte & 0b10000000) == 0b10000000) Logger::WriteInfo("CGB mode is enabled");
 			break;
 		case CH_MEMORY_BANK_TYPE_ADDRESS:
 			DecodeCartridgeType(byte);
@@ -97,24 +95,24 @@ namespace SHG
 		{
 		case CH_ROM_ONLY_CODE:
 			memoryBankControllerType = MemoryBankControllerType::None;
-			Logger::Write("Cartridge type:  'ROM ONLY'");
+			Logger::WriteInfo("Cartridge type:  'ROM ONLY'");
 			break;
 		case CH_MBC1_CODE:
 		case CH_MBC1_RAM_CODE:
 		case CH_MBC1_RAM_BATTERY_CODE:
 			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
 			memoryBankControllerType = MemoryBankControllerType::MBC1;
-			Logger::Write("Cartridge type:  'MBC1'");
+			Logger::WriteInfo("Cartridge type:  'MBC1'");
 			break;
 		case CH_MBC2_CODE:
 		case CH_MBC2_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC2());
 			memoryBankControllerType = MemoryBankControllerType::MBC2;
-			Logger::Write("Cartridge type:  'MBC2'");
+			Logger::WriteInfo("Cartridge type:  'MBC2'");
 			break;
 		case CH_ROM_RAM_CODE:
 			memoryBankControllerType = MemoryBankControllerType::None;
-			Logger::Write("Cartridge type:  'ROM + RAM'");
+			Logger::WriteInfo("Cartridge type:  'ROM + RAM'");
 			break;
 		case CH_ROM_RAM_BATTERY_CODE:
 			break;
@@ -123,7 +121,7 @@ namespace SHG
 		case CH_MMM01_RAM_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MMM01());
 			memoryBankControllerType = MemoryBankControllerType::MMM01;
-			Logger::Write("Cartridge type:  'MMM01'");
+			Logger::WriteInfo("Cartridge type:  'MMM01'");
 			break;
 		case CH_MBC3_TIMER_BATTERY_CODE:
 		case CH_MBC3_TIMER_RAM_BATTERY_CODE:
@@ -132,7 +130,7 @@ namespace SHG
 		case CH_MBC3_RAM_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC3());
 			memoryBankControllerType = MemoryBankControllerType::MBC3;
-			Logger::Write("Cartridge type:  'MBC3'");
+			Logger::WriteInfo("Cartridge type:  'MBC3'");
 			break;
 		case CH_MBC5_CODE:
 		case CH_MBC5_RAM_CODE:
@@ -142,31 +140,31 @@ namespace SHG
 		case CH_MBC5_RUMBLE_RAM_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC5());
 			memoryBankControllerType = MemoryBankControllerType::MBC5;
-			Logger::Write("Cartridge type: MBC5");
+			Logger::WriteInfo("Cartridge type: MBC5");
 			break;
 		case CH_MBC6_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC6());
 			memoryBankControllerType = MemoryBankControllerType::MBC6;
-			Logger::Write("Cartridge type: MBC6");
+			Logger::WriteInfo("Cartridge type: MBC6");
 			break;
 		case CH_MBC7_SENSOR_RUMBLE_RAM_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC7());
 			memoryBankControllerType = MemoryBankControllerType::MBC7;
-			Logger::Write("Cartridge type: MBC7");
+			Logger::WriteInfo("Cartridge type: MBC7");
 			break;
 		case 0xFC:
 			memoryBankControllerType = MemoryBankControllerType::None;
-			Logger::Write("Cartridge type: POCKET CAMERA");
+			Logger::WriteInfo("Cartridge type: POCKET CAMERA");
 			break;
 		case CH_HuC3_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new HuC3());
 			memoryBankControllerType = MemoryBankControllerType::HuC3;
-			Logger::Write("Cartridge type: HuC3");
+			Logger::WriteInfo("Cartridge type: HuC3");
 			break;
 		case CH_HuC1_RAM_BATTERY_CODE:
 			//memoryBankController = std::unique_ptr<MemoryBankController>(new HuC1());
 			memoryBankControllerType = MemoryBankControllerType::HuC1;
-			Logger::Write("Cartridge type: HuC1");
+			Logger::WriteInfo("Cartridge type: HuC1");
 			break;
 		}
 	}
@@ -178,7 +176,7 @@ namespace SHG
 
 		// Display the ROM size (in KiB) for debugging purposes
 		double romSizeKB = romSize / (double)KiB;
-		Logger::Write("Cartridge ROM available:  " + std::to_string(romSizeKB) + " KiB");
+		Logger::WriteInfo("Cartridge ROM available:  " + std::to_string(romSizeKB) + " KiB");
 	}
 
 	void Cartridge::DecodeRAMSize(uint8_t byte)
@@ -209,7 +207,7 @@ namespace SHG
 
 		// Display the RAM size (in KiB) for debugging purposes
 		double ramSizeKB = ramSize / (double)KiB;
-		Logger::Write("Cartridge RAM available: " + std::to_string(ramSizeKB) + " KiB");
+		Logger::WriteInfo("Cartridge RAM available: " + std::to_string(ramSizeKB) + " KiB");
 	}
 
 	MemoryBankControllerType Cartridge::GetMemoryBankControllerType()

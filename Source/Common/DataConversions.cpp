@@ -1,5 +1,5 @@
 #include <sstream>
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include <iomanip>
 
 namespace SHG

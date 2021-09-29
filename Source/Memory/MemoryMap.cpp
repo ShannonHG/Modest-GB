@@ -1,7 +1,7 @@
 #include <filesystem>
 #include "Memory/MemoryMap.hpp"
 #include "Logger.hpp"
-#include "Globals.hpp"
+#include "Common/DataConversions.hpp"
 #include "InvalidOpcodeException.hpp"
 
 namespace SHG

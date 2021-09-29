@@ -1,5 +1,4 @@
 #include "MBCTestGlobals.hpp"
-#include "Globals.hpp"
 #include "Memory/MemoryBankController.hpp"
 
 namespace SHG

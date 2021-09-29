@@ -3,13 +3,17 @@
 
 namespace SHG
 {
-	Display::Display(const std::string& title, int width, int height)
+	Display::Display() {}
+
+	Display::Display(const std::string& title, int x, int y, int width, int height)
 	{
 		screenWidth = width;
 		screenHeight = height;
 
-		
-		window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
+		this->x = x;
+		this->y = y;
+
+		window = SDL_CreateWindow(title.c_str(), x, y, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 		renderer = SDL_CreateRenderer(window, 0, 0);
 	}
 
@@ -41,5 +45,25 @@ namespace SHG
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
 		SDL_RenderPresent(renderer);
+	}
+
+	int Display::GetWindowX()
+	{
+		return x;
+	}
+
+	int Display::GetWindowY()
+	{
+		return y;
+	}
+
+	int Display::GetWidth()
+	{
+		return screenWidth;
+	}
+
+	int Display::GetHeight()
+	{
+		return screenHeight;
 	}
 }
