@@ -13,7 +13,7 @@ namespace SHG
 {
 	const std::string CPU_MESSAGE_HEADER = "[CPU]";
 
-	const uint16_t REGISTER_AF_DEFAULT = 0x0110;
+	const uint16_t REGISTER_AF_DEFAULT = 0x01B0;
 	const uint16_t REGISTER_BC_DEFAULT = 0x0013;
 	const uint16_t REGISTER_DE_DEFAULT = 0x00D8;
 	const uint16_t REGISTER_HL_DEFAULT = 0x014D;

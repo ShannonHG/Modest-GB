@@ -13,6 +13,7 @@ namespace SHG
 	const std::string INFO_MESSAGE_HEADER = "[INFO]";
 	const std::string WARNING_MESSAGE_HEADER = "[WARNING]";
 	const std::string ERROR_MESSAGE_HEADER = "[ERROR]";
+	const std::string SYSTEM_STATUS_MESSAGE_HEADER = "[SYSTEM]";
 
 	std::ofstream logFileStream;
 	std::array<char, 100> logDateTimeBuffer;
@@ -36,7 +37,7 @@ namespace SHG
 
 	void Logger::WriteSystemEvent(const std::string& message, const std::string& header)
 	{
-		if (IsSystemEventLoggingEnabled) WriteMessage(ERROR_MESSAGE_HEADER, message, false, header);
+		if (IsSystemEventLoggingEnabled) WriteMessage(SYSTEM_STATUS_MESSAGE_HEADER, message, false, header);
 	}
 
 	void Logger::InitLogFile()

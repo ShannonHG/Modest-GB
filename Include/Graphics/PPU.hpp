@@ -11,13 +11,14 @@
 #include "Memory/MemoryMap.hpp"
 #include "Graphics/TileMapType.hpp"
 #include "Graphics/DMATransferRegister.hpp"
+#include "Memory/Register8.hpp"
 
 namespace SHG
 {
 	class PPU
 	{
 	public:
-		PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram, DMATransferRegister& dmaRegister);
+		PPU(Display& display, MemoryMap& memoryManagementUnit);
 		void Cycle(uint32_t duration);
 		void DebugDrawBackgroundTileMap();
 		void DebugDrawWindowTileMap();
@@ -27,6 +28,16 @@ namespace SHG
 		void AttachDisplayForBackgroundDebugging(Display* display);
 		void AttachDisplayForSpriteDebugging(Display* display);
 		void AttachDisplayForTileDebugging(Display* display);
+
+		Register8* GetLCDC();
+		Register8* GetLCDStatus();
+		Register8* GetSCY();
+		Register8* GetSCX();
+		Register8* GetLY();
+		Register8* GetLYC();
+		Register8* GetWY();
+		Register8* GetWX();
+		DMATransferRegister* GetDMATransferRegister();
 	private:
 		enum class PPUMode
 		{
@@ -61,6 +72,16 @@ namespace SHG
 			uint8_t priority = 0;
 		};
 
+		Register8 lcdControl = Register8();
+		Register8 lcdStatus = Register8();
+		Register8 scy = Register8();
+		Register8 scx = Register8();
+		Register8 ly = Register8();
+		Register8 lyc = Register8();
+		Register8 wy = Register8();
+		Register8 wx = Register8();
+		DMATransferRegister dmaRegister = DMATransferRegister();
+
 		static const std::map<PixelFetcherState, uint32_t> STATE_DURATIONS;
 
 		PPUMode currentMode = PPUMode::SearchingOAM;
@@ -87,9 +108,7 @@ namespace SHG
 
 		MemoryMap& memoryManagementUnit;
 		Display& mainDisplay;
-		DataStorageDevice& vram;
 
-		DMATransferRegister& dmaRegister;
 		uint8_t dmaTransferElapsedTime = 0;
 
 		Framebuffer mainFramebuffer;
@@ -140,11 +159,6 @@ namespace SHG
 
 		void RefreshLY();
 		void RefreshLYCompare();
-
-		void ChangeLCDControlBit(uint8_t bitIndex, bool isSet);
-		bool GetLCDControlBit(uint8_t bitIndex);
-		void ChangeLCDStatusBit(uint8_t bitIndex, bool isSet);
-		bool GetLCDStatusBit(uint8_t bitIndex);
 
 		void DebugDrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanline, TileMapType tileMapType);
 	};

@@ -3,43 +3,48 @@
 
 namespace SHG
 {
+	Register8::Register8() : Memory(1)
+	{ 
+	
+	}
+
 	void Register8::SetData(uint8_t data)
 	{
-		this->data = data;
+		Memory::SetByte(0, data);
 	}
 
 	void Register8::ChangeBit(uint8_t bitIndex, bool enable)
 	{
-		Arithmetic::ChangeBit(data, bitIndex, enable);
+		Memory::ChangeBit(0, bitIndex, enable);
 	}
 
 	uint8_t Register8::GetBit(uint8_t bitNumber)
 	{
-		return (data >> bitNumber) & 1;
+		return Memory::GetBit(0, bitNumber);
 	}
 
 	uint8_t Register8::GetData()
 	{
-		return data;
+		return GetByte(0);
 	}
 
 	void Register8::Increment()
 	{
-		data++;
+		SetData(GetData() + 1);
 	}
 
 	void Register8::Decrement()
 	{
-		data--;
+		SetByte(0, GetData() - 1);
 	}
 
 	void Register8::Increase(uint8_t amount)
 	{
-		data += amount;
+		SetByte(0, GetData() + amount);
 	}
 
 	void Register8::Decrease(uint8_t amount)
 	{
-		data -= amount;
+		SetByte(0, GetData() - amount);
 	}
 }

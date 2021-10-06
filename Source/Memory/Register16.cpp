@@ -3,6 +3,12 @@
 
 namespace SHG
 {
+	Register16::Register16() : Memory(2)
+	{
+		lowRegister = Register8();
+		highRegister = Register8();
+	}
+
 	uint8_t Register16::GetHighByte()
 	{
 		return highRegister.GetData();
@@ -77,4 +83,24 @@ namespace SHG
 	{
 		return lowRegister;
 	}
+
+	uint8_t Register16::GetByte(uint16_t address)
+	{
+		if (IsAddressAvailable(address))
+			return GetData();
+
+		return 0;
+	}
+	
+	void Register16::SetByte(uint16_t address, uint8_t value)
+	{
+		if (IsAddressAvailable(address))
+			SetData(value);
+	}
+
+	bool Register16::IsAddressAvailable(uint16_t address)
+	{
+		return address < 2;
+	}
+
 }

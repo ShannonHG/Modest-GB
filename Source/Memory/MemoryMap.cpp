@@ -64,7 +64,20 @@ namespace SHG
 
 		if (mappedDevice != nullptr)
 		{
-			mappedDevice->device.SetByte(GetNormalizedAddress(mappedDevice, address), value);
+			uint16_t normalizedAddress = GetNormalizedAddress(mappedDevice, address);
+
+			// Some addresses have read-only bits. This prevents the bits in these 
+			// addresses from being changed.
+			if (readonlyBitMasks.find(address) != readonlyBitMasks.end())
+			{
+				uint8_t currentByte = mappedDevice->device.GetByte(normalizedAddress) & readonlyBitMasks[address];
+				value = (value & ~readonlyBitMasks[address]) | currentByte;
+			}
+
+			mappedDevice->device.SetByte(normalizedAddress, value);
+
+			for (MemoryMapWriteCallback c : memoryWriteCallbacks)
+				c(address, value);
 		}
 	}
 
@@ -72,6 +85,11 @@ namespace SHG
 	{
 		MemoryMappedDevice* device = GetMemoryMappedDeviceForRange(address);
 		return device != NULL && device->device.IsAddressAvailable(GetNormalizedAddress(device, address));
+	}
+
+	void MemoryMap::RegisterMemoryWriteCallback(MemoryMapWriteCallback callback)
+	{
+		memoryWriteCallbacks.push_back(callback);
 	}
 
 	MemoryMappedDevice* MemoryMap::GetMemoryMappedDeviceForRange(uint16_t address)
@@ -125,5 +143,10 @@ namespace SHG
 			blarggOutStream << (char)GetByte(0xFF01);
 			blarggOutStream.flush();
 		}
+	}
+
+	void MemoryMap::SetReadonlyBitMask(uint16_t address, uint8_t bitMask)
+	{
+		readonlyBitMasks[address] = bitMask;
 	}
 }

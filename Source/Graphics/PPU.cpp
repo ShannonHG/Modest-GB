@@ -10,9 +10,6 @@
 
 namespace SHG
 {
-	const uint16_t LCD_CONTROL_REGISTER_ADDRESS = 0xFF40;
-	const uint16_t LCD_STATUS_REGISTER_ADDRESS = 0xFF41;
-
 	const uint8_t LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX = 6;
 	const uint8_t LCD_STATUS_OAM_STAT_INTERRUPT_INDEX = 5;
 	const uint8_t LCD_STATUS_VBLANK_STAT_INTERRUPT_INDEX = 4;
@@ -21,7 +18,7 @@ namespace SHG
 	const uint8_t LCD_STATUS_MODE_FLAG_INDEX_1 = 1;
 	const uint8_t LCD_STATUS_MODE_FLAG_INDEX_0 = 0;
 
-	const uint8_t LCDC_LCD_ENABLE_INDEX = 7;
+	const uint8_t LCDC_LCD_PPU_ENABLE_INDEX = 7;
 	const uint8_t LCDC_WINDOW_TILE_MAP_INDEX = 6;
 	const uint8_t LCDC_WINDOW_ENABLED_INDEX = 5;
 	const uint8_t LCDC_BG_WINDOW_TILE_DATA_INDEX = 4;
@@ -29,13 +26,6 @@ namespace SHG
 	const uint8_t LCDC_OBJ_SIZE_INDEX = 2;
 	const uint8_t LCDC_OBJ_ENABLE_INDEX = 1;
 	const uint8_t LCDC_BG_WINDOW_PRIORITY_INDEX = 0;
-
-	const uint16_t SCY_ADDRESS = 0xFF42;
-	const uint16_t SCX_ADDRESS = 0xFF43;
-	const uint16_t LY_ADDRESS = 0xFF44;
-	const uint16_t LYC_ADDRESS = 0xFF45;
-	const uint16_t WY_ADDRESS = 0xFF4A;
-	const uint16_t WX_ADDRESS = 0xFF4B;
 
 	const uint16_t DEFAULT_TILE_MAP_ADDRESS = 0x9800;
 	const uint16_t ALTERNATE_TILE_MAP_ADDRESS = 0x9C00;
@@ -66,7 +56,6 @@ namespace SHG
 
 	const uint8_t VBLANK_END_Y = 153;
 
-	const uint16_t DMA_TRANSFER_REGISTER_ADDRESS = 0xFF46;
 	const uint16_t DMA_TRANSFER_DESTINATION_START_ADDRESS = 0xFE00;
 	const uint8_t DMA_TRANSFER_DURATION = 160;
 
@@ -92,16 +81,16 @@ namespace SHG
 		{PixelFetcherState::PushingData, 0},
 	};
 
-	PPU::PPU(Display& display, MemoryMap& memoryManagementUnit, DataStorageDevice& vram, DMATransferRegister& dmaRegister) :
-		vram(vram), mainDisplay(display), memoryManagementUnit(memoryManagementUnit),
-		mainFramebuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT), dmaRegister(dmaRegister)
+	PPU::PPU(Display& display, MemoryMap& memoryManagementUnit) :
+		mainDisplay(display), memoryManagementUnit(memoryManagementUnit),
+		mainFramebuffer(display, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT)
 	{
 
 	}
 
 	void PPU::Cycle(uint32_t duration)
 	{
-		if (duration == 0) return;
+		if (duration == 0 || !lcdControl.GetBit(LCDC_LCD_PPU_ENABLE_INDEX)) return;
 
 		RefreshLY();
 
@@ -147,9 +136,11 @@ namespace SHG
 				EnterVBlankMode();
 			else
 				EnterOAMSearchMode();
+
+			return duration;
 		}
 
-		return duration;
+		return 0;
 	}
 
 	uint32_t PPU::HandleVBlankMode(uint32_t duration)
@@ -181,9 +172,10 @@ namespace SHG
 			}
 
 			currentScanline++;
+			return duration;
 		}
 
-		return duration;
+		return 0;
 	}
 
 	uint32_t PPU::HandleLCDTransferMode(uint32_t duration)
@@ -224,10 +216,13 @@ namespace SHG
 				currentScanlineElapsedTime += 2;
 				currentModeElapsedTime += 2;
 
+				if (((int)(duration - 2)) <= 0) duration = 0;
+				else duration -= 2;
+
 				// TODO: Remove hardcoded values and account for number of sprites
 				if (currentModeElapsedTime >= 172)
 				{
-					if (GetLCDControlBit(LCDC_OBJ_ENABLE_INDEX))
+					if (lcdControl.GetBit(LCDC_OBJ_ENABLE_INDEX))
 					{
 						GetSpritePixelsForScanline(spritesOnCurrentScanline, currentScanlineX, currentScanline, spritePixelQueue);
 						spritesOnCurrentScanline.clear();
@@ -279,6 +274,7 @@ namespace SHG
 		return duration;
 	}
 
+	// TODO: Window tile rendering is broken
 	uint16_t PPU::FetchTileMapIndex(uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, TileMapType tileMapType, bool ignoreScrolling)
 	{
 		uint16_t tileMapAddress = DEFAULT_TILE_MAP_ADDRESS;
@@ -286,11 +282,11 @@ namespace SHG
 		bool isBackgroundTilesEnabled = ((uint8_t)tileMapType & (uint8_t)TileMapType::BackgroundOnly) != 0;
 		bool isWindowTilesEnabled = ((uint8_t)tileMapType & (uint8_t)TileMapType::WindowOnly) != 0;
 
-		uint8_t windowX = memoryManagementUnit.GetByte(WX_ADDRESS);
-		uint8_t windowY = memoryManagementUnit.GetByte(WY_ADDRESS);
+		uint8_t windowX = wx.GetData();
+		uint8_t windowY = wy.GetData();
 
 		bool isBackgroundTile = false;
-		if (GetLCDControlBit(LCDC_BG_TILE_MAP_INDEX))
+		if (lcdControl.GetBit(LCDC_BG_TILE_MAP_INDEX))
 		{
 			// If the current X is outside of the window then the current tile is a background tile
 			// and the tile map at 0x9C00 should be used to fetch the tile.
@@ -305,34 +301,36 @@ namespace SHG
 			isBackgroundTile = true;
 		}
 
-		bool isWindowTile = false;
-		if (GetLCDControlBit(LCDC_WINDOW_TILE_MAP_INDEX))
-		{
-			// If the current X is inside of the window then the current tile is a window tile
-			// and the tile map at 0x9C00 should be used to fetch the tile.
-			if (ignoreScrolling || (scanlineX >= windowX && (scanlineX < windowX + TILE_MAP_PIXEL_WIDTH)))
-			{
-				isWindowTile = true;
-				tileMapAddress = ALTERNATE_TILE_MAP_ADDRESS;
-			}
-		}
-		else
-		{
-			isWindowTile = GetLCDControlBit(LCDC_WINDOW_ENABLED_INDEX);
-		}
+		//bool isWindowTile = false;
+		//if (GetLCDControlBit(LCDC_WINDOW_TILE_MAP_INDEX))
+		//{
+		//	// If the current X is inside of the window then the current tile is a window tile
+		//	// and the tile map at 0x9C00 should be used to fetch the tile.
+		//	if (ignoreScrolling || (scanlineX >= windowX && (scanlineX < windowX + TILE_MAP_PIXEL_WIDTH)))
+		//	{
+		//		isWindowTile = true;
+		//		tileMapAddress = ALTERNATE_TILE_MAP_ADDRESS;
+		//	}
+		//}
+		//else
+		//{
+		//	isWindowTile = GetLCDControlBit(LCDC_WINDOW_ENABLED_INDEX);
+		//}
 
 		uint8_t tileX = 0;
 		uint8_t tileY = 0;
 
-		if (isWindowTile && isWindowTilesEnabled)
-		{
-			// TODO: Revisit
-			tileX = (windowX - 7) + scanlineX;
-			tileY = windowX + scanlineY;
-			//tileX = static_cast<uint8_t>(std::floor((std::max((int)(windowX - 7), 0) + scanlineX) / 8.0));
-			//tileY = static_cast<uint8_t>(std::floor(windowX + scanlineY) / 8.0);
-		}
-		else if (isBackgroundTile && isBackgroundTilesEnabled)
+		//if (isWindowTile && isWindowTilesEnabled)
+		//{
+		//	// TODO: Revisit
+		///*	tileX = (windowX - 7) + scanlineX;
+		//	tileY = windowX + scanlineY;*/
+		//	tileX = static_cast<uint8_t>(std::floor((std::max((int)(windowX - 7), 0) + scanlineX) / 8.0));
+		//	tileY = static_cast<uint8_t>(std::floor(windowX + scanlineY) / 8.0);
+		//}
+		//else
+
+		if (isBackgroundTile && isBackgroundTilesEnabled)
 		{
 			// IgnoreScrolling is useful for drawing the entire background map for debugging purposes.
 			tileX = ignoreScrolling ? std::floor(scanlineX / TILE_WIDTH_IN_PIXELS) : static_cast<uint8_t>(std::floor(windowX / TILE_WIDTH_IN_PIXELS) + std::floor(scanlineX / TILE_WIDTH_IN_PIXELS)) & 0x1F;
@@ -374,7 +372,7 @@ namespace SHG
 
 	int32_t PPU::GetTileAddressFromTileMaps(uint16_t tileIndex, uint8_t scanlineX, uint8_t scanlineY)
 	{
-		bool isUnsignedAddressingMode = memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, LCDC_BG_WINDOW_TILE_DATA_INDEX);
+		bool isUnsignedAddressingMode = lcdControl.GetBit(LCDC_BG_WINDOW_TILE_DATA_INDEX);
 
 		tileIndex = isUnsignedAddressingMode ? tileIndex : (int8_t)tileIndex;
 		int tileDataOffset = (tileIndex * TILE_SIZE_IN_BYTES) + ((scanlineY % TILE_WIDTH_IN_PIXELS) * 2);
@@ -386,9 +384,13 @@ namespace SHG
 	{
 		currentMode = PPUMode::HBlank;
 
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 3);
-		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+		lcdStatus.ChangeBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, true);
+		lcdStatus.ChangeBit(LCD_STATUS_VBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, false);
+
 		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
 
 		while (tileMapPixelQueue.size() > 0)
@@ -423,9 +425,12 @@ namespace SHG
 	{
 		currentMode = PPUMode::VBlank;
 
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 4);
-		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
+		lcdStatus.ChangeBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_VBLANK_STAT_INTERRUPT_INDEX, true);
+		lcdStatus.ChangeBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, true);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, false);
 
 		RequestInterrupt(memoryManagementUnit, InterruptType::VBlank);
 		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
@@ -436,9 +441,12 @@ namespace SHG
 		//Logger::WriteError("OAM search scanline time start: " + std::to_string(currentScanlineElapsedTime));
 		currentMode = PPUMode::SearchingOAM;
 
-		ChangeLCDStatusBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, true);
-		memoryManagementUnit.ResetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+		lcdStatus.ChangeBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_VBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, true);
+		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, true);
 
 		RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
 	}
@@ -448,8 +456,12 @@ namespace SHG
 		//Logger::WriteError("LCD transfer scanline time start: " + std::to_string(currentScanlineElapsedTime));
 		currentMode = PPUMode::LCDTransfer;
 
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 0);
-		memoryManagementUnit.SetBit(LCD_STATUS_REGISTER_ADDRESS, 1);
+		lcdStatus.ChangeBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_VBLANK_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, false);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, true);
+		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, true);
 
 		//frameStartTime = std::chrono::system_clock::now();
 	}
@@ -507,9 +519,14 @@ namespace SHG
 			if ((int)(duration - 2) <= 0)
 			{
 				if (currentSpriteIndex == MAX_SPRITE_COUNT)
+				{
+					duration = 0;
 					break;
+				}
 				else
+				{
 					return 0;
+				}
 			}
 
 			duration -= 2;
@@ -575,40 +592,20 @@ namespace SHG
 
 	void PPU::RefreshLY()
 	{
-		memoryManagementUnit.SetByte(LY_ADDRESS, currentScanline);
+		ly.SetData(currentScanline);
 		RefreshLYCompare();
 	}
 
 	void PPU::RefreshLYCompare()
 	{
-		bool lyCompare = currentScanline == memoryManagementUnit.GetByte(LYC_ADDRESS);
-		ChangeLCDStatusBit(LCD_STATUS_LY_COMPARE_FLAG_INDEX, lyCompare);
+		bool lyCompare = currentScanline == lyc.GetData();
+		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_FLAG_INDEX, lyCompare);
 
 		if (lyCompare)
 		{
-			ChangeLCDStatusBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, true);
+			lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, true);
 			RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
 		}
-	}
-
-	void PPU::ChangeLCDControlBit(uint8_t bitIndex, bool isSet)
-	{
-		memoryManagementUnit.ChangeBit(LCD_CONTROL_REGISTER_ADDRESS, bitIndex, isSet);
-	}
-
-	bool PPU::GetLCDControlBit(uint8_t bitIndex)
-	{
-		return memoryManagementUnit.GetBit(LCD_CONTROL_REGISTER_ADDRESS, bitIndex);
-	}
-
-	void PPU::ChangeLCDStatusBit(uint8_t bitIndex, bool isSet)
-	{
-		memoryManagementUnit.ChangeBit(LCD_STATUS_REGISTER_ADDRESS, bitIndex, isSet);
-	}
-
-	bool PPU::GetLCDStatusBit(uint8_t bitIndex)
-	{
-		return memoryManagementUnit.GetBit(LCD_STATUS_REGISTER_ADDRESS, bitIndex);
 	}
 
 	void PPU::AttachDisplayForWindowDebugging(Display* display)
@@ -783,5 +780,50 @@ namespace SHG
 
 			debugTilesScanlineY = 0;
 		}
+	}
+
+	Register8* PPU::GetLCDC()
+	{
+		return &lcdControl;
+	}
+
+	Register8* PPU::GetLCDStatus()
+	{
+		return &lcdStatus;
+	}
+
+	Register8* PPU::GetSCY()
+	{
+		return &scy;
+	}
+
+	Register8* PPU::GetSCX()
+	{
+		return &scx;
+	}
+
+	Register8* PPU::GetLY()
+	{
+		return &ly;
+	}
+	
+	Register8* PPU::GetLYC()
+	{
+		return &lyc;
+	}
+
+	Register8* PPU::GetWY()
+	{
+		return &wy;
+	}
+
+	Register8* PPU::GetWX()
+	{
+		return &wx;
+	}
+
+	DMATransferRegister* PPU::GetDMATransferRegister()
+	{
+		return &dmaRegister;
 	}
 }
