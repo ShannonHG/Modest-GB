@@ -17,6 +17,7 @@ namespace SHG
 
 	std::ofstream logFileStream;
 	std::array<char, 100> logDateTimeBuffer;
+	std::vector<LogEntryCallback> logEntryCallbacks;
 
 	bool Logger::IsSystemEventLoggingEnabled = false;
 
@@ -38,6 +39,11 @@ namespace SHG
 	void Logger::WriteSystemEvent(const std::string& message, const std::string& header)
 	{
 		if (IsSystemEventLoggingEnabled) WriteMessage(SYSTEM_STATUS_MESSAGE_HEADER, message, false, header);
+	}
+
+	void Logger::RegisterLogEntryCallback(LogEntryCallback callback)
+	{
+		logEntryCallbacks.push_back(callback);
 	}
 
 	void Logger::InitLogFile()
@@ -66,11 +72,14 @@ namespace SHG
 		std::strftime(&logDateTimeBuffer[0], logDateTimeBuffer.size(), "%F %T", &dateTime);
 
 		std::stringstream messageStream;
-		messageStream << &logDateTimeBuffer[0] << " " << heading << (customHeader.empty() ? customHeader : " " + customHeader) << ": " << message;
+		messageStream << "[" << &logDateTimeBuffer[0] << "] " << heading << (customHeader.empty() ? customHeader : " " + customHeader) << ": " << message;
 
 		if (writeToConsole) std::cout << messageStream.str() << std::endl;
 
 		// TODO: std::endl will force the stream to be flushed and immediately written to file, consider removing this.
 		logFileStream << messageStream.str() << std::endl;
+
+		for (LogEntryCallback callback : logEntryCallbacks)
+			callback(messageStream.str());
 	}
 }

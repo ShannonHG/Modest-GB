@@ -78,51 +78,16 @@ namespace SHG
 	static const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
 	static const uint16_t CH_RAM_SIZE_ADDRESS = 0x0149;
 
-	/// <summary>
-	/// Data structure representing a GameBoy cartridge.
-	/// </summary>
 	class Cartridge : public DataStorageDevice
 	{
 	public:
-		/// <summary>
-		/// Loads a ROM from a file
-		/// </summary>
-		/// <param name="romFilePath"></param>
-		/// <returns></returns>
 		bool LoadFromFile(std::string romFilePath);
-
-		/// <summary>
-		/// Loads a ROM from in-memory data
-		/// </summary>
-		/// <param name="data"></param>
-		/// <returns></returns>
 		bool LoadFromMemory(std::vector<uint8_t>& data);
-
-		/// <summary>
-		/// The type of memory bank controller this catridge uses.
-		/// </summary>
-		/// <returns></returns>
 		MemoryBankControllerType GetMemoryBankControllerType();
-
-		/// <summary>
-		/// Size of the ROM included in this cartridge (if any)
-		/// </summary>
-		/// <returns></returns>
 		uint32_t GetROMSize();
-
-		/// <summary>
-		/// Size of the RAM included in this cartridge (if any)
-		/// </summary>
-		/// <returns></returns>
 		uint32_t GetRAMSize();
-
-		/// <inheritdoc/>
 		uint8_t GetByte(uint16_t address) override;
-
-		/// <inheritdoc/>
 		void SetByte(uint16_t address, uint8_t value) override;
-
-		/// <inheritdoc/>
 		bool IsAddressAvailable(uint16_t address) override;
 
 	private:

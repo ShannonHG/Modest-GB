@@ -13,13 +13,6 @@ namespace SHG
 {
 	const std::string CPU_MESSAGE_HEADER = "[CPU]";
 
-	const uint16_t REGISTER_AF_DEFAULT = 0x01B0;
-	const uint16_t REGISTER_BC_DEFAULT = 0x0013;
-	const uint16_t REGISTER_DE_DEFAULT = 0x00D8;
-	const uint16_t REGISTER_HL_DEFAULT = 0x014D;
-	const uint16_t STACK_POINTER_DEFAULT = 0xFFFE;
-	const uint16_t PROGRAM_COUNTER_DEFAULT = 0x0100;
-
 	const uint8_t HALT_CYCLE_COUNT = 4;
 
 	CPU::CPU(DataStorageDevice& memoryManagementUnit) : memoryManagementUnit(memoryManagementUnit)
@@ -27,37 +20,24 @@ namespace SHG
 		this->memoryManagementUnit = memoryManagementUnit;
 	}
 
-	void CPU::ResetToDefaultState()
-	{
-		regAF.SetData(REGISTER_AF_DEFAULT);
-		regBC.SetData(REGISTER_BC_DEFAULT);
-		regDE.SetData(REGISTER_DE_DEFAULT);
-		regHL.SetData(REGISTER_HL_DEFAULT);
-		stackPointer.SetData(STACK_POINTER_DEFAULT);
-		programCounter.SetData(PROGRAM_COUNTER_DEFAULT);
-	}
-
 	void CPU::PrintRegisterInfo()
 	{
-		Logger::WriteSystemEvent("(z) " + std::to_string((int)GetZeroFlag()) +
-			" (n) " + std::to_string((int)GetSubtractionFlag()) +
-			" (h) " + std::to_string((int)GetHalfCarryFlag()) +
+		Logger::WriteSystemEvent("(z) " + std::to_string((int)GetZeroFlag()) + 
+			" (n) " + std::to_string((int)GetSubtractionFlag()) + 
+			" (h) " + std::to_string((int)GetHalfCarryFlag()) + 
 			" (c) " + std::to_string((int)GetCarryFlag()), CPU_MESSAGE_HEADER);
 
-		Logger::WriteSystemEvent("(A) " + ConvertToHexString(GetRegisterA().GetData(), 2) +
-			" (F) " + ConvertToHexString(GetRegisterF().GetData(), 2) +
-			" (B) " + ConvertToHexString(GetRegisterB().GetData(), 2) +
-			" (C) " + ConvertToHexString(GetRegisterC().GetData(), 2) +
-			" (D) " + ConvertToHexString(GetRegisterD().GetData(), 2) + 
-			" (E) " + ConvertToHexString(GetRegisterE().GetData(), 2) + 
-			" (H) " + ConvertToHexString(GetRegisterH().GetData(), 2) + 
+		Logger::WriteSystemEvent("(A) " + ConvertToHexString(GetRegisterA().GetData(), 2) + 
+			" (F) " + ConvertToHexString(GetRegisterF().GetData(), 2) + 
+			" (B) " + ConvertToHexString(GetRegisterB().GetData(), 2) + 
+			" (C) " + ConvertToHexString(GetRegisterC().GetData(), 2), CPU_MESSAGE_HEADER);
+
+		Logger::WriteSystemEvent("(D) " + ConvertToHexString(GetRegisterD().GetData(), 2) +
+			" (E) " + ConvertToHexString(GetRegisterE().GetData(), 2) +
+			" (H) " + ConvertToHexString(GetRegisterH().GetData(), 2) +
 			" (L) " + ConvertToHexString(GetRegisterL().GetData(), 2), CPU_MESSAGE_HEADER);
 
-		Logger::WriteSystemEvent("(AF) " + ConvertToHexString(GetRegisterAF().GetData(), 4) +
-			" (BC) " + ConvertToHexString(GetRegisterBC().GetData(), 4) + 
-			" (DE) " + ConvertToHexString(GetRegisterDE().GetData(), 4) + 
-			" (HL) " + ConvertToHexString(GetRegisterHL().GetData(), 4) + 
-			" (PC) " + ConvertToHexString(programCounter.GetData(), 4) +
+		Logger::WriteSystemEvent("(PC) " + ConvertToHexString(programCounter.GetData(), 4) + 
 			" (SP) " + ConvertToHexString(stackPointer.GetData(), 4), CPU_MESSAGE_HEADER);
 	}
 
@@ -93,7 +73,7 @@ namespace SHG
 		}
 	}
 
-	uint32_t CPU::Cycle()
+	uint32_t CPU::Step()
 	{
 		currentCycles = 0;
 
@@ -116,6 +96,7 @@ namespace SHG
 		Logger::WriteSystemEvent("(execute) " + std::string(currentInstruction->mnemonic), CPU_MESSAGE_HEADER);
 
 		(this->*(currentInstruction->operation))();
+		currentInstruction = nullptr;
 
 		return currentCycles;
 	}

@@ -3,9 +3,9 @@
 #include <array>
 #include <queue>
 #include <chrono>
+#include "SDL.h"
 #include "Memory/Memory.hpp"
 #include "Graphics/PixelColorID.hpp"
-#include "Graphics/Display.hpp"
 #include "Graphics/PixelData.hpp"
 #include "Graphics/Framebuffer.hpp"
 #include "Memory/MemoryMap.hpp"
@@ -18,16 +18,18 @@ namespace SHG
 	class PPU
 	{
 	public:
-		PPU(Display& display, MemoryMap& memoryManagementUnit);
-		void Cycle(uint32_t duration);
+		PPU(MemoryMap& memoryManagementUnit);
+		void Step(uint32_t duration);
+		void InitializeFramebuffer(SDL_Window* window);
+		Framebuffer& GetFramebuffer();
+		Framebuffer& GetTileDebugFramebuffer();
+		Framebuffer& GetSpriteDebugFramebuffer();
+		Framebuffer& GetBackgroundMapDebugFramebuffer();
+		Framebuffer& GetWindowMapDebugFramebuffer();
 		void DebugDrawBackgroundTileMap();
 		void DebugDrawWindowTileMap();
 		void DebugDrawSprites();
 		void DebugDrawTiles();
-		void AttachDisplayForWindowDebugging(Display* display);
-		void AttachDisplayForBackgroundDebugging(Display* display);
-		void AttachDisplayForSpriteDebugging(Display* display);
-		void AttachDisplayForTileDebugging(Display* display);
 
 		Register8* GetLCDC();
 		Register8* GetLCDStatus();
@@ -38,6 +40,9 @@ namespace SHG
 		Register8* GetWY();
 		Register8* GetWX();
 		DMATransferRegister* GetDMATransferRegister();
+
+		// TODO: Temp
+		void Render();
 	private:
 		enum class PPUMode
 		{
@@ -107,16 +112,10 @@ namespace SHG
 		std::queue<PixelData> spritePixelQueue;
 
 		MemoryMap& memoryManagementUnit;
-		Display& mainDisplay;
 
 		uint8_t dmaTransferElapsedTime = 0;
 
 		Framebuffer mainFramebuffer;
-
-		Display* debugWindowTileMapDisplay;
-		Display* debugBackgroundTileMapDisplay;
-		Display* debugSpriteDisplay;
-		Display* debugGenericTileDisplay;
 
 		Framebuffer debugWindowTileMapFramebuffer;
 		Framebuffer debugBackgroundTileMapFramebuffer;
@@ -152,14 +151,13 @@ namespace SHG
 		void EnterOAMSearchMode();
 		void EnterLCDTransferMode();
 
-		void DrawFrameBuffer();
+		void ChangeStatInterruptSourceBit(uint8_t bitIndex, bool isSet);
 
 		uint8_t GetColorFromID(PixelColorID id);
 		void GetPixelsFromTileScanline(uint8_t rawScanlineDataLow, uint8_t rawScanlineDataHigh, uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, std::queue<PixelData>& pixelQueue);
 
-		void RefreshLY();
 		void RefreshLYCompare();
 
-		void DebugDrawTileMap(Display& display, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanline, TileMapType tileMapType);
+		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanline, TileMapType tileMapType);
 	};
 }

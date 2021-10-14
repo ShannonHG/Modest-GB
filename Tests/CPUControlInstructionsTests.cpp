@@ -11,7 +11,7 @@ namespace SHG
 		Memory memory = CreatePresetMemory(0x00);
 		auto processor = CPU(memory);
 
-		processor.Cycle();
+		processor.Step();
 
 		// TODO: Implement
 	}
@@ -23,7 +23,7 @@ namespace SHG
 		Memory memory = CreatePresetMemory(0x10);
 		auto processor = CPU(memory);
 
-		processor.Cycle();
+		processor.Step();
 
 		// TODO: Implement
 	}
@@ -35,7 +35,7 @@ namespace SHG
 		Memory memory = CreatePresetMemory(0x76);
 		auto processor = CPU(memory);
 
-		processor.Cycle();
+		processor.Step();
 
 		// TODO: Implement
 	}
@@ -48,7 +48,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.ChangeInterruptMasterEnableFlag(true);
-		processor.Cycle();
+		processor.Step();
 		EXPECT_EQ(processor.GetInterruptMasterEnableFlag(), false);
 	}
 
@@ -60,7 +60,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.ChangeInterruptMasterEnableFlag(false);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetInterruptMasterEnableFlag(), true);
 	}

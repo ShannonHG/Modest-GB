@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <functional>
 #include "CPU/CPUInstruction.hpp"
 #include "Memory/DataStorageDevice.hpp"
 #include "Memory/Register16.hpp"
@@ -14,8 +15,7 @@ namespace SHG
 	{
 	public:
 		CPU(DataStorageDevice& memoryManagementUnit);
-		uint32_t Cycle();
-		void ResetToDefaultState();
+		uint32_t Step();
 
 		uint8_t GetZeroFlag();
 		uint8_t GetSubtractionFlag();
@@ -48,8 +48,8 @@ namespace SHG
 		Register16& GetStackPointer();
 
 		CPUInstruction GetCurrentInstruction();
-		void HandleInterrupts();
 
+		void HandleInterrupts();
 		void PrintRegisterInfo();
 
 	private:
@@ -65,7 +65,7 @@ namespace SHG
 		uint32_t currentCycles = 0;
 		bool isHalted = false;
 		bool interruptMasterEnableFlag = false;
-		CPUInstruction* currentInstruction;
+		CPUInstruction* currentInstruction = nullptr;
 
 		static std::map<uint8_t, CPUInstruction> BasicInstructionSet;
 		static std::map<uint8_t, CPUInstruction> CBPrefixedInstructionSet;

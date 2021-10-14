@@ -30,7 +30,7 @@ namespace SHG
 		currentTimerCounterFreq = TIMER_CONTROL_MODE_0_FREQ;
 	}
 
-	void Timer::Update(uint32_t cycles)
+	void Timer::Step(uint32_t cycles)
 	{
 		dividerRegister += cycles * DIVIDER_INCREMENTS_PER_CYCLE;
 		if (dividerRegister > 255) dividerRegister = 0;

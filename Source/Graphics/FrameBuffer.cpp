@@ -5,13 +5,22 @@ namespace SHG
 {
 	Framebuffer::Framebuffer() {}
 
-	Framebuffer::Framebuffer(Display& display, uint16_t width, uint16_t height) : width(width), height(height)
+	Framebuffer::Framebuffer(SDL_Window* window, uint16_t width, uint16_t height)
 	{
-		uint32_t format = SDL_GetWindowPixelFormat(display.GetWindow());
-		pixelFormat = SDL_AllocFormat(format);
-		texture = SDL_CreateTexture(display.GetRenderer(), SDL_PIXELFORMAT_BGRA32, SDL_TEXTUREACCESS_STREAMING, width, height);
+		Initialize(window, width, height);
+	}
+
+	void Framebuffer::Initialize(SDL_Window* window, uint16_t width, uint16_t height)
+	{
+		this->width = width;
+		this->height = height;
+		aspectRatio = width / (float)height;
+		pixelFormat = SDL_AllocFormat(SDL_GetWindowPixelFormat(window));
+		texture = SDL_CreateTexture(SDL_GetRenderer(window), SDL_PIXELFORMAT_BGRA32, SDL_TEXTUREACCESS_STREAMING, width, height);
 		pixels = std::vector<uint32_t>(width * height);
 	}
+
+	// TODO: Handle case where the framebuffer is uninitialized
 
 	void Framebuffer::UploadData()
 	{
@@ -59,5 +68,10 @@ namespace SHG
 	int Framebuffer::GetHeight()
 	{
 		return height;
+	}
+
+	float Framebuffer::GetAspectRatio()
+	{
+		return aspectRatio;
 	}
 }

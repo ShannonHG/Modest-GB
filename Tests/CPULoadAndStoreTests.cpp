@@ -15,7 +15,7 @@ namespace SHG
 		memory.SetByte(address, operand & 0x00FF);
 		memory.SetByte(address + 1, operand >> 8);
 		processor.GetStackPointer().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(reg.GetData(), operand);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), address + 2);
@@ -28,7 +28,7 @@ namespace SHG
 
 		reg.SetData(operand);
 		processor.GetStackPointer().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		uint8_t lower = memory.GetByte(address - 2);
 		uint8_t upper = memory.GetByte((address - 2) + 1);
@@ -46,7 +46,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -60,7 +60,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -74,7 +74,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -90,7 +90,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -106,7 +106,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		uint8_t data = memory.GetByte(0xFF00 | address);
 
@@ -125,7 +125,7 @@ namespace SHG
 		memory.SetByte(0xFF00 | address, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -140,7 +140,7 @@ namespace SHG
 		memory.SetByte(2, value >> 8);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterBC().GetData(), value);
 	}
@@ -155,7 +155,7 @@ namespace SHG
 		memory.SetByte(2, value >> 8);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterDE().GetData(), value);
 	}
@@ -170,7 +170,7 @@ namespace SHG
 		memory.SetByte(2, value >> 8);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), value);
 	}
@@ -185,7 +185,7 @@ namespace SHG
 		memory.SetByte(2, value >> 8);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetStackPointer().GetData(), value);
 	}
@@ -199,7 +199,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -213,7 +213,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -227,7 +227,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -243,7 +243,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -259,7 +259,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterBC().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -275,7 +275,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterDE().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -291,7 +291,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), address + 1);
@@ -308,7 +308,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), address - 1);
@@ -323,7 +323,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -337,7 +337,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -353,7 +353,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -370,7 +370,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterC().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		uint8_t data = memory.GetByte(0xFF00 | address);
 
@@ -388,7 +388,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -402,7 +402,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -416,7 +416,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -430,7 +430,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -446,7 +446,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -460,7 +460,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -474,7 +474,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -488,7 +488,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -503,7 +503,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -517,7 +517,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -531,7 +531,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -545,7 +545,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -560,7 +560,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -574,7 +574,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -588,7 +588,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -602,7 +602,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -619,7 +619,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -635,7 +635,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -651,7 +651,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -668,7 +668,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -682,7 +682,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterB().GetData(), value);
 	}
@@ -696,7 +696,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterD().GetData(), value);
 	}
@@ -710,7 +710,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterH().GetData(), value);
 	}
@@ -726,7 +726,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value);
 	}
@@ -743,7 +743,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetStackPointer().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		uint8_t lowerByte = memory.GetByte(address);
 		uint8_t upperByte = memory.GetByte(address + 1);
@@ -760,7 +760,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -774,7 +774,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -788,7 +788,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -802,7 +802,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterB().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -816,7 +816,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -830,7 +830,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -844,7 +844,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -858,7 +858,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterC().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -875,7 +875,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterBC().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -892,7 +892,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterDE().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -909,7 +909,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), address + 1);
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
@@ -927,7 +927,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), address - 1);
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
@@ -942,7 +942,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -956,7 +956,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -970,7 +970,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -984,7 +984,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterD().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1002,7 +1002,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		uint8_t data = memory.GetByte(address);
 
@@ -1021,7 +1021,7 @@ namespace SHG
 		memory.SetByte(address, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1035,7 +1035,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1049,7 +1049,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1063,7 +1063,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1077,7 +1077,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterE().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1091,7 +1091,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1105,7 +1105,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1119,7 +1119,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1133,7 +1133,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterH().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1147,7 +1147,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1161,7 +1161,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1175,7 +1175,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1189,7 +1189,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1203,7 +1203,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1217,7 +1217,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1231,7 +1231,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1245,7 +1245,7 @@ namespace SHG
 		memory.SetByte(1, value);
 
 		auto processor = CPU(memory);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1262,7 +1262,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1279,7 +1279,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1298,7 +1298,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1315,7 +1315,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}
@@ -1329,7 +1329,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterC().GetData(), value);
 	}
@@ -1343,7 +1343,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterE().GetData(), value);
 	}
@@ -1357,7 +1357,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterL().GetData(), value);
 	}
@@ -1371,7 +1371,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value);
 	}

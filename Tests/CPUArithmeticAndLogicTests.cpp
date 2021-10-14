@@ -13,7 +13,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
 	}
@@ -26,7 +26,7 @@ namespace SHG
 		processor.GetRegisterHL().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), operand1 + operand2);
 	}
@@ -39,7 +39,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
 	}
@@ -52,7 +52,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
 	}
@@ -65,7 +65,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
 	}
@@ -78,7 +78,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
 	}
@@ -93,7 +93,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
 	}
@@ -108,7 +108,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
 	}
@@ -119,7 +119,7 @@ namespace SHG
 
 		targetRegister.SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), operand + 1);
 	}
@@ -130,7 +130,7 @@ namespace SHG
 
 		targetRegister.SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), operand + 1);
 	}
@@ -141,7 +141,7 @@ namespace SHG
 
 		targetRegister.SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), operand - 1);
 	}
@@ -152,7 +152,7 @@ namespace SHG
 
 		targetRegister.SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), operand - 1);
 	}
@@ -165,7 +165,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		targetRegister.SetData(operand2);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}
@@ -253,7 +253,7 @@ namespace SHG
 		memory.SetByte(address, value);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value + 1);
 	}
@@ -301,7 +301,7 @@ namespace SHG
 		memory.SetByte(address, value);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), value - 1);
 	}
@@ -318,7 +318,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.GetRegisterA().SetData(operand1 + operand2);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), expectedResult);
 	}
@@ -331,7 +331,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.ChangeCarryFlag(false);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetCarryFlag(), 1);
 	}
@@ -366,7 +366,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.GetRegisterHL().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), value * 2);
 	}
@@ -511,7 +511,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.GetRegisterA().SetData(operand);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand ^ 0x00FF);
 	}
@@ -527,11 +527,11 @@ namespace SHG
 		memory.SetByte(1, opcode);
 
 		processor.ChangeCarryFlag(false);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetCarryFlag(), 1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetCarryFlag(), 0);
 	}
@@ -612,7 +612,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
 	}
@@ -627,7 +627,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.GetRegisterA().SetData(value);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), value * 2);
 	}
@@ -710,7 +710,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
 	}
@@ -728,7 +728,7 @@ namespace SHG
 		processor.ChangeCarryFlag((bool)carryFlag);
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand1 + carryFlag);
 	}
@@ -809,7 +809,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
 	}
@@ -825,7 +825,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), 0);
 	}
@@ -908,7 +908,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
 	}
@@ -927,7 +927,7 @@ namespace SHG
 		processor.ChangeCarryFlag((bool)carryFlag);
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		// TODO: Re-assess this
 		EXPECT_EQ(processor.GetRegisterA().GetData(), (uint8_t)-1);
@@ -1009,7 +1009,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
 	}
@@ -1025,7 +1025,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand & operand);
 	}
@@ -1106,7 +1106,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
 	}
@@ -1122,7 +1122,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand ^ operand);
 	}
@@ -1203,7 +1203,7 @@ namespace SHG
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
 	}
@@ -1219,7 +1219,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand | operand);
 	}
@@ -1299,7 +1299,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand1);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}
@@ -1314,7 +1314,7 @@ namespace SHG
 		uint8_t operand = 5;
 
 		processor.GetRegisterA().SetData(operand);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}
@@ -1331,7 +1331,7 @@ namespace SHG
 
 		memory.SetByte(1, operand2);
 		processor.GetRegisterA().SetData(operand1);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
 	}
@@ -1350,7 +1350,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
 	}
@@ -1366,7 +1366,7 @@ namespace SHG
 		auto processor = CPU(memory);
 
 		processor.GetRegisterA().SetData(operand1);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
 	}
@@ -1383,7 +1383,7 @@ namespace SHG
 
 		memory.SetByte(1, operand2);
 		processor.GetRegisterA().SetData(operand1);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
 	}
@@ -1400,7 +1400,7 @@ namespace SHG
 		memory.SetByte(1, operand2);
 
 		processor.GetStackPointer().SetData(operand1);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetStackPointer().GetData(), operand1 + operand2);
 	}
@@ -1417,7 +1417,7 @@ namespace SHG
 
 		memory.SetByte(1, signedIntValue);
 		processor.GetStackPointer().SetData(stackPointerValue);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterHL().GetData(), stackPointerValue + signedIntValue);
 	}
@@ -1437,7 +1437,7 @@ namespace SHG
 		processor.ChangeCarryFlag((bool)carryFlag);
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
 	}
@@ -1457,7 +1457,7 @@ namespace SHG
 		processor.ChangeCarryFlag(carryFlag);
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
 	}
@@ -1476,7 +1476,7 @@ namespace SHG
 
 		processor.GetRegisterA().SetData(operand1);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
 	}
@@ -1493,7 +1493,7 @@ namespace SHG
 		memory.SetByte(1, operand2);
 
 		processor.GetRegisterA().SetData(operand1);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
 	}

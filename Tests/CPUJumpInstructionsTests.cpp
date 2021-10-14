@@ -11,7 +11,7 @@ namespace SHG
 		memory.SetByte(1, address & 0x00FF);
 		memory.SetByte(2, address >> 8);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), address);
 	}
@@ -25,7 +25,7 @@ namespace SHG
 		uint16_t programCounterBeforeExecution = 2;
 
 		memory.SetByte(1, data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), programCounterBeforeExecution + data);
 	}
@@ -43,7 +43,7 @@ namespace SHG
 
 		memory.SetByte(1, address & 0x00FF);
 		memory.SetByte(2, address >> 8);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), address);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
@@ -58,7 +58,7 @@ namespace SHG
 		memory.SetByte(address, memData & 0x00FF);
 		memory.SetByte(address + 1, memData >> 8);
 		processor.GetStackPointer().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), memData);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), address + 2);
@@ -73,7 +73,7 @@ namespace SHG
 		uint8_t programCounterBeforeExecution = 1;
 
 		processor.GetStackPointer().SetData(stackPointerData);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), data);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
@@ -283,7 +283,7 @@ namespace SHG
 		memory.SetByte(address, memData & 0x00FF);
 		memory.SetByte(address + 1, memData >> 8);
 		processor.GetStackPointer().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), memData);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), address + 2);

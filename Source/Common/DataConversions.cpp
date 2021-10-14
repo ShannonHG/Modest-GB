@@ -14,4 +14,14 @@ namespace SHG
 
 		return "0x" + result;
 	}
+
+	std::string GetHexString8(uint8_t data)
+	{
+		return ConvertToHexString(data, 2);
+	}
+
+	std::string GetHexString16(uint8_t data)
+	{
+		return ConvertToHexString(data, 4);
+	}
 }

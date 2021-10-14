@@ -10,7 +10,7 @@ namespace SHG
 		uint8_t data = ~(1 << bitNumber);
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), zeroFlag);
 	}
@@ -23,7 +23,7 @@ namespace SHG
 
 		memory.SetByte(address, data);
 		addressRegister.SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), zeroFlag);
 	}

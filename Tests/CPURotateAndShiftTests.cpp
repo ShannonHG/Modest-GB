@@ -15,7 +15,7 @@ namespace SHG
 
 		targetRegister.SetData(data);
 		processor.ChangeCarryFlag(carryFlag);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousHighBit);
@@ -32,7 +32,7 @@ namespace SHG
 
 		targetRegister.SetData(data);
 		processor.ChangeCarryFlag(carryFlag);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousLowBit);
@@ -46,7 +46,7 @@ namespace SHG
 		uint8_t expectedResult = (data << 1) | (data >> 7);
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -59,7 +59,7 @@ namespace SHG
 		uint8_t expectedResult = (data >> 1) | (data << 7);
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -70,7 +70,7 @@ namespace SHG
 		uint8_t expectedResult = data << 1;
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -81,7 +81,7 @@ namespace SHG
 		uint8_t expectedResult = (data >> 1) | (data & 0b10000000);
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -92,7 +92,7 @@ namespace SHG
 		uint8_t expectedResult = data >> 1;
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -103,7 +103,7 @@ namespace SHG
 		uint8_t expectedResult = ((data & 0x0F) << 4) | ((data & 0xF0) >> 4) ;
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetData(), expectedResult);
 	}
@@ -181,7 +181,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}
@@ -279,7 +279,7 @@ namespace SHG
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}
@@ -380,7 +380,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.ChangeCarryFlag(carryFlag);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousHighBit);
@@ -482,7 +482,7 @@ namespace SHG
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.ChangeCarryFlag(carryFlag);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousLowBit);
@@ -581,7 +581,7 @@ namespace SHG
 
 		memory.SetByte(address, data);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}
@@ -669,7 +669,7 @@ namespace SHG
 
 		processor.GetRegisterHL().SetData(address);
 
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}
@@ -758,7 +758,7 @@ namespace SHG
 
 		memory.SetByte(address, data);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}
@@ -851,7 +851,7 @@ namespace SHG
 
 		memory.SetByte(address, data);
 		processor.GetRegisterHL().SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address), expectedResult);
 	}

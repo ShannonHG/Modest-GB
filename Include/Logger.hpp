@@ -2,9 +2,12 @@
 #include <map>
 #include <iostream>
 #include <array>
+#include <functional>
 
 namespace SHG
 {
+	using LogEntryCallback = std::function<void(std::string message)>;
+
 	class Logger
 	{
 	public:
@@ -13,6 +16,7 @@ namespace SHG
 		static void WriteWarning(const std::string& message, const std::string& header = "");
 		static void WriteError(const std::string& message, const std::string& header = "");
 		static void WriteSystemEvent(const std::string& message, const std::string& header = "");
+		static void RegisterLogEntryCallback(LogEntryCallback callback);
 
 	private:
 		static void InitLogFile();

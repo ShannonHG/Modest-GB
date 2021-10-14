@@ -9,7 +9,7 @@ namespace SHG
 		uint8_t data = 1 << bitNumber;
 
 		targetRegister.SetData(data);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(targetRegister.GetBit(bitNumber), 0);
 	}
@@ -21,7 +21,7 @@ namespace SHG
 
 		memory.SetByte(address, data);
 		addressRegister.SetData(address);
-		processor.Cycle();
+		processor.Step();
 
 		EXPECT_EQ(memory.GetByte(address) & (1 << bitNumber), 0);
 	}

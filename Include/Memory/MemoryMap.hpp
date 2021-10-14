@@ -8,7 +8,7 @@
 
 namespace SHG
 {
-	using MemoryMapWriteCallback = std::function<void(uint16_t, uint8_t)>;
+	using MemoryMapWriteCallback = std::function<void(uint16_t address, uint8_t value)>;
 
 	// TODO: Create a more efficient way of storing and accessing memory map data.
 	class MemoryMap : public DataStorageDevice

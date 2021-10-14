@@ -363,3 +363,6 @@ ThirdParty/
 
 # ROMs
 ROMs/
+
+# ImGui save data file
+imgui.ini
