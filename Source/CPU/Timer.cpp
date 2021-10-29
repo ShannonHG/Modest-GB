@@ -1,9 +1,9 @@
 #include <map>
 #include "CPU/Timer.hpp"
-#include "Common/DataConversions.hpp"
+#include "Utils/DataConversions.hpp"
 #include "CPU/Interrupts.hpp"
 #include "Logger.hpp"
-#include "Common/GBSpecs.hpp"
+#include "Utils/GBSpecs.hpp"
 
 namespace SHG
 {
@@ -25,6 +25,12 @@ namespace SHG
 		{3, TIMER_CONTROL_MODE_3_FREQ},
 	};
 
+	// Timer Registers
+	// FF04: DIV - Divider Register (R/W)
+	// FF05: TIMA - Timer Counter (R/W)
+	// FF06: TIMA - Timer Counter (R/W)
+	// FF07: TAC - Timer Control (R/W)
+
 	Timer::Timer(MemoryMap& memoryMap) : memoryMap(memoryMap)
 	{
 		currentTimerCounterFreq = TIMER_CONTROL_MODE_0_FREQ;
@@ -33,11 +39,17 @@ namespace SHG
 	void Timer::Step(uint32_t cycles)
 	{
 		dividerRegister += cycles * DIVIDER_INCREMENTS_PER_CYCLE;
-		if (dividerRegister > 255) dividerRegister = 0;
+
+		// The divider register is actual only 8 bits, 
+		// it's only implemented as a float for precision purposes.
+		if (dividerRegister > 255) 
+			dividerRegister = 0;
 
 		if (isClockEnabled)
 		{
 			timerCounter += cycles * currentTimerCounterFreq;
+
+			// Just like the divider register, the timer counter is also only 8 bits.
 			if (timerCounter > 255)
 			{
 				timerCounter = timerModulo;
@@ -45,10 +57,11 @@ namespace SHG
 			}
 		}
 
-		PrintStatus();
+		if (Logger::IsSystemEventLoggingEnabled)
+			PrintStatus();
 	}
 
-	uint8_t Timer::GetByte(uint16_t address)
+	uint8_t Timer::Read(uint16_t address)
 	{
 		switch (address)
 		{
@@ -65,11 +78,12 @@ namespace SHG
 		return 0;
 	}
 
-	void Timer::SetByte(uint16_t address, uint8_t value)
+	void Timer::Write(uint16_t address, uint8_t value)
 	{
 		switch (address)
 		{
 		case 0x00:
+			// Writing any value to the divider register resets it to 0.
 			dividerRegister = 0;
 			break;
 		case 0x01:
@@ -84,8 +98,6 @@ namespace SHG
 			timerControl = value;
 			break;
 		}
-
-		PrintStatus();
 	}
 
 	bool Timer::IsAddressAvailable(uint16_t address)
@@ -93,11 +105,25 @@ namespace SHG
 		return address <= 3;
 	}
 
+	void Timer::Reset()
+	{
+		preciseDivider = 0;
+		preciseCounter = 0;
+
+		dividerRegister = 0;
+		timerCounter = 0;
+		timerModulo = 0;
+		timerControl = 0;
+
+		isClockEnabled = false;
+		currentTimerCounterFreq = 0;
+	}
+
 	void Timer::PrintStatus()
 	{
-		Logger::WriteSystemEvent("(DIV) "+ ConvertToHexString(std::floor(dividerRegister), 2) + 
-			" (TIMA) " + ConvertToHexString(std::floor(timerCounter), 2) + 
-			" (TMA) " + ConvertToHexString(timerModulo, 2) + 
-			" (TAC) " + ConvertToHexString(timerControl, 2), TIMER_MESSAGE_HEADER);
+		Logger::WriteSystemEvent("(DIV) " + GetHexString8(std::floor(dividerRegister)) +
+			" (TIMA) " + GetHexString8(std::floor(timerCounter)) +
+			" (TMA) " + GetHexString8(timerModulo) +
+			" (TAC) " + GetHexString8(timerControl), TIMER_MESSAGE_HEADER);
 	}
 }

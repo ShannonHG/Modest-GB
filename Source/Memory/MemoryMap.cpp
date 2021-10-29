@@ -1,36 +1,40 @@
 #include <filesystem>
 #include "Memory/MemoryMap.hpp"
 #include "Logger.hpp"
-#include "Common/DataConversions.hpp"
+#include "Utils/DataConversions.hpp"
 #include "InvalidOpcodeException.hpp"
 
 namespace SHG
 {
-	void MemoryMap::AssignDeviceToAddressRange(DataStorageDevice& device, uint16_t lowerBoundAddress, uint16_t upperBoundAddress)
+	const std::string MEMORY_MAP_LOG_HEADER = "[Memory Map]";
+
+	void MemoryMap::AssignDeviceToAddressRange(DataStorageDevice* device, uint16_t lowerBoundAddress, uint16_t upperBoundAddress)
 	{
-		if (IsAddressRangeOccupied(lowerBoundAddress, upperBoundAddress))
+		if (device == nullptr)
 		{
-			Logger::WriteWarning("[MemoryMap] The address range " + ConvertToHexString(lowerBoundAddress, 4) + " - " + ConvertToHexString(upperBoundAddress, 4) + " is already occupied.");
+			Logger::WriteError("Cannot add NULL device to memory map.");
 			return;
 		}
 
-		MemoryMappedDevice* mappedDevice = GetMappedDevice(device);
+		if (IsAddressRangeOccupied(lowerBoundAddress, upperBoundAddress))
+		{
+			Logger::WriteWarning("The address range " + ConvertToHexString(lowerBoundAddress, 4) + " - " + ConvertToHexString(upperBoundAddress, 4) + " is already occupied.", MEMORY_MAP_LOG_HEADER);
+			return;
+		}
 
-		if (mappedDevice != nullptr)
-		{
-			mappedDevice->ranges.push_back(MemoryMapRange(lowerBoundAddress, upperBoundAddress));
-		}
+		MemoryMapEntry* entry = GetEntryForDevice(device);
+
+		if (entry != nullptr)
+			entry->AddAddressRange(lowerBoundAddress, upperBoundAddress);
 		else
-		{
-			mappedDevices.push_back(MemoryMappedDevice(device, { MemoryMapRange(lowerBoundAddress, upperBoundAddress) }));
-		}
+			memoryMapEntries.push_back(MemoryMapEntry(device, { MemoryMapRange(lowerBoundAddress, upperBoundAddress) }));
 	}
 
 	bool MemoryMap::IsAddressRangeOccupied(uint16_t lowerBoundAddress, uint16_t upperBoundAddress)
 	{
-		for (MemoryMappedDevice d : mappedDevices)
+		for (MemoryMapEntry& entry : memoryMapEntries)
 		{
-			for (MemoryMapRange range : d.ranges)
+			for (const MemoryMapRange& range : entry.GetAddressRanges())
 			{
 				// Check if this device is already contained within the provided address range,
 				// or the provided address range is inside of this device's address range.
@@ -47,88 +51,94 @@ namespace SHG
 		return false;
 	}
 
-	uint8_t MemoryMap::GetByte(uint16_t address)
+	uint8_t MemoryMap::Read(uint16_t address)
 	{
-		MemoryMappedDevice* mappedDevice = GetMemoryMappedDeviceForRange(address);
+		MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
 		
-		if (mappedDevice == nullptr) return 0;
+		if (entry == nullptr)
+			return 0;
 
-		return mappedDevice->device.GetByte(GetNormalizedAddress(mappedDevice, address));
+		return entry->GetDevice()->Read(GetNormalizedAddress(entry, address));
 	}
 
-	void MemoryMap::SetByte(uint16_t address, uint8_t value)
+	void MemoryMap::Write(uint16_t address, uint8_t value)
 	{
 		ProcessBlarggTestsOutput(address, value);
 
-		MemoryMappedDevice* mappedDevice = GetMemoryMappedDeviceForRange(address);
+		MemoryMapEntry* memoryMapEntry = GetMemoryMapEntryWithAddress(address);
 
-		if (mappedDevice != nullptr)
+		if (memoryMapEntry != nullptr)
 		{
-			uint16_t normalizedAddress = GetNormalizedAddress(mappedDevice, address);
+			uint16_t normalizedAddress = GetNormalizedAddress(memoryMapEntry, address);
 
 			// Some addresses have read-only bits. This prevents the bits in these 
 			// addresses from being changed.
 			if (readonlyBitMasks.find(address) != readonlyBitMasks.end())
 			{
-				uint8_t currentByte = mappedDevice->device.GetByte(normalizedAddress) & readonlyBitMasks[address];
+				uint8_t currentByte = memoryMapEntry->GetDevice()->Read(normalizedAddress) & readonlyBitMasks[address];
 				value = (value & ~readonlyBitMasks[address]) | currentByte;
 			}
 
-			mappedDevice->device.SetByte(normalizedAddress, value);
-
-			for (MemoryMapWriteCallback c : memoryWriteCallbacks)
-				c(address, value);
+			memoryMapEntry->GetDevice()->Write(normalizedAddress, value);
 		}
 	}
 
-	bool MemoryMap::IsAddressAvailable(uint16_t address)
+	MemoryMapEntry* MemoryMap::GetMemoryMapEntryWithAddress(uint16_t address)
 	{
-		MemoryMappedDevice* device = GetMemoryMappedDeviceForRange(address);
-		return device != NULL && device->device.IsAddressAvailable(GetNormalizedAddress(device, address));
-	}
-
-	void MemoryMap::RegisterMemoryWriteCallback(MemoryMapWriteCallback callback)
-	{
-		memoryWriteCallbacks.push_back(callback);
-	}
-
-	MemoryMappedDevice* MemoryMap::GetMemoryMappedDeviceForRange(uint16_t address)
-	{
-		for (int i = 0; i < mappedDevices.size(); i++)
+		for (MemoryMapEntry& entry : memoryMapEntries)
 		{
-			for (MemoryMapRange range : mappedDevices[i].ranges)
+			for (const MemoryMapRange& range : entry.GetAddressRanges())
 			{
 				if (address >= range.lowerBoundAddress && address <= range.upperBoundAddress)
 				{
-					return &mappedDevices[i];
+					return &entry;
 				}
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
-	bool MemoryMap::IsDeviceMapped(DataStorageDevice& device)
+	bool MemoryMap::IsAddressAvailable(uint16_t address)
 	{
-		return GetMappedDevice(device) != nullptr;
+		MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
+		return entry != nullptr && entry->GetDevice()->IsAddressAvailable(GetNormalizedAddress(entry, address));
 	}
 
-	MemoryMappedDevice* MemoryMap::GetMappedDevice(DataStorageDevice& device)
+	void MemoryMap::Reset()
 	{
-		for (int i = 0; i < mappedDevices.size(); i++)
+		readonlyBitMasks.clear();
+
+		for (MemoryMapEntry& entry : memoryMapEntries)
+			entry.GetDevice()->Reset();
+	}
+
+	bool MemoryMap::IsDeviceMapped(DataStorageDevice* device)
+	{
+		return GetEntryForDevice(device) != nullptr;
+	}
+
+	MemoryMapEntry* MemoryMap::GetEntryForDevice(DataStorageDevice* device)
+	{
+		for (MemoryMapEntry& entry : memoryMapEntries)
 		{
-			if (&mappedDevices[i].device == &device)
+			if (entry.GetDevice() == device)
 			{
-				return &mappedDevices[i];
+				return &entry;
 			}
 		}
-
-		return NULL;
+		
+		return nullptr;
 	}
 
-	uint16_t MemoryMap::GetNormalizedAddress(MemoryMappedDevice* mappedDevice, uint16_t address)
+	uint16_t MemoryMap::GetNormalizedAddress(MemoryMapEntry* memoryMapEntry, uint16_t address)
 	{
-		return address - mappedDevice->GetLowestBound();
+		return address - memoryMapEntry->GetLowestBoundAddress();
+	}
+
+	void MemoryMap::SetReadonlyBitMask(uint16_t address, uint8_t bitMask)
+	{
+		readonlyBitMasks[address] = bitMask;
 	}
 
 	void MemoryMap::ProcessBlarggTestsOutput(uint16_t address, uint8_t value)
@@ -140,13 +150,8 @@ namespace SHG
 				blarggOutStream = std::ofstream(std::filesystem::current_path().string() + "/BlarggTestResult.log", std::ios::out);
 			}
 
-			blarggOutStream << (char)GetByte(0xFF01);
+			blarggOutStream << (char)Read(0xFF01);
 			blarggOutStream.flush();
 		}
-	}
-
-	void MemoryMap::SetReadonlyBitMask(uint16_t address, uint8_t bitMask)
-	{
-		readonlyBitMasks[address] = bitMask;
 	}
 }

@@ -21,7 +21,7 @@ namespace SHG
 		return sourceTransferEndAddress;
 	}
 
-	uint8_t DMATransferRegister::GetByte(uint16_t address)
+	uint8_t DMATransferRegister::Read(uint16_t address)
 	{
 		if (IsAddressAvailable(address))
 			return data;
@@ -29,7 +29,7 @@ namespace SHG
 		return 0;
 	}
 
-	void DMATransferRegister::SetByte(uint16_t address, uint8_t value)
+	void DMATransferRegister::Write(uint16_t address, uint8_t value)
 	{
 		if (IsAddressAvailable(address))
 		{
@@ -44,5 +44,13 @@ namespace SHG
 	{
 		// This register only contains a single byte
 		return address == 0;
+	}
+
+	void DMATransferRegister::Reset()
+	{
+		data = 0;
+		isTransferPending = false;
+		sourceTransferStartAddress = 0;
+		sourceTransferEndAddress = 0;
 	}
 }

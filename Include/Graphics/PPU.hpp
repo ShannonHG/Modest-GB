@@ -21,6 +21,7 @@ namespace SHG
 		PPU(MemoryMap& memoryManagementUnit);
 		void Step(uint32_t duration);
 		void InitializeFramebuffer(SDL_Window* window);
+		void Reset();
 		Framebuffer& GetFramebuffer();
 		Framebuffer& GetTileDebugFramebuffer();
 		Framebuffer& GetSpriteDebugFramebuffer();
@@ -97,7 +98,6 @@ namespace SHG
 
 		uint16_t currentModeElapsedTime = 0;
 
-		uint8_t currentScanline = 0;
 		uint8_t currentScanlineX = 0;
 		uint16_t currentScanlineElapsedTime = 0;
 

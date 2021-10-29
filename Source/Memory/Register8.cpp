@@ -1,5 +1,5 @@
 #include "Memory/Register8.hpp"
-#include "Common/Arithmetic.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG
 {
@@ -10,7 +10,7 @@ namespace SHG
 
 	void Register8::SetData(uint8_t data)
 	{
-		Memory::SetByte(0, data);
+		Memory::Write(0, data);
 	}
 
 	void Register8::ChangeBit(uint8_t bitIndex, bool enable)
@@ -25,7 +25,7 @@ namespace SHG
 
 	uint8_t Register8::GetData()
 	{
-		return GetByte(0);
+		return Read(0);
 	}
 
 	void Register8::Increment()
@@ -35,16 +35,16 @@ namespace SHG
 
 	void Register8::Decrement()
 	{
-		SetByte(0, GetData() - 1);
+		Write(0, GetData() - 1);
 	}
 
 	void Register8::Increase(uint8_t amount)
 	{
-		SetByte(0, GetData() + amount);
+		Write(0, GetData() + amount);
 	}
 
 	void Register8::Decrease(uint8_t amount)
 	{
-		SetByte(0, GetData() - amount);
+		Write(0, GetData() - amount);
 	}
 }

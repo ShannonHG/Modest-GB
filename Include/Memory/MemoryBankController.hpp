@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "Common/DataConversions.hpp"
-#include "Common/MemoryUnits.hpp"
+#include "Utils/DataConversions.hpp"
+#include "Utils/MemoryUnits.hpp"
 #include "Memory/DataStorageDevice.hpp"
 
 namespace SHG
@@ -17,8 +17,9 @@ namespace SHG
 		void AttachRAM(std::vector<uint8_t>& ram);
 		void AttachROM(std::vector<uint8_t>& rom);
 
-		virtual uint8_t GetByte(uint16_t address) override = 0;
-		virtual void SetByte(uint16_t address, uint8_t value) override = 0;
+		void Reset() override;
+		virtual uint8_t Read(uint16_t address) override = 0;
+		virtual void Write(uint16_t address, uint8_t value) override = 0;
 		virtual bool IsAddressAvailable(uint16_t address) override = 0;
 
 		/// <summary>
@@ -41,12 +42,12 @@ namespace SHG
 		virtual std::string GetName() = 0;
 		void WriteMissingROMMessage();
 		void WriteMissingRAMMessage();
-		void WriteInvalidROMAccesMessage(uint16_t address);
-		void WriteInvalidRAMAccesMessage(uint16_t address);
+		void WriteTovalidROMAccesMessage(uint16_t address);
+		void WriteTovalidRAMAccesMessage(uint16_t address);
 
-		void SetByteInRAM(uint32_t address, uint8_t value);
-		uint8_t GetByteFromRAM(uint32_t address);
-		void SetByteInROM(uint32_t address, uint8_t value);
-		uint8_t GetByteFromROM(uint32_t address);
+		void WriteToRAM(uint32_t address, uint8_t value);
+		uint8_t ReadFromRAM(uint32_t address);
+		void WriteToROM(uint32_t address, uint8_t value);
+		uint8_t ReadFromROM(uint32_t address);
 	};
 }

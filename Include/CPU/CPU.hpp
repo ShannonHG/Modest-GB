@@ -51,6 +51,9 @@ namespace SHG
 
 		void HandleInterrupts();
 		void PrintRegisterInfo();
+		void Reset();
+
+		bool IsPreviousInstructionValid();
 
 	private:
 		DataStorageDevice& memoryManagementUnit;

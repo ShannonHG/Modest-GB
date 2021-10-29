@@ -1,7 +1,7 @@
 #include <sstream>
 #include "Memory/MBC1.hpp"
 #include "Logger.hpp"
-#include "Common/DataConversions.hpp"
+#include "Utils/DataConversions.hpp"
 
 namespace SHG
 {
@@ -51,17 +51,17 @@ namespace SHG
 		return "MBC1";
 	}
 
-	uint8_t MBC1::GetByte(uint16_t address)
+	uint8_t MBC1::Read(uint16_t address)
 	{
 		if (address <= ROM_BANK_X0_END_ADDR && address >= ROM_BANK_X0_START_ADDR)
 		{
-			return GetByteFromROM(address);
+			return ReadFromROM(address);
 		}
 		else if (address <= ROM_SWITCHABLE_BANK_END_ADDR && address >= ROM_SWITCHABLE_BANK_START_ADDR)
 		{
 			/*uint16_t offset = CalculatePhysicalROMAddress(GetROMBankNumber(), ROM_SWITCHABLE_BANK_START_ADDR, address);*/
 
-			return GetByteFromROM(address);
+			return ReadFromROM(address);
 		}
 		else if (address <= RAM_SWITCHABLE_BANK_END_ADDR && address >= RAM_SWITCHABLE_BANK_START_ADDR)
 		{
@@ -70,14 +70,14 @@ namespace SHG
 			{
 				uint16_t offset = CalculatePhysicalRAMAddress(GetRAMBankNumber(), RAM_SWITCHABLE_BANK_START_ADDR, address);
 
-				return GetByteFromRAM(offset);
+				return ReadFromRAM(offset);
 			}
 		}
 
 		return 0;
 	}
 
-	void MBC1::SetByte(uint16_t address, uint8_t value)
+	void MBC1::Write(uint16_t address, uint8_t value)
 	{
 		if (address <= RAM_ENABLE_END_ADDR && address >= RAM_ENABLE_START_ADDR)
 		{
@@ -147,7 +147,7 @@ namespace SHG
 			{
 				uint16_t offset = CalculatePhysicalRAMAddress(GetRAMBankNumber(), RAM_SWITCHABLE_BANK_START_ADDR, address);
 
-				return SetByteInRAM(offset, value);
+				return WriteToRAM(offset, value);
 			}
 		}
 		else if (address <= BANK_MODE_SELECT_END_ADDR && address >= BANK_MODE_SELECT_START_ADDR)

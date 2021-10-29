@@ -1,9 +1,9 @@
 #include "nfd.h"
 #include "EmulatorWindow.hpp"
 #include "Logger.hpp"
-#include "Common/DataConversions.hpp"
-#include "Common/GBSpecs.hpp"
-#include "Common/GBMemoryMapAddresses.hpp"
+#include "Utils/DataConversions.hpp"
+#include "Utils/GBSpecs.hpp"
+#include "Utils/GBMemoryMapAddresses.hpp"
 
 namespace SHG
 {
@@ -37,20 +37,6 @@ namespace SHG
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 		return true;
-	}
-
-	void EmulatorWindow::PollEvents(GenericCallback quitCallback)
-	{
-		SDL_Event e;
-		while (SDL_PollEvent(&e))
-		{
-			ImGui_ImplSDL2_ProcessEvent(&e);
-			if (e.type == SDL_QUIT)
-			{
-				quitCallback();
-				return;
-			}
-		}
 	}
 
 	void EmulatorWindow::Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, uint32_t cyclesPerSecond, std::string& logs)
@@ -101,6 +87,36 @@ namespace SHG
 		SDL_RenderClear(sdlRenderer);
 	}
 
+	void EmulatorWindow::RegisterFileSelectionCallback(FileSelectionEvent callback)
+	{
+		romFileSelectionCallback = callback;
+	}
+
+	void EmulatorWindow::RegisterPauseButtonCallback(SimpleEvent callback)
+	{
+		pauseButtonPressedCallback = callback;
+	}
+
+	void EmulatorWindow::RegisterStepButtonCallback(SimpleEvent callback)
+	{
+		stepButtonPressedCallback = callback;
+	}
+
+	void EmulatorWindow::RegisterClearButtonCallback(SimpleEvent callback)
+	{
+		clearButtonPressedCallback = callback;
+	}
+
+	void EmulatorWindow::RegisterQuitButtonCallback(SimpleEvent callback)
+	{
+		quitButtonPressedCallback = callback;
+	}
+
+	bool EmulatorWindow::IsTraceEnabled()
+	{
+		return isTraceEnabled;
+	}
+
 	void EmulatorWindow::RenderMainWindow()
 	{
 		// Make the main window have the same size and position as the main viewport.
@@ -118,15 +134,20 @@ namespace SHG
 				{
 					if (ImGui::MenuItem("Load ROM"))
 					{
+						// TODO: Opening the file dialog seems to cause a memory leak.
 						nfdchar_t* outPath = nullptr;
-						// TODO: Add code to open native file explorer
 						NFD_OpenDialog(nullptr, nullptr, &outPath);
 
-						Logger::WriteInfo("Selected path: " + std::string(outPath));
+						if (outPath != nullptr)
+						{
+							romFileSelectionCallback(outPath);
+							free(outPath);
+						}
 					}
 
 					ImGui::EndMenu();
 				}
+
 
 				// Menu that enables the user to open debugging tools/windows.
 				if (ImGui::BeginMenu("Tools"))
@@ -160,11 +181,11 @@ namespace SHG
 
 				ImGui::EndMenuBar();
 			}
-
-			dockspaceID = ImGui::GetID("Dockspace");
-			ImGui::DockSpace(dockspaceID, ImVec2(0, 0), ImGuiDockNodeFlags_None);
-			ImGui::End();
 		}
+
+		dockspaceID = ImGui::GetID("Dockspace");
+		ImGui::DockSpace(dockspaceID, ImVec2(0, 0), ImGuiDockNodeFlags_None);
+		ImGui::End();
 	}
 
 	// TODO: Remove scrollbar
@@ -205,30 +226,38 @@ namespace SHG
 				(contentRegionSize.y - imageSize.y) * 0.5 + 25));
 
 			ImGui::Image((void*)framebuffer.GetTexture(), imageSize);
-			ImGui::End();
 		}
+
+		ImGui::End();
 	}
 
 	void EmulatorWindow::RenderCPUWindow(CPU& processor, uint32_t cyclesPerSecond)
 	{
 		// By default, force the window to be docked.
-		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+		//ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing CPU related information (clock speed, registers, etc.).
 		if (ImGui::Begin("CPU", &shouldRenderCPUWindow))
 		{
+			ImGui::Text("Performance");
+			ImGui::Separator();
 			ImGui::Text(("Clock speed: " + std::to_string(cyclesPerSecond / 1000000.0) + " MHz").c_str());
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Registers");
 			ImGui::Separator();
 
 			// Print register values 
 			ImGui::Text(("A: " + GetHexString8(processor.GetRegisterA().GetData())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("F: " + GetHexString8(processor.GetRegisterF().GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("B: " + GetHexString8(processor.GetRegisterB().GetData())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("C: " + GetHexString8(processor.GetRegisterC().GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("D: " + GetHexString8(processor.GetRegisterD().GetData())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("E: " + GetHexString8(processor.GetRegisterE().GetData())).c_str());
@@ -236,13 +265,32 @@ namespace SHG
 			ImGui::Text(("H: " + GetHexString8(processor.GetRegisterH().GetData())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("L: " + GetHexString8(processor.GetRegisterL().GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("PC: " + GetHexString16(processor.GetProgramCounter().GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("SP: " + GetHexString16(processor.GetStackPointer().GetData())).c_str());
 
-			ImGui::End();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Last Instruction");
+			ImGui::Separator();
+			if (processor.IsPreviousInstructionValid())
+				ImGui::Text(processor.GetCurrentInstruction().mnemonic);
+
+			ImGui::Separator();
+			if (ImGui::Button(pauseButtonLabel.c_str()))
+				pauseButtonPressedCallback();
+
+			ImGui::SameLine();
+			ImGui::Button("Step");
+				
+			// If the step button is held down, then keep invoking the callback.
+			if (ImGui::IsItemActive())
+				stepButtonPressedCallback();
 		}
+
+		ImGui::End();
 	}
 
 	void EmulatorWindow::RenderIOWindow(MemoryMap& memoryMap, CPU& processor)
@@ -254,35 +302,35 @@ namespace SHG
 		if (ImGui::Begin("IO", &shouldRenderIOWindow))
 		{
 			ImGui::Text("Interrupts");
-			ImGui::Text(("IF: " + GetHexString8(memoryMap.GetByte(GB_INTERRUPT_FLAG_ADDRESS))).c_str());
+			ImGui::Text(("IF: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("IE: " + GetHexString8(memoryMap.GetByte(GB_INTERRUPT_ENABLE_ADDRESS))).c_str());
+			ImGui::Text(("IE: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_ENABLE_ADDRESS))).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("IME: " + std::to_string(processor.GetInterruptMasterEnableFlag())).c_str());
 
 			ImGui::Separator();
 			ImGui::Text("Timer");
-			ImGui::Text(("DIV: " + GetHexString8(memoryMap.GetByte(GB_DIV_ADDRESS))).c_str());
+			ImGui::Text(("DIV: " + GetHexString8(memoryMap.Read(GB_DIV_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("TIMA: " + GetHexString8(memoryMap.GetByte(GB_TIMA_ADDRESS))).c_str());
+			ImGui::Text(("TIMA: " + GetHexString8(memoryMap.Read(GB_TIMA_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("TMA: " + GetHexString8(memoryMap.GetByte(GB_TMA_ADDRESS))).c_str());
+			ImGui::Text(("TMA: " + GetHexString8(memoryMap.Read(GB_TMA_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("TAC: " + GetHexString8(memoryMap.GetByte(GB_TAC_ADDRESS))).c_str());
+			ImGui::Text(("TAC: " + GetHexString8(memoryMap.Read(GB_TAC_ADDRESS))).c_str());
 
 			ImGui::Separator();
 			ImGui::Text("Serial");
-			ImGui::Text(("SB: " + GetHexString8(memoryMap.GetByte(GB_SB_ADDRESS))).c_str());
+			ImGui::Text(("SB: " + GetHexString8(memoryMap.Read(GB_SB_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("SC: " + GetHexString8(memoryMap.GetByte(GB_SC_ADDRESS))).c_str());
+			ImGui::Text(("SC: " + GetHexString8(memoryMap.Read(GB_SC_ADDRESS))).c_str());
 
 			// TODO: Print sound registers
 			ImGui::Separator();
 			ImGui::Text("Misc");
-			ImGui::Text(("JOYP: " + GetHexString8(memoryMap.GetByte(GB_JOYP_ADDRESS))).c_str());
-
-			ImGui::End();
+			ImGui::Text(("JOYP: " + GetHexString8(memoryMap.Read(GB_JOYP_ADDRESS))).c_str());
 		}
+
+		ImGui::End();
 	}
 
 	void EmulatorWindow::RenderTilesWindow(PPU& ppu)
@@ -327,26 +375,29 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing information about the video-related registers.
-		if (ImGui::Begin("Video Registers", &shouldRenderVideoRegistersWindow))
+		if (ImGui::Begin("Video", &shouldRenderVideoRegistersWindow))
 		{
+			ImGui::Text("Registers");
+			ImGui::Separator();
 			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC()->GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatus()->GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY()->GetData())).c_str());
 
 			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC()->GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY()->GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX()->GetData())).c_str());
 
 			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY()->GetData())).c_str());
-			ImGui::SameLine();
+			//ImGui::SameLine();
 			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX()->GetData())).c_str());
-
-			ImGui::End();
+			ImGui::Separator();
 		}
+
+		ImGui::End();
 	}
 
 	void EmulatorWindow::RenderLogWindow(std::string& logs)
@@ -355,14 +406,33 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window containing log entries.
-		if (ImGui::Begin("Logs", &shouldRenderLogWindow))
+		if (ImGui::Begin("Logs", &shouldRenderLogWindow, ImGuiWindowFlags_NoScrollbar))
 		{
-			// TextUnformatted() is used here since the other text rendering functions
-			// seem to have a limit on the string's size.
-			ImGui::TextUnformatted(logs.c_str());
+			if (ImGui::RadioButton("Trace", isTraceEnabled))
+				isTraceEnabled = !isTraceEnabled;
 
-			ImGui::End();
+			ImGui::Separator();
+
+			ImVec2 size = ImGui::GetContentRegionAvail();
+			size.y -= 25;
+
+			if (ImGui::BeginChild("Log Entries", size))
+			{
+				// TextUnformatted() is used here since the other text rendering functions
+				// seem to have a limit on the string's size.
+				ImGui::TextUnformatted(logs.c_str());
+
+				if (isTraceEnabled)
+					ImGui::SetScrollHereY(0.999f);
+			}
+			ImGui::EndChild();
+		
+			ImGui::Separator();
+			if (ImGui::Button("Clear"))
+				clearButtonPressedCallback();
 		}
+
+		ImGui::End();
 	}
 
 	void EmulatorWindow::EndFrame()
@@ -376,5 +446,10 @@ namespace SHG
 	SDL_Window* EmulatorWindow::GetSDLWindow()
 	{
 		return sdlWindow;
+	}
+
+	void EmulatorWindow::SetPauseButtonLabel(const std::string& label)
+	{
+		pauseButtonLabel = label;
 	}
 }

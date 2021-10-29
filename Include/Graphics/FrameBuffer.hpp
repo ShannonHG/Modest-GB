@@ -16,7 +16,7 @@ namespace SHG
 		int GetHeight();
 		float GetAspectRatio();
 		void UploadData();
-		void Clear();
+		void Clear(uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255);
 		void Destroy();
 		SDL_Texture* GetTexture();
 

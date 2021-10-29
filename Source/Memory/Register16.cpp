@@ -84,7 +84,7 @@ namespace SHG
 		return lowRegister;
 	}
 
-	uint8_t Register16::GetByte(uint16_t address)
+	uint8_t Register16::Read(uint16_t address)
 	{
 		if (IsAddressAvailable(address))
 			return GetData();
@@ -92,7 +92,7 @@ namespace SHG
 		return 0;
 	}
 	
-	void Register16::SetByte(uint16_t address, uint8_t value)
+	void Register16::Write(uint16_t address, uint8_t value)
 	{
 		if (IsAddressAvailable(address))
 			SetData(value);
@@ -103,4 +103,9 @@ namespace SHG
 		return address < 2;
 	}
 
+	void Register16::Reset()
+	{
+		lowRegister.Reset();
+		highRegister.Reset();
+	}
 }

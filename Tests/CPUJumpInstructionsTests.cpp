@@ -8,8 +8,8 @@ namespace SHG
 
 	void TestStandardJump(CPU& processor, DataStorageDevice& memory, uint16_t address)
 	{
-		memory.SetByte(1, address & 0x00FF);
-		memory.SetByte(2, address >> 8);
+		memory.Write(1, address & 0x00FF);
+		memory.Write(2, address >> 8);
 
 		processor.Step();
 
@@ -24,7 +24,7 @@ namespace SHG
 		// one increment for the initial byte fetch, and one increment for fetching the 8-bit operand.
 		uint16_t programCounterBeforeExecution = 2;
 
-		memory.SetByte(1, data);
+		memory.Write(1, data);
 		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), programCounterBeforeExecution + data);
@@ -41,13 +41,13 @@ namespace SHG
 
 		processor.GetStackPointer().SetData(stackPointerData);
 
-		memory.SetByte(1, address & 0x00FF);
-		memory.SetByte(2, address >> 8);
+		memory.Write(1, address & 0x00FF);
+		memory.Write(2, address >> 8);
 		processor.Step();
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), address);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
-		EXPECT_EQ(memory.GetByte(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
+		EXPECT_EQ(memory.Read(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
 	}
 
 	void TestReturn(CPU& processor, DataStorageDevice& memory)
@@ -55,8 +55,8 @@ namespace SHG
 		uint16_t address = 400;
 		uint16_t memData = 500;
 
-		memory.SetByte(address, memData & 0x00FF);
-		memory.SetByte(address + 1, memData >> 8);
+		memory.Write(address, memData & 0x00FF);
+		memory.Write(address + 1, memData >> 8);
 		processor.GetStackPointer().SetData(address);
 		processor.Step();
 
@@ -77,7 +77,7 @@ namespace SHG
 
 		EXPECT_EQ(processor.GetProgramCounter().GetData(), data);
 		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
-		EXPECT_EQ(memory.GetByte(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
+		EXPECT_EQ(memory.Read(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
 	}
 
 	// JR NZ, I8
@@ -280,8 +280,8 @@ namespace SHG
 		uint16_t address = 400;
 		uint16_t memData = 600;
 
-		memory.SetByte(address, memData & 0x00FF);
-		memory.SetByte(address + 1, memData >> 8);
+		memory.Write(address, memData & 0x00FF);
+		memory.Write(address + 1, memData >> 8);
 		processor.GetStackPointer().SetData(address);
 		processor.Step();
 

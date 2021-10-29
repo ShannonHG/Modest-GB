@@ -7,24 +7,17 @@
 #include "Graphics/PPU.hpp"
 #include "CPU/CPU.hpp"
 #include "Memory/MemoryMap.hpp"
+#include "Utils/Events.hpp"
 
 namespace SHG
 {
-	// TODO: Move this
-	using GenericCallback = std::function<void()>;
-
 	class EmulatorWindow
 	{
 	public:
 		bool Initialize();
 		SDL_Window* GetSDLWindow();
-		void PollEvents(GenericCallback quitCallback);
 		void Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, uint32_t cyclesPerSecond, std::string& logs);
 	
-	private:
-		SDL_Window* sdlWindow = nullptr;
-		SDL_Renderer* sdlRenderer = nullptr;
-
 		bool shouldRenderCPUWindow = false;
 		bool shouldRenderIOWindow = false;
 		bool shouldRenderLogWindow = false;
@@ -33,6 +26,30 @@ namespace SHG
 		bool shouldRenderBackgroundTileMapWindow = false;
 		bool shouldRenderWindowTileMapWindow = false;
 		bool shouldRenderVideoRegistersWindow = false;
+
+		void RegisterFileSelectionCallback(FileSelectionEvent callback);
+		void RegisterPauseButtonCallback(SimpleEvent callback);
+		void RegisterStepButtonCallback(SimpleEvent callback);
+		void RegisterClearButtonCallback(SimpleEvent callback);
+		void RegisterQuitButtonCallback(SimpleEvent callback);
+
+		void SetPauseButtonLabel(const std::string& label);
+
+		bool IsTraceEnabled();
+
+	private:
+		SDL_Window* sdlWindow = nullptr;
+		SDL_Renderer* sdlRenderer = nullptr;
+
+		FileSelectionEvent romFileSelectionCallback;
+		SimpleEvent pauseButtonPressedCallback;
+		SimpleEvent stepButtonPressedCallback;
+		SimpleEvent clearButtonPressedCallback;
+		SimpleEvent quitButtonPressedCallback;
+
+		std::string pauseButtonLabel = "Pause";
+
+		bool isTraceEnabled = false;
 
 		ImGuiID dockspaceID = 0;
 

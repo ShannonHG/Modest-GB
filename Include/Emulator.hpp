@@ -7,18 +7,20 @@
 #include "Memory/Cartridge.hpp"
 #include "CPU/Timer.hpp"
 #include "EmulatorWindow.hpp"
+#include "Logger.hpp"
+#include "Input/Joypad.hpp"
+#include "Input/InputManager.hpp"
 
 namespace SHG
 {
 	class Emulator
 	{
 	public:
-		bool Start(const std::string& romFilePath);
+		bool Start();
 
 	private:
-		// TODO: Move this
-		bool scrollToBottom = false;
 		EmulatorWindow window = EmulatorWindow();
+		InputManager inputManager = InputManager();
 		MemoryMap memoryMap = MemoryMap();
 		Cartridge cartridge = Cartridge();
 		CPU processor = CPU(memoryMap);
@@ -33,8 +35,8 @@ namespace SHG
 		Memory ioRegisters = Memory(127);
 		Register8 interruptEnableRegister;
 		Register8 interruptFlagRegister;
-		Register8 joypadRegister;
 		Memory serialOutputRegister = Memory(4);
+		Joypad joypad = Joypad(inputManager);
 
 		bool isRunning = false;
 		bool isPaused = false;
@@ -43,10 +45,24 @@ namespace SHG
 
 		std::string logEntries;
 
-		void InitializeCPU();
-		void InitializeMemoryMap();
 		void OnQuit();
+		void OnPauseButtonPressed();
+		void OnStepButtonPressed();
+		void OnClearButtonPressed();
 
-		void AddLogEntry(std::string logEntry);
+		void AddLogEntry(std::string logEntry, LogMessageType messageType);
+		void OnFileSelected(std::string path);
+
+		bool LoadROM(std::string& romFilePath);
+
+		void AssignMemoryMapAddresses();
+		void SetDefaultMemoryMapValues();
+
+		void SaveConfigurationFile();
+		void LoadConfigurationFile();
+		void LoadConfigurationItem(std::ifstream& stream, const std::string& key, std::string& value);
+		void LoadConfigurationItemAsBool(std::ifstream& stream, const std::string& key, bool& value);
+		void SaveConfigurationItem(std::ofstream& stream, const std::string& key, const std::string& value);
+		void SaveBoolConfigurationItem(std::ofstream& stream, const std::string& key, const bool& value);
 	};
 }

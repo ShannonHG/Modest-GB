@@ -1,5 +1,5 @@
 #include "CPU/Interrupts.hpp"
-#include "Common/Arithmetic.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG
 {

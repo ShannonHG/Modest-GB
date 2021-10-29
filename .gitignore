@@ -364,5 +364,5 @@ ThirdParty/
 # ROMs
 ROMs/
 
-# ImGui save data file
-imgui.ini
+# Save data files
+*.ini

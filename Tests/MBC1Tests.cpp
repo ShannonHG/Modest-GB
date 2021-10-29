@@ -21,13 +21,13 @@ namespace SHG
 		// Compare bytes in the first ROM bank, to bytes retrieved from the 
 		// memory bank controller in the address range 0x0000 to 0x3FFF
 
-		uint8_t byte1 = mbc.GetByte(0);
+		uint8_t byte1 = mbc.Read(0);
 		EXPECT_EQ(byte1, rom[0]);
 
-		uint8_t byte2 = mbc.GetByte(offset);
+		uint8_t byte2 = mbc.Read(offset);
 		EXPECT_EQ(byte2, rom[offset]);
 
-		uint8_t byte3 = mbc.GetByte(offset * 2);
+		uint8_t byte3 = mbc.Read(offset * 2);
 		EXPECT_EQ(byte3, rom[offset * 2]);
 	}
 
@@ -43,7 +43,7 @@ namespace SHG
 		mbc.AttachROM(rom);
 
 		// Set ROM bank number
-		mbc.SetByte(0x2050, targetROMBankNum);
+		mbc.Write(0x2050, targetROMBankNum);
 
 		// Compare bytes in the target ROM bank, to bytes retrieved from the 
 		// memory bank controller in the address range 0x4000 to 0x7FFF
@@ -51,17 +51,17 @@ namespace SHG
 		uint32_t virtualAddressRangeStart = 0x4000;
 		uint32_t taretAddress = 0x4000;
 
-		uint8_t byte1 = mbc.GetByte(virtualAddressRangeStart);
+		uint8_t byte1 = mbc.Read(virtualAddressRangeStart);
 		EXPECT_EQ(byte1, rom[taretAddress]);
 
 		taretAddress = virtualAddressRangeStart + offset;
 
-		uint8_t byte2 = mbc.GetByte(taretAddress);
+		uint8_t byte2 = mbc.Read(taretAddress);
 		EXPECT_EQ(byte2, rom[taretAddress]);
 
 		taretAddress = virtualAddressRangeStart + (offset * 2);
 
-		uint8_t byte3 = mbc.GetByte(taretAddress);
+		uint8_t byte3 = mbc.Read(taretAddress);
 		EXPECT_EQ(byte3, rom[taretAddress]);
 	}
 
@@ -80,10 +80,10 @@ namespace SHG
 		mbc.AttachRAM(ram);
 
 		// Set RAM bank number
-		mbc.SetByte(0x4005, targetRAMBankNum);
+		mbc.Write(0x4005, targetRAMBankNum);
 
 		// Enable RAM
-		mbc.SetByte(0x0000, 0x0A);
+		mbc.Write(0x0000, 0x0A);
 
 		// Compare bytes in the target RAM bank, to bytes retrieved from the 
 		// memory bank controller in the address range 0xA000 to 0xBFFF
@@ -92,19 +92,19 @@ namespace SHG
 		uint32_t targetVirtualAddress = 0xA000;
 		uint32_t physicalAddress = MemoryBankController::CalculatePhysicalRAMAddress(targetRAMBankNum, virtualAddressRangeStart, targetVirtualAddress);
 
-		uint8_t byte1 = mbc.GetByte(virtualAddressRangeStart);
+		uint8_t byte1 = mbc.Read(virtualAddressRangeStart);
 		EXPECT_EQ(byte1, ram[physicalAddress]);
 
 		targetVirtualAddress = virtualAddressRangeStart + offset;
 		physicalAddress = MemoryBankController::CalculatePhysicalRAMAddress(targetRAMBankNum, virtualAddressRangeStart, targetVirtualAddress);
 
-		uint8_t byte2 = mbc.GetByte(targetVirtualAddress);
+		uint8_t byte2 = mbc.Read(targetVirtualAddress);
 		EXPECT_EQ(byte2, ram[physicalAddress]);
 
 		targetVirtualAddress = virtualAddressRangeStart + (offset * 2);
 		physicalAddress = MemoryBankController::CalculatePhysicalRAMAddress(targetRAMBankNum, virtualAddressRangeStart, targetVirtualAddress);
 
-		uint8_t byte3 = mbc.GetByte(targetVirtualAddress);
+		uint8_t byte3 = mbc.Read(targetVirtualAddress);
 		EXPECT_EQ(byte3, ram[physicalAddress]);
 	}
 
@@ -119,7 +119,7 @@ namespace SHG
 		mbc.AttachROM(rom);
 		mbc.AttachRAM(ram);
 
-		mbc.SetByte(0x0001, 0x0A);
+		mbc.Write(0x0001, 0x0A);
 		EXPECT_EQ(mbc.IsRAMEnabled(), true);
 	}
 
@@ -132,7 +132,7 @@ namespace SHG
 		MBC1 mbc;
 		mbc.AttachROM(rom);
 
-		mbc.SetByte(0x0001, 0x0D);
+		mbc.Write(0x0001, 0x0D);
 		EXPECT_EQ(mbc.IsRAMEnabled(), false);
 	}
 
@@ -150,7 +150,7 @@ namespace SHG
 		mbc.AttachROM(rom);
 		mbc.AttachRAM(ram);
 
-		mbc.SetByte(0x6112, expectedBankingMode);
+		mbc.Write(0x6112, expectedBankingMode);
 		EXPECT_EQ(mbc.GetBankingMode() , expectedBankingMode);
 	}
 
@@ -168,7 +168,7 @@ namespace SHG
 		MBC1 mbc;
 		mbc.AttachROM(rom);
 
-		mbc.SetByte(0x2005, expectedBankNum);
+		mbc.Write(0x2005, expectedBankNum);
 		EXPECT_EQ(mbc.GetROMBankNumber(), expectedBankNum);
 	}
 
@@ -188,7 +188,7 @@ namespace SHG
 		mbc.AttachROM(rom);
 		mbc.AttachRAM(ram);
 
-		mbc.SetByte(0x4011, expectedBankNum);
+		mbc.Write(0x4011, expectedBankNum);
 		EXPECT_EQ(mbc.GetRAMBankNumber(), expectedBankNum);
 	}
 }

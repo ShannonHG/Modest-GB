@@ -34,15 +34,16 @@ namespace SHG
 		SDL_UnlockTexture(texture);
 	}
 
-	void Framebuffer::Clear()
+	void Framebuffer::Clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
-		std::memset(pixels.data(), 0, sizeof(uint32_t) * pixels.size());
+		std::memset(pixels.data(), SDL_MapRGBA(pixelFormat, r, g, b, a), sizeof(uint32_t) * pixels.size());
 		UploadData();
 	}
 
 	void Framebuffer::Destroy()
 	{
 		SDL_FreeFormat(pixelFormat);
+		SDL_DestroyTexture(texture);
 	}
 
 	SDL_Texture* Framebuffer::GetTexture()

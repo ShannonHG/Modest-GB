@@ -177,13 +177,13 @@ namespace SHG
 		uint8_t expectedResult = (data << 1) | (data >> 7);
 
 		Memory memory = CreatePresetMemory({ 0xCB, 0x06 });
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// RLCA
@@ -275,13 +275,13 @@ namespace SHG
 		uint8_t expectedResult = (data >> 1) | (data << 7);
 
 		Memory memory = CreatePresetMemory({ 0xCB, 0x0E });
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// RRCA
@@ -375,14 +375,14 @@ namespace SHG
 		uint8_t previousHighBit = (data & 0b10000000) >> 7;
 
 		Memory memory = CreatePresetMemory({ 0xCB, 0x16 });
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.ChangeCarryFlag(carryFlag);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousHighBit);
 	}
 
@@ -477,14 +477,14 @@ namespace SHG
 		uint8_t previousLowBit = (data & 1);
 
 		Memory memory = CreatePresetMemory({ 0xCB, 0x1E });
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 
 		auto processor = CPU(memory);
 		processor.GetRegisterHL().SetData(address);
 		processor.ChangeCarryFlag(carryFlag);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 		EXPECT_EQ(processor.GetCarryFlag(), previousLowBit);
 	}
 
@@ -579,11 +579,11 @@ namespace SHG
 		Memory memory = CreatePresetMemory({ 0xCB, 0x26 });
 		auto processor = CPU(memory);
 
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 		processor.GetRegisterHL().SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// SLA A
@@ -671,7 +671,7 @@ namespace SHG
 
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// SRA A
@@ -756,11 +756,11 @@ namespace SHG
 		uint16_t address = 400;
 		uint8_t expectedResult = ((data & 0x0F) << 4) | ((data & 0xF0) >> 4);
 
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 		processor.GetRegisterHL().SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// SWAP A
@@ -849,11 +849,11 @@ namespace SHG
 		Memory memory = CreatePresetMemory({ 0xCB, 0x3E });
 		auto processor = CPU(memory);
 
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 		processor.GetRegisterHL().SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address), expectedResult);
+		EXPECT_EQ(memory.Read(address), expectedResult);
 	}
 
 	// SRL A

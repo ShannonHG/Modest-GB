@@ -24,10 +24,10 @@ namespace SHG
 		Register8& GetHighRegister();
 		Register8& GetLowRegister();
 
-		uint8_t GetByte(uint16_t address) override;
-		void SetByte(uint16_t address, uint8_t value) override;
+		uint8_t Read(uint16_t address) override;
+		void Write(uint16_t address, uint8_t value) override;
 		bool IsAddressAvailable(uint16_t address) override;
-
+		void Reset() override;
 	private:
 		Register8 highRegister;
 		Register8 lowRegister;

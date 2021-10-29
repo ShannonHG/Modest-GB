@@ -19,11 +19,11 @@ namespace SHG
 		uint16_t address = 300;
 		uint8_t data = 1 << bitNumber;
 
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 		addressRegister.SetData(address);
 		processor.Step();
 
-		EXPECT_EQ(memory.GetByte(address) & (1 << bitNumber), 0);
+		EXPECT_EQ(memory.Read(address) & (1 << bitNumber), 0);
 	}
 
 	// RES 0, B

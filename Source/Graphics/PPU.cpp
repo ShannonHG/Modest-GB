@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cassert>
 #include "Graphics/PPU.hpp"
-#include "Common/DataConversions.hpp"
-#include "Common/Arithmetic.hpp"
+#include "Utils/DataConversions.hpp"
+#include "Utils/Arithmetic.hpp"
 #include "Logger.hpp"
 #include "CPU/Interrupts.hpp"
-#include "Common/GBSpecs.hpp"
+#include "Utils/GBSpecs.hpp"
 
 namespace SHG
 {
@@ -94,12 +94,71 @@ namespace SHG
 		debugWindowTileMapFramebuffer.Initialize(window, DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_WIDTH, DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_HEIGHT);
 	}
 
+	void PPU::Reset()
+	{
+		currentMode = PPUMode::SearchingOAM;
+		pixelFetcherState = PixelFetcherState::FetchingTile;
+		dmaTransferState = DMATransferState::Idle;
+
+		currentModeElapsedTime = 0;
+
+		currentScanlineX = 0;
+		currentScanlineElapsedTime = 0;
+
+		currentPixelFetcherTileIndex = 0;
+		currentPixelFetcherTileDataLow = 0;
+		currentPixelFetcherTileDataHigh = 0;
+
+		spritesOnCurrentScanline.clear();
+		currentSpriteIndex = 0;
+
+		tileMapPixelQueue = std::queue<PixelData>();
+		spritePixelQueue = std::queue<PixelData>();
+
+		dmaTransferElapsedTime = 0;
+		dmaRegister.ClearPendingTransfer();
+
+		mainFramebuffer.Clear();
+		debugGenericTileFramebuffer.Clear();
+		debugSpriteFramebuffer.Clear(0, 0, 0, 0);
+		debugBackgroundTileMapFramebuffer.Clear();
+		debugWindowTileMapFramebuffer.Clear();
+	}
+
+	// 
 	void PPU::Step(uint32_t duration)
 	{
-		if (duration == 0 || !lcdControl.GetBit(LCDC_LCD_PPU_ENABLE_INDEX)) return;
+		if (duration == 0)
+			return;
 
-		ly.SetData(currentScanline);
-		RefreshLYCompare();
+		// TODO: Is this correct?
+		if (!lcdControl.GetBit(LCDC_LCD_PPU_ENABLE_INDEX))
+		{
+			lcdStatus.SetData(0);
+			ly.SetData(0);
+
+			currentMode = PPUMode::HBlank;
+			pixelFetcherState = PixelFetcherState::FetchingTile;
+			dmaTransferState = DMATransferState::Idle;
+
+			currentModeElapsedTime = 0;
+
+			currentScanlineX = 0;
+			currentScanlineElapsedTime = 0;
+
+			currentPixelFetcherTileIndex = 0;
+			currentPixelFetcherTileDataLow = 0;
+			currentPixelFetcherTileDataHigh = 0;
+
+			spritesOnCurrentScanline.clear();
+			currentSpriteIndex = 0;
+
+			tileMapPixelQueue = std::queue<PixelData>();
+			spritePixelQueue = std::queue<PixelData>();
+
+			mainFramebuffer.Clear();
+			return;
+		}
 
 		duration = ExecuteDMATransferCycle(duration);
 
@@ -112,12 +171,14 @@ namespace SHG
 			duration = HandleVBlankMode(duration);
 			break;
 		case PPUMode::SearchingOAM:
-			duration = FetchSpritesOnScanline(currentScanline, spritesOnCurrentScanline, duration);
+			duration = FetchSpritesOnScanline(ly.GetData(), spritesOnCurrentScanline, duration);
 			break;
 		case PPUMode::LCDTransfer:
 			duration = HandleLCDTransferMode(duration);
 			break;
 		}
+
+		RefreshLYCompare();
 
 		Step(duration);
 	}
@@ -169,13 +230,13 @@ namespace SHG
 			// Save the leftover cycles
 			duration = currentScanlineElapsedTime - CYCLES_PER_SCANLINE;
 
-			currentScanline++;
+			ly.Increment();
 			currentScanlineX = 0;
 			currentScanlineElapsedTime = 0;
 
 			currentModeElapsedTime = 0;
 
-			if (currentScanline == GB_SCREEN_HEIGHT)
+			if (ly.GetData() == GB_SCREEN_HEIGHT)
 				EnterVBlankMode();
 			else
 				EnterOAMSearchMode();
@@ -208,11 +269,11 @@ namespace SHG
 			duration = currentScanlineElapsedTime - CYCLES_PER_SCANLINE;
 			currentScanlineElapsedTime = 0;
 
-			if (currentScanline == VBLANK_END_Y)
+			if (ly.GetData() == VBLANK_END_Y)
 			{
 				currentModeElapsedTime = 0;
 
-				currentScanline = 0;
+				ly.SetData(0);
 
 				mainFramebuffer.UploadData();
 				EnterOAMSearchMode();
@@ -220,7 +281,7 @@ namespace SHG
 				return duration;
 			}
 
-			currentScanline++;
+			ly.Increment();
 			return duration;
 		}
 
@@ -235,15 +296,15 @@ namespace SHG
 		switch (pixelFetcherState)
 		{
 		case PixelFetcherState::FetchingTile:
-			currentPixelFetcherTileIndex = FetchTileMapIndex(currentScanlineX, currentScanline, GB_SCREEN_WIDTH, TileMapType::BackgroundAndWindow);
+			currentPixelFetcherTileIndex = FetchTileMapIndex(currentScanlineX, ly.GetData(), GB_SCREEN_WIDTH, TileMapType::BackgroundAndWindow);
 			duration = TransitionToPixelFetcherState(PixelFetcherState::FetchingLowTileData, duration);
 			break;
 		case PixelFetcherState::FetchingLowTileData:
-			currentPixelFetcherTileDataLow = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(currentPixelFetcherTileIndex, currentScanlineX, currentScanline) + 1);
+			currentPixelFetcherTileDataLow = memoryManagementUnit.Read(GetTileAddressFromTileMaps(currentPixelFetcherTileIndex, currentScanlineX, ly.GetData()) + 1);
 			duration = TransitionToPixelFetcherState(PixelFetcherState::FetchingHighTileData, duration);
 			break;
 		case PixelFetcherState::FetchingHighTileData:
-			currentPixelFetcherTileDataHigh = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(currentPixelFetcherTileIndex, currentScanlineX, currentScanline));
+			currentPixelFetcherTileDataHigh = memoryManagementUnit.Read(GetTileAddressFromTileMaps(currentPixelFetcherTileIndex, currentScanlineX, ly.GetData()));
 			duration = TransitionToPixelFetcherState(PixelFetcherState::Sleeping, duration);
 			break;
 		case PixelFetcherState::Sleeping:
@@ -251,7 +312,7 @@ namespace SHG
 			break;
 		case PixelFetcherState::PushingData:
 			uint8_t queueSize = tileMapPixelQueue.size();
-			GetPixelsFromTileScanline(currentPixelFetcherTileDataLow, currentPixelFetcherTileDataHigh, currentScanlineX, currentScanline, GB_SCREEN_WIDTH, tileMapPixelQueue);
+			GetPixelsFromTileScanline(currentPixelFetcherTileDataLow, currentPixelFetcherTileDataHigh, currentScanlineX, ly.GetData(), GB_SCREEN_WIDTH, tileMapPixelQueue);
 
 			// Increase the X position based on how many pixels were added to the queue.
 			// The number of added pixels should generally be 8, but this handles the case where that's not true.
@@ -273,7 +334,7 @@ namespace SHG
 				{
 					if (lcdControl.GetBit(LCDC_OBJ_ENABLE_INDEX))
 					{
-						GetSpritePixelsForScanline(spritesOnCurrentScanline, currentScanlineX, currentScanline, spritePixelQueue);
+						GetSpritePixelsForScanline(spritesOnCurrentScanline, currentScanlineX, ly.GetData(), spritePixelQueue);
 						spritesOnCurrentScanline.clear();
 					}
 
@@ -303,8 +364,8 @@ namespace SHG
 				// A DMA transfer causes data to be transfer from $XX00-$XX9F to $FFE0-$FE9F.
 				// Since a DMA transfer lasts 160 cycles and also transfers 160 bytes, the elapsed DMA transfer time
 				// can be used as the offset from the source and destination addresses.
-				uint8_t sourceData = memoryManagementUnit.GetByte(dmaRegister.GetSourceStartAddress() + dmaTransferElapsedTime);
-				memoryManagementUnit.SetByte(DMA_TRANSFER_DESTINATION_START_ADDRESS + dmaTransferElapsedTime, sourceData);
+				uint8_t sourceData = memoryManagementUnit.Read(dmaRegister.GetSourceStartAddress() + dmaTransferElapsedTime);
+				memoryManagementUnit.Write(DMA_TRANSFER_DESTINATION_START_ADDRESS + dmaTransferElapsedTime, sourceData);
 
 				dmaTransferElapsedTime++;
 
@@ -398,7 +459,7 @@ namespace SHG
 		}
 
 		int tileMapIndex = tileX + tileY * TILE_MAP_WIDTH;
-		return memoryManagementUnit.GetByte(tileMapAddress + tileMapIndex);
+		return memoryManagementUnit.Read(tileMapAddress + tileMapIndex);
 	}
 
 	void PPU::GetPixelsFromTileScanline(uint8_t rawScanlineDataLow, uint8_t rawScanlineDataHigh, uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, std::queue<PixelData>& pixelQueue)
@@ -535,8 +596,8 @@ namespace SHG
 				// The bit at the specified index in the low byte
 				// will determine the most significant bit of the color, while the bit 
 				// in the high byte will determine the least significant bit of the color.
-				uint8_t low = (memoryManagementUnit.GetByte(scanlineAddress + 1) & modifier) >> tilePixelX;
-				uint8_t high = (memoryManagementUnit.GetByte(scanlineAddress) & modifier) >> tilePixelX;
+				uint8_t low = (memoryManagementUnit.Read(scanlineAddress + 1) & modifier) >> tilePixelX;
+				uint8_t high = (memoryManagementUnit.Read(scanlineAddress) & modifier) >> tilePixelX;
 
 				PixelData pixelData;
 
@@ -555,10 +616,10 @@ namespace SHG
 
 		Sprite sprite;
 
-		sprite.y = memoryManagementUnit.GetByte(attributeAddress);
-		sprite.x = memoryManagementUnit.GetByte(attributeAddress + 1);
-		uint8_t tileIndex = memoryManagementUnit.GetByte(attributeAddress + 2);
-		uint8_t flags = memoryManagementUnit.GetByte(attributeAddress + 3);
+		sprite.y = memoryManagementUnit.Read(attributeAddress);
+		sprite.x = memoryManagementUnit.Read(attributeAddress + 1);
+		uint8_t tileIndex = memoryManagementUnit.Read(attributeAddress + 2);
+		uint8_t flags = memoryManagementUnit.Read(attributeAddress + 3);
 
 		sprite.xFlip = Arithmetic::GetBit(flags, 5);
 
@@ -569,7 +630,7 @@ namespace SHG
 
 	void PPU::RefreshLYCompare()
 	{
-		bool lyCompare = currentScanline == lyc.GetData();
+		bool lyCompare = ly.GetData() == lyc.GetData();
 		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_FLAG_INDEX, lyCompare);
 
 		if (lyCompare)
@@ -593,8 +654,8 @@ namespace SHG
 	{
 		uint16_t tileIndex = FetchTileMapIndex(scanlineX, scanline, TILE_MAP_PIXEL_WIDTH, tileMapType, true);
 
-		uint8_t low = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline) + 1);
-		uint8_t high = memoryManagementUnit.GetByte(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline));
+		uint8_t low = memoryManagementUnit.Read(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline) + 1);
+		uint8_t high = memoryManagementUnit.Read(GetTileAddressFromTileMaps(tileIndex, scanlineX, scanline));
 
 		auto pixelQueue = std::queue<PixelData>();
 		GetPixelsFromTileScanline(low, high, scanlineX, scanline, TILE_MAP_PIXEL_WIDTH, pixelQueue);
@@ -639,8 +700,8 @@ namespace SHG
 
 		// TODO: Swapping the order of the pixels is a temporary hack to 
 		// address bug that causes tiles to be flipped horizontally when rendered.
-		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
-		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
+		uint8_t tileDataHigh = memoryManagementUnit.Read(scanlineAddress);
+		uint8_t tileDataLow = memoryManagementUnit.Read(scanlineAddress + 1);
 
 		auto pixelQueue = std::queue<PixelData>();
 		for (uint8_t scanlineX = 0; scanlineX < 8; scanlineX++)
@@ -710,8 +771,8 @@ namespace SHG
 
 		uint16_t scanlineAddress = tileDataAddress + (tileIndex * TILE_SIZE_IN_BYTES) + ((debugTilesScanlineY % TILE_HEIGHT_IN_PIXELS) * 2);
 
-		uint8_t tileDataLow = memoryManagementUnit.GetByte(scanlineAddress + 1);
-		uint8_t tileDataHigh = memoryManagementUnit.GetByte(scanlineAddress);
+		uint8_t tileDataLow = memoryManagementUnit.Read(scanlineAddress + 1);
+		uint8_t tileDataHigh = memoryManagementUnit.Read(scanlineAddress);
 
 		for (uint8_t px = 0; px < 8; px++)
 		{

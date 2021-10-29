@@ -2,7 +2,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "Common/Arithmetic.hpp"
+#include "Utils/Arithmetic.hpp"
 #include "Memory/MemoryBankController.hpp"
 
 namespace SHG
@@ -72,11 +72,13 @@ namespace SHG
 	const uint8_t CH_8MB_ROM = 0x08; // 512 banks of 16 KiB each
 
 	// Catridge header addresses
-
-	static const uint16_t CH_CGB_FLAG_ADDRESS = 0x0143;
-	static const uint16_t CH_MEMORY_BANK_TYPE_ADDRESS = 0x0147;
-	static const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
-	static const uint16_t CH_RAM_SIZE_ADDRESS = 0x0149;
+	
+	const uint16_t CH_TITLE_START_ADDRESS = 0x0134;
+	const uint16_t CH_TITLE_END_ADDRESS = 0x0143;
+	const uint16_t CH_CGB_FLAG_ADDRESS = 0x0143;
+	const uint16_t CH_MEMORY_BANK_TYPE_ADDRESS = 0x0147;
+	const uint16_t CH_ROM_SIZE_ADDRESS = 0x0148;
+	const uint16_t CH_RAM_SIZE_ADDRESS = 0x0149;
 
 	class Cartridge : public DataStorageDevice
 	{
@@ -86,16 +88,20 @@ namespace SHG
 		MemoryBankControllerType GetMemoryBankControllerType();
 		uint32_t GetROMSize();
 		uint32_t GetRAMSize();
-		uint8_t GetByte(uint16_t address) override;
-		void SetByte(uint16_t address, uint8_t value) override;
+		uint8_t Read(uint16_t address) override;
+		void Write(uint16_t address, uint8_t value) override;
 		bool IsAddressAvailable(uint16_t address) override;
-
+		bool IsROMLoaded();
+		void Reset() override;
 	private:
+		bool isROMLoaded = false;
+
 		std::unique_ptr<MemoryBankController> memoryBankController;
 		MemoryBankControllerType memoryBankControllerType;
 
 		std::vector<uint8_t> ram;
 		std::vector<uint8_t> rom;
+		std::string title;
 
 		void DecodeCartridgeType(uint8_t byte);
 		void DecodeROMSize(uint8_t byte);

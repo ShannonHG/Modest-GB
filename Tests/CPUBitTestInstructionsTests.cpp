@@ -21,7 +21,7 @@ namespace SHG
 		uint8_t zeroFlag = 1;
 		uint8_t data = ~(1 << bitNumber);
 
-		memory.SetByte(address, data);
+		memory.Write(address, data);
 		addressRegister.SetData(address);
 		processor.Step();
 

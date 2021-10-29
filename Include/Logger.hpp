@@ -6,7 +6,15 @@
 
 namespace SHG
 {
-	using LogEntryCallback = std::function<void(std::string message)>;
+	enum class LogMessageType
+	{
+		Info,
+		Warning,
+		Error,
+		SystemEvent
+	};
+
+	using LogEntryEvent = std::function<void(std::string message, LogMessageType messageType)>;
 
 	class Logger
 	{
@@ -16,10 +24,10 @@ namespace SHG
 		static void WriteWarning(const std::string& message, const std::string& header = "");
 		static void WriteError(const std::string& message, const std::string& header = "");
 		static void WriteSystemEvent(const std::string& message, const std::string& header = "");
-		static void RegisterLogEntryCallback(LogEntryCallback callback);
+		static void RegisterLogEntryAddedCallback(LogEntryEvent callback);
 
 	private:
 		static void InitLogFile();
-		static void WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader);
+		static void WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader, LogMessageType messageType);
 	};
 }

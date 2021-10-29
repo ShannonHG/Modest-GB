@@ -9,7 +9,7 @@ namespace SHG
 		memory = std::vector<uint8_t>(memorySize);
 	}
 
-	uint8_t Memory::GetByte(uint16_t address)
+	uint8_t Memory::Read(uint16_t address)
 	{
 		if (!IsAddressAvailable(address))
 		{
@@ -22,7 +22,7 @@ namespace SHG
 		}
 	}
 
-	void Memory::SetByte(uint16_t address, uint8_t value)
+	void Memory::Write(uint16_t address, uint8_t value)
 	{
 		if (IsAddressAvailable(address)) memory[address] = value;
 	}
@@ -30,5 +30,10 @@ namespace SHG
 	bool Memory::IsAddressAvailable(uint16_t address)
 	{
 		return address < memory.size();
+	}
+
+	void Memory::Reset()
+	{
+		std::memset(memory.data(), 0, sizeof(uint8_t) * memory.size());
 	}
 }

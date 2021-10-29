@@ -5,7 +5,7 @@ namespace SHG
 	Memory CreatePresetMemory(uint8_t value)
 	{
 		Memory memory = Memory(std::numeric_limits<uint16_t>::max());
-		memory.SetByte(0, value);
+		memory.Write(0, value);
 
 		return memory;
 	}
@@ -13,7 +13,7 @@ namespace SHG
 	Memory CreatePresetMemory(const std::vector<uint8_t>& values)
 	{
 		Memory memory = Memory(std::numeric_limits<uint16_t>::max());
-		for (int i = 0; i < values.size(); i++) memory.SetByte(i, values[i]);
+		for (int i = 0; i < values.size(); i++) memory.Write(i, values[i]);
 
 		return memory;
 	}

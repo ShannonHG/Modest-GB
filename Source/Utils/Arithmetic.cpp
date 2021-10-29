@@ -1,6 +1,6 @@
 #include <limits>
 #include <cstdint>
-#include "Common/Arithmetic.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG::Arithmetic
 {

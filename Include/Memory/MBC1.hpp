@@ -32,10 +32,10 @@ namespace SHG
 		bool IsRAMEnabled();
 
 		/// <inheritdoc/>
-		uint8_t GetByte(uint16_t address) override;
+		uint8_t Read(uint16_t address) override;
 
 		/// <inheritdoc/>
-		void SetByte(uint16_t address, uint8_t value) override;
+		void Write(uint16_t address, uint8_t value) override;
 
 		/// <inheritdoc/>
 		bool IsAddressAvailable(uint16_t address) override;

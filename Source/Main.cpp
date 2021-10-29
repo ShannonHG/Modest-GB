@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-	SHG::AppConfig config;
+	/*SHG::AppConfig config;
 
 	if (SHG::ParseROMFilePath(argc, argv, config.romFilePath))
 	{
@@ -18,9 +18,9 @@ int main(int argc, char* argv[])
 	}
 
 	SHG::ParseCommandLineOptions(argc, argv, config);
-	SHG::Logger::IsSystemEventLoggingEnabled = config.isSystemStatusLoggingEnabled;
+	SHG::Logger::IsSystemEventLoggingEnabled = config.isSystemStatusLoggingEnabled;*/
 
-	SHG::Emulator().Start(config.romFilePath);
+	SHG::Emulator().Start();
 
 	return 0;
 }
