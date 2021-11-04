@@ -116,7 +116,10 @@ namespace SHG
 		currentInstruction = Decode(opcode);
 
 		if (currentInstruction == nullptr)
-			throw InvalidOpcodeException("[CPU] Invalid opcode encountered: " + ConvertToHexString(opcode, 2));
+		{
+			Logger::WriteError("Invalid opcode encountered: " + ConvertToHexString(opcode, 2), CPU_MESSAGE_HEADER);
+			return 0;
+		}
 
 		currentCycles = currentInstruction->cycles;
 
@@ -135,10 +138,11 @@ namespace SHG
 		uint16_t address = programCounter.GetData();
 		programCounter.Increment();
 
-		// If, for some reason, the memory address is not available
-		// then execution should be stopped since this indicates a severe issue.
 		if (!memoryManagementUnit.IsAddressAvailable(address))
-			throw std::out_of_range("[CPU] Failed to fetch data from " + ConvertToHexString(address, 4) + ". Memory address is inaccessible.");
+		{
+			Logger::WriteError("Failed to fetch data from " + ConvertToHexString(address, 4) + ". Memory address is inaccessible.", CPU_MESSAGE_HEADER);
+			return 0;
+		}
 
 		uint8_t result = memoryManagementUnit.Read(address);
 

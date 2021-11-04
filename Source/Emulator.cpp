@@ -28,14 +28,17 @@ namespace SHG
 
 		LoadConfigurationFile();
 
-		// TODO: Check if successful
-		window.Initialize();
+		if (!window.Initialize())
+		{
+			Logger::WriteError("Failed to initialize the window.");
+			return false;
+		}
 
 		window.RegisterFileSelectionCallback(std::bind(&Emulator::OnFileSelected, this, std::placeholders::_1));
 		window.RegisterPauseButtonCallback(std::bind(&Emulator::OnPauseButtonPressed, this));
 		window.RegisterStepButtonCallback(std::bind(&Emulator::OnStepButtonPressed, this));
 		window.RegisterClearButtonCallback(std::bind(&Emulator::OnClearButtonPressed, this));
-		inputManager.RegisterExitEventCallback(std::bind(&Emulator::OnQuit, this));
+		inputManager.RegisterExitEventCallback(std::bind(&Emulator::OnQuit, this));\
 
 		ppu.InitializeFramebuffer(window.GetSDLWindow());
 		memoryMap.Reset();
@@ -96,7 +99,6 @@ namespace SHG
 
 			if (timeSinceLastFrame >= GB_DURATION_PER_FRAME)
 			{
-				//window.PollEvents();
 				inputManager.Update();
 				window.Render(memoryMap, ppu, processor, cyclesPerSecond, logEntries);
 

@@ -9,7 +9,6 @@
 #include "Graphics/PixelData.hpp"
 #include "Graphics/Framebuffer.hpp"
 #include "Memory/MemoryMap.hpp"
-#include "Graphics/TileMapType.hpp"
 #include "Graphics/DMATransferRegister.hpp"
 #include "Memory/Register8.hpp"
 
@@ -41,9 +40,6 @@ namespace SHG
 		Register8* GetWY();
 		Register8* GetWX();
 		DMATransferRegister* GetDMATransferRegister();
-
-		// TODO: Temp
-		void Render();
 	private:
 		enum class PPUMode
 		{
@@ -66,6 +62,13 @@ namespace SHG
 		{
 			Idle,
 			InProgress
+		};
+
+		enum class TileMapType
+		{
+			Background = 1,
+			Window = 2,
+			BackgroundAndWindow = 3
 		};
 
 		struct Sprite
@@ -131,7 +134,6 @@ namespace SHG
 		uint16_t debugTilesScanlineX = 0;
 		uint16_t debugTilesScanlineY = 0;
 
-		void ExecutePixelFetcherCycle(uint32_t& duration);
 		uint32_t ExecuteDMATransferCycle(uint32_t duration);
 
 		int32_t GetTileAddressFromTileMaps(uint16_t tileIndex, uint8_t scanlineX, uint8_t scanlineY);

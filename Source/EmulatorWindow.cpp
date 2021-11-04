@@ -19,17 +19,32 @@ namespace SHG
 	{
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
-			// TODO: Print SDL error
-			Logger::WriteError("SDL failed to initialize!");
+			Logger::WriteError("SDL failed to initialize. Error: " + std::string(SDL_GetError()));
 			return false;
 		}
 
-		// TODO: Check for errors
 		sdlWindow = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+
+		if (sdlWindow == nullptr)
+		{
+			Logger::WriteError("Failed to create SDL window. Error: " + std::string(SDL_GetError()));
+			return false;
+		}
+
 		sdlRenderer = SDL_CreateRenderer(sdlWindow, 0, 0);
 
+		if (sdlRenderer == nullptr)
+		{
+			Logger::WriteError("Failed to create SDL renderer. Error: " + std::string(SDL_GetError()));
+			return false;
+		}
+
 		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
+		if (ImGui::CreateContext() == nullptr)
+		{
+			Logger::WriteError("Failed to create ImGui context.");
+			return false;
+		}
 
 		ImGui_ImplSDL2_InitForSDLRenderer(sdlWindow);
 		ImGui_ImplSDLRenderer_Init(sdlRenderer);
