@@ -5,6 +5,7 @@
 #include <functional>
 #include "Memory/DataStorageDevice.hpp"
 #include "Memory/MemoryMapEntry.hpp"
+#include "Graphics/DMATransferRegister.hpp"
 
 namespace SHG
 {
@@ -31,7 +32,5 @@ namespace SHG
 		MemoryMapEntry* GetEntryForDevice(DataStorageDevice* device);
 		MemoryMapEntry* GetMemoryMapEntryWithAddress(uint16_t address);
 		uint16_t GetNormalizedAddress(MemoryMapEntry* memoryMapEntry, uint16_t address);
-
-		void ProcessBlarggTestsOutput(uint16_t address, uint8_t value);
 	};
 }

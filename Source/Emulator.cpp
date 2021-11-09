@@ -22,7 +22,7 @@ namespace SHG
 
 	const uint32_t MAX_LOG_ENTRY_STRING_SIZE = 50000;
 
-	bool Emulator::Start()
+	bool Emulator::Run()
 	{
 		Logger::RegisterLogEntryAddedCallback(std::bind(&Emulator::AddLogEntry, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -65,6 +65,7 @@ namespace SHG
 			if (cartridge.IsROMLoaded() && (!isPaused || isStepRequested) && cyclesSinceLastFrame < GB_CYCLES_PER_FRAME)
 			{
 				uint32_t cycles = processor.Step();
+
 				cyclesSinceLastFrame += cycles;
 				cyclesSinceLastCount += cycles;
 
@@ -83,7 +84,9 @@ namespace SHG
 				if (window.shouldRenderWindowTileMapWindow)
 					ppu.DebugDrawWindowTileMap();
 
-				processor.HandleInterrupts();
+				if (cycles > 0)
+					processor.HandleInterrupts();
+
 				isStepRequested = false;
 			}
 
@@ -201,13 +204,13 @@ namespace SHG
 		memoryMap.Write(0xFF70, 0xFF);
 		memoryMap.Write(0xFFFF, 0x00);
 
-		// Set the lower nibble of the joypad register to read-only
-		memoryMap.SetReadonlyBitMask(0xFF00, 0x0F);
+		// Set the lower nibble and upper 2 bits of the joypad register to read-only.
+		memoryMap.SetReadonlyBitMask(0xFF00, 0b11001111);
 
-		// Set LYC=LY and Mode flag bits to read-only
+		// Set LYC=LY and Mode flag bits to read-only.
 		memoryMap.SetReadonlyBitMask(0xFF41, 0b0000111);
 
-		// Set LY to read-only
+		// Set LY to read-only.
 		memoryMap.SetReadonlyBitMask(0xFF44, 0xFF);
 	}
 
@@ -215,7 +218,7 @@ namespace SHG
 	{
 		if (!window.shouldRenderLogWindow)
 			return;
-
+		
 		if (messageType != LogMessageType::SystemEvent || window.IsTraceEnabled())
 			logEntries += logEntry + '\n';
 
@@ -226,7 +229,7 @@ namespace SHG
 
 			// Start on the first complete line
 			logEntries = trimmed.substr(pos + 1);
-		}
+		}  
 	}
 
 	void Emulator::OnQuit()

@@ -67,10 +67,10 @@ namespace SHG
 	const uint16_t DEBUG_WINDOW_TILE_MAP_FRAMEBUFFER_HEIGHT = TILE_MAP_PIXEL_HEIGHT;
 	const uint16_t DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_WIDTH = TILE_MAP_PIXEL_WIDTH;
 	const uint16_t DEBUG_BACKGROUND_TILE_MAP_FRAMEBUFFER_HEIGHT = TILE_MAP_PIXEL_HEIGHT;
-	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_WIDTH = 116;
-	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_HEIGHT = 44;
-	const uint16_t DEBUG_TILE_FRAMEBUFFER_WIDTH = 256;
-	const uint16_t DEBUG_TILE_FRAMEBUFFER_HEIGHT = 96;
+	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_WIDTH = 89;
+	const uint16_t DEBUG_SPRITE_FRAMEBUFFER_HEIGHT = 35;
+	const uint16_t DEBUG_TILE_FRAMEBUFFER_WIDTH = 287;
+	const uint16_t DEBUG_TILE_FRAMEBUFFER_HEIGHT = 107;
 
 	const std::map<PPU::PixelFetcherState, uint32_t> PPU::STATE_DURATIONS =
 	{
@@ -120,8 +120,8 @@ namespace SHG
 		dmaRegister.ClearPendingTransfer();
 
 		mainFramebuffer.Clear();
-		debugGenericTileFramebuffer.Clear();
-		debugSpriteFramebuffer.Clear(0, 0, 0, 0);
+		debugGenericTileFramebuffer.Clear(RGBA_BLACK);
+		debugSpriteFramebuffer.Clear(RGBA_BLACK);
 		debugBackgroundTileMapFramebuffer.Clear();
 		debugWindowTileMapFramebuffer.Clear();
 	}
@@ -135,7 +135,25 @@ namespace SHG
 		if (!lcdControl.GetBit(LCDC_LCD_PPU_ENABLE_INDEX))
 		{
 			lcdStatus.SetData(0);
-			mainFramebuffer.Clear();
+			ly.SetData(0);
+			currentMode = PPUMode::HBlank;
+			pixelFetcherState = PixelFetcherState::FetchingTile;
+			dmaTransferState = DMATransferState::Idle;
+
+			currentModeElapsedTime = 0;
+
+			currentScanlineX = 0;
+			currentScanlineElapsedTime = 0;
+
+			currentPixelFetcherTileIndex = 0;
+			currentPixelFetcherTileDataLow = 0;
+			currentPixelFetcherTileDataHigh = 0;
+
+			spritesOnCurrentScanline.clear();
+			currentSpriteIndex = 0;
+
+			tileMapPixelQueue = std::queue<PixelData>();
+			spritePixelQueue = std::queue<PixelData>();
 			return;
 		}
 
@@ -380,9 +398,7 @@ namespace SHG
 			if (data.y >= GB_SCREEN_HEIGHT) continue;
 
 			// TODO: Properly implement palettes
-			uint8_t color = GetColorFromID(data.colorID);
-
-			mainFramebuffer.SetPixel(data.x, data.y, color, color, color, 255);
+			mainFramebuffer.SetPixel(data.x, data.y, data.color);
 		}
 
 		while (spritePixelQueue.size() > 0)
@@ -390,16 +406,14 @@ namespace SHG
 			PixelData data = spritePixelQueue.front();
 			spritePixelQueue.pop();
 
-			if (data.colorID == PixelColorID::White || data.y >= GB_SCREEN_HEIGHT) continue;
+			if (data.color == RGBA_WHITE || data.y >= GB_SCREEN_HEIGHT) continue;
 
 			// TODO: Properly implement palettes
-			uint8_t color = GetColorFromID(data.colorID);
 
-			// TODO: Revisit
-			if (data.backgroundPriority == 0 || mainFramebuffer.GetPixel(data.x, data.y) == std::numeric_limits<uint32_t>::max())
-			{
-				mainFramebuffer.SetPixel(data.x, data.y, color, color, color, 255);
-			}
+			// If a sprite's priority is 0, then background and window tiles should not be drawn on top of it.
+			// Otherwise, only non-white background and window tiles should be drawn on top of the sprite.
+			if (data.priority == 0 || mainFramebuffer.GetPixel(data.x, data.y) == RGBA_WHITE)
+				mainFramebuffer.SetPixel(data.x, data.y, data.color);
 		}
 	}
 
@@ -409,8 +423,6 @@ namespace SHG
 
 		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, true);
 		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, true);
-
-		ChangeStatInterruptSourceBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, true);
 	}
 
 	uint16_t PPU::FetchTileMapIndex(uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, TileMapType tileMapType, bool ignoreScrolling)
@@ -429,7 +441,7 @@ namespace SHG
 
 		bool isWindowEnabled = lcdControl.GetBit(LCDC_WINDOW_ENABLED_INDEX);
 		bool isScanlineXInsideWindow = scanlineX >= windowX && scanlineY < windowX + TILE_MAP_PIXEL_WIDTH;
-		
+
 		bool isBackgroundTile = false;
 		if (lcdControl.GetBit(LCDC_BG_TILE_MAP_INDEX))
 		{
@@ -519,7 +531,7 @@ namespace SHG
 
 			pixelData.x = x;
 			pixelData.y = scanlineY;
-			pixelData.colorID = static_cast<PixelColorID>((low << 1) | high);
+			pixelData.color = GetColorFromID((low << 1) | high);
 
 			pixelQueue.push(pixelData);
 		}
@@ -535,20 +547,18 @@ namespace SHG
 		return tileDataOffset + (isUnsignedAddressingMode ? UNSIGNED_ADDRESSING_MODE_BASE_ADDRESS : SIGNED_ADDRESSING_MODE_BASE_ADDRESS);
 	}
 
-	uint8_t PPU::GetColorFromID(PixelColorID id)
+	Color PPU::GetColorFromID(uint8_t id)
 	{
 		switch (id)
 		{
-		case PixelColorID::Black:
-			return 0;
-		case PixelColorID::DarkGray:
-			return 100;
-		case PixelColorID::LightGray:
-			return 175;
-		case PixelColorID::White:
-			return 255;
+		case 3:
+			return RGBA_BLACK;
+		case 2:
+			return RGBA_DARK_GRAY;
+		case 1:
+			return RGBA_LIGHT_GRAY;
 		default:
-			assert(false);
+			return RGBA_WHITE;
 		}
 	}
 
@@ -568,7 +578,7 @@ namespace SHG
 		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_0, false);
 		lcdStatus.ChangeBit(LCD_STATUS_MODE_FLAG_INDEX_1, true);
 
-		ChangeStatInterruptSourceBit(LCD_STATUS_HBLANK_STAT_INTERRUPT_INDEX, true);
+		ChangeStatInterruptSourceBit(LCD_STATUS_OAM_STAT_INTERRUPT_INDEX, true);
 	}
 
 	void PPU::GetSpritePixelsForScanline(const std::vector<Sprite>& spritesOnCurrentScanline, uint8_t scanlineX, uint8_t scanlineY, std::queue<PixelData>& pixelQueue)
@@ -577,11 +587,13 @@ namespace SHG
 		{
 			int16_t spriteScanline = 16 - (sprite.y - scanlineY);
 
+			if (sprite.yFlip)
+				spriteScanline = 7 - spriteScanline;
+
 			uint16_t scanlineAddress = sprite.tileAddress + (spriteScanline * 2);
 
 			for (uint8_t x = 0; x < 8; x++)
 			{
-				// TODO: Implement Y flip
 				uint8_t px = sprite.xFlip ? x : 7 - x;
 
 				int tilePixelX = px % 8;
@@ -596,17 +608,18 @@ namespace SHG
 
 				PixelData pixelData;
 
-				pixelData.backgroundPriority = sprite.priority;
+				pixelData.priority = sprite.priority;
 				pixelData.x = std::max((sprite.x - 8) + x, 0);
 				pixelData.y = scanlineY;
-				pixelData.colorID = static_cast<PixelColorID>((low << 1) | high);
+				pixelData.color = GetColorFromID((low << 1) | high);
 
 				pixelQueue.push(pixelData);
 			}
 
-			/*uint16_t duration = (11 - std::min(5, (s.x + scx.GetData()) % 8));
+			// TODO: Revisit
+			uint16_t duration = (11 - std::min(5, (sprite.x + scx.GetData()) % 8));
 			currentModeElapsedTime += duration;
-			currentScanlineElapsedTime += duration;*/
+			currentScanlineElapsedTime += duration;
 		}
 	}
 
@@ -623,6 +636,7 @@ namespace SHG
 
 		sprite.xFlip = Arithmetic::GetBit(flags, 5);
 		sprite.yFlip = Arithmetic::GetBit(flags, 6);
+
 		sprite.priority = Arithmetic::GetBit(flags, 7);
 		sprite.tileAddress = SPRITE_TILES_TABLE_START_ADDRESS + (tileIndex * TILE_SIZE_IN_BYTES);
 
@@ -634,11 +648,7 @@ namespace SHG
 		bool lyCompare = ly.GetData() == lyc.GetData();
 		lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_FLAG_INDEX, lyCompare);
 
-		if (lyCompare)
-		{
-			lcdStatus.ChangeBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, true);
-			RequestInterrupt(memoryManagementUnit, InterruptType::LCDStat);
-		}
+		ChangeStatInterruptSourceBit(LCD_STATUS_LY_COMPARE_STAT_INTERRUPT_INDEX, true);
 	}
 
 	void PPU::DebugDrawBackgroundTileMap()
@@ -671,9 +681,7 @@ namespace SHG
 			PixelData data = pixelQueue.front();
 			pixelQueue.pop();
 
-			uint8_t color = GetColorFromID(data.colorID);
-
-			framebuffer.SetPixel(data.x, data.y, color, color, color, 255);
+			framebuffer.SetPixel(data.x, data.y, data.color);
 		}
 
 		if (x == TILE_MAP_PIXEL_WIDTH)
@@ -696,7 +704,7 @@ namespace SHG
 	{
 		Sprite sprite = FetchSpriteAtIndex(debugSpriteIndex);
 
-		uint8_t spriteSpacing = 12;
+		uint8_t spriteSpacing = 9;
 		uint16_t scanlineAddress = sprite.tileAddress + (debugSpriteScanline * 2);
 
 		uint8_t tileDataHigh = memoryManagementUnit.Read(scanlineAddress);
@@ -712,13 +720,15 @@ namespace SHG
 			uint8_t low = (tileDataLow & modifier) >> scanlineX;
 			uint8_t high = (tileDataHigh & modifier) >> scanlineX;
 
-			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
+			Color color = GetColorFromID((low << 1) | high);
 
 			// Evenly space out sprites across the screen
 			uint8_t xOffset = (debugSpriteIndex % MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
 			uint8_t yOffset = std::floor(debugSpriteIndex / (double)MAX_SPRITES_PER_SCANLINE) * spriteSpacing;
 
-			debugSpriteFramebuffer.SetPixel(scanlineX + xOffset, debugSpriteScanline + yOffset, color, color, color, 255);
+			debugSpriteFramebuffer.SetPixel(scanlineX + xOffset, debugSpriteScanline + yOffset, color);
+
+			//debugSpriteFramebuffer.SetPixel(scanlineX, debugSpriteScanline, color);
 		}
 
 		debugSpriteScanline++;
@@ -783,9 +793,14 @@ namespace SHG
 			uint8_t low = (tileDataLow & modifier) >> flippedX;
 			uint8_t high = (tileDataHigh & modifier) >> flippedX;
 
-			uint8_t color = GetColorFromID(static_cast<PixelColorID>((low << 1) | high));
+			Color color = GetColorFromID((low << 1) | high);
 
-			debugGenericTileFramebuffer.SetPixel(debugTilesScanlineX + px, debugTilesScanlineY, color, color, color, 255);
+			uint16_t x = debugTilesScanlineX + px;
+			x = x >= 8 ? x + std::floor(debugTilesScanlineX / 8.0) : x;
+
+			uint16_t y = debugTilesScanlineY >= 8 ? debugTilesScanlineY + std::floor(debugTilesScanlineY / 8.0) : debugTilesScanlineY;
+
+			debugGenericTileFramebuffer.SetPixel(x, y, color);
 		}
 
 		debugTilesScanlineX += TILE_WIDTH_IN_PIXELS;
@@ -827,7 +842,7 @@ namespace SHG
 	{
 		return &ly;
 	}
-	
+
 	Register8* PPU::GetLYC()
 	{
 		return &lyc;

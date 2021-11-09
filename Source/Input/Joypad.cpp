@@ -3,6 +3,7 @@
 #include "Input/Joypad.hpp"
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
+#include "CPU/Interrupts.hpp"
 
 namespace SHG
 {
@@ -28,7 +29,7 @@ namespace SHG
 	// Bit 1 - Left or B (0 = Pressed)
 	// Bit 0 - Right or A (0 = Pressed)
 
-	Joypad::Joypad(InputManager& inputManager)
+	Joypad::Joypad(InputManager& inputManager, MemoryMap& memoryMap) : memoryMap(memoryMap)
 	{
 		ResetButtonStates();
 		LoadControllerMapping(DEFAULT_CONTROLLER_MAPPING);
@@ -42,9 +43,10 @@ namespace SHG
 		controllerMapping = mapping;
 	}
 
+	// TODO: Revisit
 	uint8_t Joypad::Read(uint16_t address)
 	{
-		uint8_t result = 0;
+		uint8_t result = 0xCF;
 
 		// When a button is pressed, the respective bit should be set to 0, 
 		// otherwise the bit should be 1.
@@ -63,8 +65,10 @@ namespace SHG
 				| (!buttonStates[GBButton::Start] << 3);
 		}
 
-		result |= isDirectionButtonsSelected << 4;
-		result |= isActionButtonsSelected << 5;
+		result |= !isDirectionButtonsSelected << 4;
+		result |= !isActionButtonsSelected << 5;
+
+		result |= 0b11000000;
 
 		return result;
 	}
@@ -115,6 +119,38 @@ namespace SHG
 	void Joypad::SetButtonStateWithKeyCode(KeyCode key, bool isPressed)
 	{
 		if (controllerMapping.find(key) != controllerMapping.end())
-			buttonStates[controllerMapping[key]] = isPressed;
+		{
+			GBButton button = controllerMapping[key];
+			buttonStates[button] = isPressed;
+
+			// TODO: Revisit
+			if (isPressed)
+			{
+				if (isDirectionButtonsSelected)
+				{
+					switch (button)
+					{
+					case SHG::GBButton::Right:
+					case SHG::GBButton::Left:
+					case SHG::GBButton::Up:
+					case SHG::GBButton::Down:
+						RequestInterrupt(memoryMap, InterruptType::Joypad);
+						break;
+					}
+				}
+				else if (isActionButtonsSelected)
+				{
+					switch (button)
+					{
+					case SHG::GBButton::A:
+					case SHG::GBButton::B:
+					case SHG::GBButton::Select:
+					case SHG::GBButton::Start:
+						RequestInterrupt(memoryMap, InterruptType::Joypad);
+						break;
+					}
+				}
+			}
+		}
 	}
 }

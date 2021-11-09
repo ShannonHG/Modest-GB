@@ -37,7 +37,7 @@ namespace SHG
 
 		InitMBC();
 
-		Logger::WriteInfo("ROM title: " + title, CARTRIDGE_LOG_HEADER);
+		Logger::WriteInfo("ROM title: " + std::string(title.c_str()), CARTRIDGE_LOG_HEADER);
 
 		isROMLoaded = true;
 		return true;
@@ -274,7 +274,7 @@ namespace SHG
 				return;
 			}
 
-			rom[address] = value;
+			//rom[address] = value;
 			break;
 		default:
 			// If the memoryBankControllerType is anything other than None, then the memoryBankController should not be NULL

@@ -117,7 +117,9 @@ namespace SHG
 
 		if (currentInstruction == nullptr)
 		{
-			Logger::WriteError("Invalid opcode encountered: " + ConvertToHexString(opcode, 2), CPU_MESSAGE_HEADER);
+			Logger::WriteError("Invalid opcode encountered at " + GetHexString16(programCounter.GetData()) + ": " + GetHexString8(opcode), CPU_MESSAGE_HEADER);
+
+			// TODO: Return something more useful
 			return 0;
 		}
 

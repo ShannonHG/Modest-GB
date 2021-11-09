@@ -16,7 +16,7 @@ namespace SHG
 	class Emulator
 	{
 	public:
-		bool Start();
+		bool Run();
 
 	private:
 		EmulatorWindow window = EmulatorWindow();
@@ -36,7 +36,7 @@ namespace SHG
 		Register8 interruptEnableRegister;
 		Register8 interruptFlagRegister;
 		Memory serialOutputRegister = Memory(4);
-		Joypad joypad = Joypad(inputManager);
+		Joypad joypad = Joypad(inputManager, memoryMap);
 
 		bool isRunning = false;
 		bool isPaused = false;

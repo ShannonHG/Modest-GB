@@ -107,9 +107,6 @@ namespace SHG
 
 	void Timer::Reset()
 	{
-		preciseDivider = 0;
-		preciseCounter = 0;
-
 		dividerRegister = 0;
 		timerCounter = 0;
 		timerModulo = 0;

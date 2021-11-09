@@ -56,7 +56,7 @@ namespace SHG
 	// At some point, writing to an actual log file may be useful again.
 	void Logger::WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader, LogMessageType messageType)
 	{
-		//if (!logFileStream.is_open()) InitLogFile();
+		if (!logFileStream.is_open()) InitLogFile();
 
 		std::time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 		std::tm dateTime{};
@@ -73,13 +73,13 @@ namespace SHG
 
 		// %F %T = Y-m-d H:M
 		std::strftime(&logDateTimeBuffer[0], logDateTimeBuffer.size(), "%F %T", &dateTime);
-		std::string formattedMessage = "[" + std::string(logDateTimeBuffer.data()) + heading + (customHeader.empty() ? customHeader : " " + customHeader) + ": " + message;
+		std::string formattedMessage = "[" + std::string(logDateTimeBuffer.data()) + "] " + heading + (customHeader.empty() ? customHeader : " " + customHeader) + ": " + message;
 
 		if (writeToConsole) 
 			std::cout << formattedMessage << std::endl;
 
 		// TODO: std::endl will force the stream to be flushed and immediately written to file, consider removing this.
-		//logFileStream << messageStream.str() << std::endl;
+		logFileStream << formattedMessage << std::endl;
 
 		for (LogEntryEvent callback : logEntryCallbacks)
 			callback(formattedMessage, messageType);

@@ -63,8 +63,6 @@ namespace SHG
 
 	void MemoryMap::Write(uint16_t address, uint8_t value)
 	{
-		ProcessBlarggTestsOutput(address, value);
-
 		MemoryMapEntry* memoryMapEntry = GetMemoryMapEntryWithAddress(address);
 
 		if (memoryMapEntry != nullptr)
@@ -139,19 +137,5 @@ namespace SHG
 	void MemoryMap::SetReadonlyBitMask(uint16_t address, uint8_t bitMask)
 	{
 		readonlyBitMasks[address] = bitMask;
-	}
-
-	void MemoryMap::ProcessBlarggTestsOutput(uint16_t address, uint8_t value)
-	{
-		if (address == 0xFF02 && value == 0x81)
-		{
-			if (!blarggOutStream.is_open())
-			{
-				blarggOutStream = std::ofstream(std::filesystem::current_path().string() + "/BlarggTestResult.log", std::ios::out);
-			}
-
-			blarggOutStream << (char)Read(0xFF01);
-			blarggOutStream.flush();
-		}
 	}
 }

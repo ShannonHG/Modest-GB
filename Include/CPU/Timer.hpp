@@ -18,9 +18,6 @@ namespace SHG
 	private:
 		MemoryMap& memoryMap;
 
-		float preciseDivider = 0;
-		float preciseCounter = 0;
-
 		float dividerRegister = 0;
 		float timerCounter = 0;
 		float timerModulo = 0; 

@@ -1,6 +1,6 @@
 #pragma once
-#include <Graphics/PixelColorID.hpp>
 #include <cstdint>
+#include "Graphics/Color.hpp"
 
 namespace SHG
 {
@@ -8,8 +8,8 @@ namespace SHG
 	{
 		int x;
 		int y;
-		PixelColorID colorID;
+		Color color;
 		uint8_t palette;
-		uint8_t backgroundPriority;
+		uint8_t priority;
 	};
 }

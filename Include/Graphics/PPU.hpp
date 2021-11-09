@@ -5,7 +5,6 @@
 #include <chrono>
 #include "SDL.h"
 #include "Memory/Memory.hpp"
-#include "Graphics/PixelColorID.hpp"
 #include "Graphics/PixelData.hpp"
 #include "Graphics/Framebuffer.hpp"
 #include "Memory/MemoryMap.hpp"
@@ -155,7 +154,7 @@ namespace SHG
 
 		void ChangeStatInterruptSourceBit(uint8_t bitIndex, bool isSet);
 
-		uint8_t GetColorFromID(PixelColorID id);
+		Color GetColorFromID(uint8_t id);
 		void GetPixelsFromTileScanline(uint8_t rawScanlineDataLow, uint8_t rawScanlineDataHigh, uint8_t scanlineX, uint8_t scanlineY, uint16_t tileMapRegionWidth, std::queue<PixelData>& pixelQueue);
 
 		void RefreshLYCompare();

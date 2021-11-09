@@ -34,9 +34,9 @@ namespace SHG
 		SDL_UnlockTexture(texture);
 	}
 
-	void Framebuffer::Clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void Framebuffer::Clear(const Color& color)
 	{
-		std::memset(pixels.data(), SDL_MapRGBA(pixelFormat, r, g, b, a), sizeof(uint32_t) * pixels.size());
+		std::memset(pixels.data(), SDL_MapRGBA(pixelFormat, color.r, color.g, color.b, color.a), sizeof(uint32_t) * pixels.size());
 		UploadData();
 	}
 
@@ -51,14 +51,17 @@ namespace SHG
 		return texture;
 	}
 
-	uint32_t Framebuffer::GetPixel(uint16_t x, uint16_t y)
+	Color Framebuffer::GetPixel(uint16_t x, uint16_t y)
 	{
-		return pixels[x + y * width];
+		Color color;
+		SDL_GetRGBA(pixels[x + y * width], pixelFormat, &color.r, &color.g, &color.b, &color.a);
+
+		return color;
 	}
 
-	void Framebuffer::SetPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void Framebuffer::SetPixel(uint16_t x, uint16_t y, const Color& color)
 	{
-		pixels[x + y * width] = SDL_MapRGBA(pixelFormat, r, g, b, a);
+		pixels[x + y * width] = SDL_MapRGBA(pixelFormat, color.r, color.g, color.b, color.a);
 	}
 
 	int Framebuffer::GetWidth()

@@ -17,7 +17,6 @@ namespace SHG
 
 	void SHG::RequestInterrupt(MemoryMap& memoryMap, InterruptType interruptType)
 	{
-		//memoryMap.SetBit(INTERRUPT_ENABLE_ADDRESS, static_cast<uint8_t>(interruptType));
 		memoryMap.SetBit(INTERRUPT_FLAG_ADDRESS, static_cast<uint8_t>(interruptType));
 	}
 }
