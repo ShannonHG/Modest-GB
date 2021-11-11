@@ -266,7 +266,7 @@ namespace SHG
 	{
 		memoryMap.Reset();
 
-		if (!cartridge.LoadFromFile(romFilePath))
+		if (!cartridge.Load(romFilePath))
 		{
 			Logger::WriteError("Invalid ROM file provided");
 			return false;

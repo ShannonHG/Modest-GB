@@ -9,110 +9,132 @@ namespace SHG
 
 	TEST(Cartridge, ReadsRAMTypeFromHeader)
 	{
-		testROMData[CH_RAM_SIZE_ADDRESS] = 0x05; // 64 KiB
+		// RAM Size Address = 0x0149
+		// 64 KiB RAM Code = 0x05
+		testROMData[0x0149] = 0x05; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetRAMSize(), 64 * KiB);
 	}
 
 	TEST(Cartridge, ReadsROMTypeFromHeader)
 	{
-		testROMData[CH_ROM_SIZE_ADDRESS] = 0x00; // 32 KiB
+		// ROM Size Address = 0x0148
+		// 32 KiB ROM Code = 0x00
+		testROMData[0x0148] = 0x00; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetROMSize(), 32 * KiB);
 	}
 
 	TEST(Cartridge, ReadsMBC1CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x01; // MBC1
+		// Cartridge Type Address = 0x0147
+		// MBC1 Code = 0x01
+		testROMData[0x147] = 0x01; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC1);
 	}
 
 	TEST(Cartridge, ReadsMBC2CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x05; // MBC2
+		// Cartridge Type Address = 0x0147
+		// MBC2 Code = 0x05
+		testROMData[0x147] = 0x05; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC2);
 	}
 
 	TEST(Cartridge, ReadsMBC3CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x0F; // MBC3
+		// Cartridge Type Address = 0x0147
+		// MBC3 Code = 0x0F
+		testROMData[0x147] = 0x0F; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC3);
 	}
 
 	TEST(Cartridge, ReadsMBC5CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x19; // MBC5
+		// Cartridge Type Address = 0x0147
+		// MBC5 Code = 0x19
+		testROMData[0x147] = 0x19; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC5);
 	}
 
 	TEST(Cartridge, ReadsMBC6CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x20; // MBC6
+		// Cartridge Type Address = 0x0147
+		// MBC6 Code = 0x20
+		testROMData[0x147] = 0x20; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC6);
 	}
 
 	TEST(Cartridge, ReadsMBC7CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x22; // MBC7
+		// Cartridge Type Address = 0x0147
+		// MBC7 Code = 0x22
+		testROMData[0x147] = 0x22; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MBC7);
 	}
 
 	TEST(Cartridge, ReadsMMM01CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0x0B; // MMM01
+		// Cartridge Type Address = 0x0147
+		// MMM01 Code = 0x0B
+		testROMData[0x147] = 0x0B; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::MMM01);
 	}
 
 	TEST(Cartridge, ReadsHuC3CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0xFE; // HuC3
+		// Cartridge Type Address = 0x0147
+		// HuC3 Code = 0xFE
+		testROMData[0x147] = 0xFE; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::HuC3);
 	}
 
 	TEST(Cartridge, ReadsHuC1CodeFromHeader)
 	{
-		testROMData[CH_MEMORY_BANK_TYPE_ADDRESS] = 0xFF; // HuC1
+		// Cartridge Type Address = 0x0147
+		// HuC1 Code = 0xFF
+		testROMData[0x147] = 0xFF; 
 
 		Cartridge cartridge;
-		cartridge.LoadFromMemory(testROMData);
+		cartridge.Load(testROMData);
 
 		EXPECT_EQ(cartridge.GetMemoryBankControllerType(), MemoryBankControllerType::HuC1);
 	}
