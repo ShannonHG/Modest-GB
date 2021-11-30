@@ -7,6 +7,9 @@ namespace SHG
 
 	const uint16_t GB_SCY_ADDRESS = 0xFF42;
 	const uint16_t GB_SCX_ADDRESS = 0xFF43;
+	const uint16_t GB_BACKGROUND_PALETTE_ADDRESS = 0xFF47;
+	const uint16_t GB_SPRITE_PALETTE_0_ADDRESS = 0xFF48;
+	const uint16_t GB_SPRITE_PALETTE_1_ADDRESS = 0xFF49;
 
 	// LY is the current scanline, and can hold any value from 0 to 153. 
 	// Values 144 to 153 indicate the VBlank period.

@@ -12,4 +12,5 @@ namespace SHG::Arithmetic
 	void ChangeBit(uint8_t& data, uint8_t bitIndex, bool isSet);
 	void SetBit(uint8_t& data, uint8_t bitIndex);
 	void ResetBit(uint8_t& data, uint8_t bitIndex);
+	uint32_t EvenCeil(uint32_t operand);
 }

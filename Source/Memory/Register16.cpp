@@ -9,12 +9,12 @@ namespace SHG
 		highRegister = Register8();
 	}
 
-	uint8_t Register16::GetHighByte()
+	uint8_t Register16::GetHighByte() const
 	{
 		return highRegister.GetData();
 	}
 
-	uint8_t Register16::GetLowByte()
+	uint8_t Register16::GetLowByte() const
 	{
 		return lowRegister.GetData();
 	}
@@ -28,7 +28,7 @@ namespace SHG
 		lowRegister.SetData(lowByte);
 	}
 
-	uint16_t Register16::GetData()
+	uint16_t Register16::GetData() const
 	{
 		return (highRegister.GetData() << 8) | lowRegister.GetData();
 	}
@@ -49,7 +49,7 @@ namespace SHG
 		else highRegister.ChangeBit(bitNumber - 8, enabled);
 	}
 
-	uint8_t Register16::GetBit(uint8_t bitNumber)
+	uint8_t Register16::GetBit(uint8_t bitNumber) const
 	{
 		return bitNumber < 8 ? lowRegister.GetBit(bitNumber) : highRegister.GetBit(bitNumber);
 	}
@@ -84,7 +84,7 @@ namespace SHG
 		return lowRegister;
 	}
 
-	uint8_t Register16::Read(uint16_t address)
+	uint8_t Register16::Read(uint16_t address) const
 	{
 		if (IsAddressAvailable(address))
 			return GetData();
@@ -98,7 +98,7 @@ namespace SHG
 			SetData(value);
 	}
 
-	bool Register16::IsAddressAvailable(uint16_t address)
+	bool Register16::IsAddressAvailable(uint16_t address) const
 	{
 		return address < 2;
 	}

@@ -22,7 +22,7 @@ namespace SHG
 			return;
 		}
 
-		MemoryMapEntry* entry = GetEntryForDevice(device);
+		MemoryMapEntry* entry = const_cast<MemoryMapEntry*>(GetEntryForDevice(device));
 
 		if (entry != nullptr)
 			entry->AddAddressRange(lowerBoundAddress, upperBoundAddress);
@@ -51,9 +51,9 @@ namespace SHG
 		return false;
 	}
 
-	uint8_t MemoryMap::Read(uint16_t address)
+	uint8_t MemoryMap::Read(uint16_t address) const
 	{
-		MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
+		const MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
 		
 		if (entry == nullptr)
 			return 0;
@@ -63,7 +63,7 @@ namespace SHG
 
 	void MemoryMap::Write(uint16_t address, uint8_t value)
 	{
-		MemoryMapEntry* memoryMapEntry = GetMemoryMapEntryWithAddress(address);
+		MemoryMapEntry* memoryMapEntry = const_cast<MemoryMapEntry*>(GetMemoryMapEntryWithAddress(address));
 
 		if (memoryMapEntry != nullptr)
 		{
@@ -81,9 +81,9 @@ namespace SHG
 		}
 	}
 
-	MemoryMapEntry* MemoryMap::GetMemoryMapEntryWithAddress(uint16_t address)
+	const MemoryMapEntry* MemoryMap::GetMemoryMapEntryWithAddress(uint16_t address) const
 	{
-		for (MemoryMapEntry& entry : memoryMapEntries)
+		for (const MemoryMapEntry& entry : memoryMapEntries)
 		{
 			for (const MemoryMapRange& range : entry.GetAddressRanges())
 			{
@@ -97,9 +97,9 @@ namespace SHG
 		return nullptr;
 	}
 
-	bool MemoryMap::IsAddressAvailable(uint16_t address)
+	bool MemoryMap::IsAddressAvailable(uint16_t address) const
 	{
-		MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
+		const MemoryMapEntry* entry = GetMemoryMapEntryWithAddress(address);
 		return entry != nullptr && entry->GetDevice()->IsAddressAvailable(GetNormalizedAddress(entry, address));
 	}
 
@@ -111,14 +111,14 @@ namespace SHG
 			entry.GetDevice()->Reset();
 	}
 
-	bool MemoryMap::IsDeviceMapped(DataStorageDevice* device)
+	bool MemoryMap::IsDeviceMapped(DataStorageDevice* device) const
 	{
 		return GetEntryForDevice(device) != nullptr;
 	}
 
-	MemoryMapEntry* MemoryMap::GetEntryForDevice(DataStorageDevice* device)
+	const MemoryMapEntry* MemoryMap::GetEntryForDevice(DataStorageDevice* device) const
 	{
-		for (MemoryMapEntry& entry : memoryMapEntries)
+		for (const MemoryMapEntry& entry : memoryMapEntries)
 		{
 			if (entry.GetDevice() == device)
 			{
@@ -129,7 +129,7 @@ namespace SHG
 		return nullptr;
 	}
 
-	uint16_t MemoryMap::GetNormalizedAddress(MemoryMapEntry* memoryMapEntry, uint16_t address)
+	uint16_t MemoryMap::GetNormalizedAddress(const MemoryMapEntry* memoryMapEntry, uint16_t address) const 
 	{
 		return address - memoryMapEntry->GetLowestBoundAddress();
 	}

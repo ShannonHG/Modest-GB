@@ -37,7 +37,6 @@ namespace SHG
 	void Framebuffer::Clear(const Color& color)
 	{
 		std::memset(pixels.data(), SDL_MapRGBA(pixelFormat, color.r, color.g, color.b, color.a), sizeof(uint32_t) * pixels.size());
-		UploadData();
 	}
 
 	void Framebuffer::Destroy()
@@ -64,12 +63,12 @@ namespace SHG
 		pixels[x + y * width] = SDL_MapRGBA(pixelFormat, color.r, color.g, color.b, color.a);
 	}
 
-	int Framebuffer::GetWidth()
+	uint16_t Framebuffer::GetWidth() const
 	{
 		return width;
 	}
 
-	int Framebuffer::GetHeight()
+	uint16_t Framebuffer::GetHeight() const
 	{
 		return height;
 	}

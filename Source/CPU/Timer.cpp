@@ -1,7 +1,7 @@
 #include <map>
 #include "CPU/Timer.hpp"
 #include "Utils/DataConversions.hpp"
-#include "CPU/Interrupts.hpp"
+#include "Utils/Interrupts.hpp"
 #include "Logger.hpp"
 #include "Utils/GBSpecs.hpp"
 
@@ -17,12 +17,12 @@ namespace SHG
 	const double TIMER_CONTROL_MODE_2_FREQ = (GB_CLOCK_SPEED / 64.0) / (double)GB_CLOCK_SPEED;
 	const double TIMER_CONTROL_MODE_3_FREQ = (GB_CLOCK_SPEED / 256.0) / (double)GB_CLOCK_SPEED;
 
-	const std::map<uint8_t, double> TIMER_COUNTER_FREQUENCIES =
+	const std::map <TimerControlMode, uint8_t> TIMER_CONTROL_MODE_BIT_INDEXES =
 	{
-		{0, TIMER_CONTROL_MODE_0_FREQ},
-		{1, TIMER_CONTROL_MODE_1_FREQ},
-		{2, TIMER_CONTROL_MODE_2_FREQ},
-		{3, TIMER_CONTROL_MODE_3_FREQ},
+		{TimerControlMode::TIMER_CONTROL_MODE_1024, 9},
+		{TimerControlMode::TIMER_CONTROL_MODE_16, 3},
+		{TimerControlMode::TIMER_CONTROL_MODE_64, 5},
+		{TimerControlMode::TIMER_CONTROL_MODE_256, 7},
 	};
 
 	// Timer Registers
@@ -33,46 +33,55 @@ namespace SHG
 
 	Timer::Timer(MemoryMap& memoryMap) : memoryMap(memoryMap)
 	{
-		currentTimerCounterFreq = TIMER_CONTROL_MODE_0_FREQ;
+
 	}
 
 	void Timer::Step(uint32_t cycles)
 	{
-		dividerRegister += cycles * DIVIDER_INCREMENTS_PER_CYCLE;
-
-		// The divider register is actual only 8 bits, 
-		// it's only implemented as a float for precision purposes.
-		if (dividerRegister > 255) 
-			dividerRegister = 0;
-
-		if (isClockEnabled)
+		/*if (isTimerOverflowPending)
 		{
-			timerCounter += cycles * currentTimerCounterFreq;
-
-			// Just like the divider register, the timer counter is also only 8 bits.
-			if (timerCounter > 255)
+			count += cycles;
+			if (count >= 4)
 			{
-				timerCounter = timerModulo;
+				count = 0;
+				isTimerOverflowPending = false;
+				timerCounter = oldTma;
 				RequestInterrupt(memoryMap, InterruptType::Timer);
 			}
-		}
+		}*/
+
+		// Incremented every cycle
+		SetInternalCounter(internalCounter + cycles);
+
+		/*if (cycles > 4)
+		{
+			if (isTimerOverflowPending)
+			{
+				count = 0;
+				isTimerOverflowPending = false;
+				timerCounter = oldTma;
+				RequestInterrupt(memoryMap, InterruptType::Timer);
+			}
+		}*/
 
 		if (Logger::IsSystemEventLoggingEnabled)
 			PrintStatus();
 	}
 
-	uint8_t Timer::Read(uint16_t address)
+	uint8_t Timer::Read(uint16_t address) const
 	{
 		switch (address)
 		{
 		case 0x00:
-			return std::floor(dividerRegister);
+			return internalCounter & 0x00FF;
 		case 0x01:
-			return std::floor(timerCounter);
+			return GetDividerRegister();
 		case 0x02:
-			return timerModulo;
+			return timerCounter;
 		case 0x03:
-			return timerControl;
+			return timerModulo;
+		case 0x04:
+			return GetTimerControlRegister();
 		}
 
 		return 0;
@@ -83,44 +92,86 @@ namespace SHG
 		switch (address)
 		{
 		case 0x00:
-			// Writing any value to the divider register resets it to 0.
-			dividerRegister = 0;
 			break;
 		case 0x01:
-			timerCounter = value;
+			// Writing any value to this address resets the internal counter (and divider register).
+			SetInternalCounter(0);
 			break;
 		case 0x02:
-			timerModulo = value;
+			timerCounter = value;
+			//isTimerOverflowPending = false;
+			//count = 0;
 			break;
 		case 0x03:
-			isClockEnabled = (value & 0b00000100) >> 2;
-			currentTimerCounterFreq = TIMER_COUNTER_FREQUENCIES.at(value & 0b00000011);
-			timerControl = value;
+			//oldTma = timerModulo;
+			timerModulo = value;
+			break;
+		case 0x04:
+			isClockEnabled = (value & 0b100) >> 2;
+			currentTimerControlMode = static_cast<TimerControlMode>(value & 0b11);
 			break;
 		}
 	}
 
-	bool Timer::IsAddressAvailable(uint16_t address)
+	bool Timer::IsAddressAvailable(uint16_t address) const
 	{
-		return address <= 3;
+		return address <= 4;
 	}
 
 	void Timer::Reset()
 	{
-		dividerRegister = 0;
+		internalCounter = 0;
 		timerCounter = 0;
 		timerModulo = 0;
-		timerControl = 0;
-
 		isClockEnabled = false;
-		currentTimerCounterFreq = 0;
+		currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
 	}
 
-	void Timer::PrintStatus()
+	uint8_t Timer::GetDividerRegister() const
 	{
-		Logger::WriteSystemEvent("(DIV) " + GetHexString8(std::floor(dividerRegister)) +
+		// The divider register is the upper 8 bits of the internal counter.
+		return internalCounter >> 8;
+	}
+
+	uint8_t Timer::GetTimerControlRegister() const
+	{
+		return (isClockEnabled << 2) | static_cast<uint8_t>(currentTimerControlMode);
+	}
+
+	bool Timer::GetCurrentTimerControlBit() const
+	{
+		return (internalCounter >> TIMER_CONTROL_MODE_BIT_INDEXES.at(currentTimerControlMode)) & 1;
+	}
+
+	void Timer::SetInternalCounter(uint16_t value)
+	{
+		bool isPrevControlBitEnabled = GetCurrentTimerControlBit();
+
+		internalCounter = value;
+
+		// TODO: Revisit
+		if (isPrevControlBitEnabled && !GetCurrentTimerControlBit())
+		{
+			if (timerCounter == 255)
+			{
+				timerCounter = timerModulo;
+				RequestInterrupt(memoryMap, InterruptType::Timer);
+				//timerCounter = 0;
+				//isTimerOverflowPending = true;
+			}
+			else
+			{
+				timerCounter++;
+			}
+		}
+	}
+
+
+	void Timer::PrintStatus() const
+	{
+		Logger::WriteSystemEvent("(DIV) " + GetHexString8(std::floor(GetDividerRegister())) +
 			" (TIMA) " + GetHexString8(std::floor(timerCounter)) +
 			" (TMA) " + GetHexString8(timerModulo) +
-			" (TAC) " + GetHexString8(timerControl), TIMER_MESSAGE_HEADER);
+			" (TAC) " + GetHexString8(GetTimerControlRegister()), TIMER_MESSAGE_HEADER);
 	}
 }

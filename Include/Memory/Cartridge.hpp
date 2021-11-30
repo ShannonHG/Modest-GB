@@ -32,9 +32,9 @@ namespace SHG
 		uint32_t GetRAMSize();
 		bool IsROMLoaded();
 
-		uint8_t Read(uint16_t address) override;
+		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) override;
+		bool IsAddressAvailable(uint16_t address) const override;
 		void Reset() override;
 	private:
 		bool isROMLoaded = false;
@@ -49,6 +49,6 @@ namespace SHG
 		void InitializeMemoryBankController(uint8_t byte);
 		void DecodeROMSize(uint8_t byte);
 		void InitializeRAM(uint8_t byte);
-		bool IsRAMAddress(uint16_t address);
+		bool IsRAMAddress(uint16_t address) const;
 	};
 }

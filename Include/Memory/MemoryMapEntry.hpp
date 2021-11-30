@@ -10,8 +10,8 @@ namespace SHG
 	public:
 		MemoryMapEntry(DataStorageDevice* device, const std::vector<MemoryMapRange>& addressRanges);
 
-		uint16_t GetLowestBoundAddress();
-		uint16_t GetHighestBoundAddress();
+		uint16_t GetLowestBoundAddress() const;
+		uint16_t GetHighestBoundAddress() const;
 		void AddAddressRange(uint16_t lowerBoundAddress, uint16_t upperBoundAddress);
 		const std::vector<MemoryMapRange>& GetAddressRanges() const;
 		DataStorageDevice* GetDevice() const;

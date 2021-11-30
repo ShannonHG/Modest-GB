@@ -66,4 +66,14 @@ namespace SHG::Arithmetic
 	{
 		data &= ~(1 << bitIndex);
 	}
+
+	uint32_t SHG::Arithmetic::EvenCeil(uint32_t operand)
+	{
+		uint8_t remainder = (operand % 2);
+
+		if (remainder == 0)
+			return operand;
+
+		return operand - remainder + 2;
+	}
 }

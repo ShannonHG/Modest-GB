@@ -124,8 +124,8 @@ namespace SHG
 		memoryMap.AssignDeviceToAddressRange(&echoRam, 0xE000, 0xFDFF);
 		memoryMap.AssignDeviceToAddressRange(&restrictedMemory, 0xFEA0, 0xFEFF);
 		memoryMap.AssignDeviceToAddressRange(&oam, 0xFE00, 0xFE9F);
-		memoryMap.AssignDeviceToAddressRange(&serialOutputRegister, 0xFF01, 0xFF03);
-		memoryMap.AssignDeviceToAddressRange(&timer, 0xFF04, 0xFF07);
+		memoryMap.AssignDeviceToAddressRange(&serialOutputRegister, 0xFF01, 0xFF02);
+		memoryMap.AssignDeviceToAddressRange(&timer, 0xFF03, 0xFF07);
 		memoryMap.AssignDeviceToAddressRange(&hram, 0xFF80, 0xFFFE);
 		memoryMap.AssignDeviceToAddressRange(&interruptFlagRegister, 0xFF0F, 0xFF0F);
 		memoryMap.AssignDeviceToAddressRange(&interruptEnableRegister, 0xFFFF, 0xFFFF);
@@ -136,15 +136,15 @@ namespace SHG
 		memoryMap.AssignDeviceToAddressRange(&ioRegisters, 0xFF4C, 0xFF7F);
 		memoryMap.AssignDeviceToAddressRange(&ioRegisters, 0xFF47, 0xFF49);
 
-		memoryMap.AssignDeviceToAddressRange(ppu.GetLCDC(), GB_LCD_CONTROL_REGISTER_ADDRESS, GB_LCD_CONTROL_REGISTER_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetLCDStatus(), GB_LCD_STATUS_REGISTER_ADDRESS, GB_LCD_STATUS_REGISTER_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetSCY(), GB_SCY_ADDRESS, GB_SCY_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetSCX(), GB_SCX_ADDRESS, GB_SCX_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetLY(), GB_LY_ADDRESS, GB_LY_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetLYC(), GB_LYC_ADDRESS, GB_LYC_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetWY(), GB_WY_ADDRESS, GB_WY_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetWX(), GB_WX_ADDRESS, GB_WX_ADDRESS);
-		memoryMap.AssignDeviceToAddressRange(ppu.GetDMATransferRegister(), GB_DMA_TRANSFER_REGISTER_ADDRESS, GB_DMA_TRANSFER_REGISTER_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetLCDC(), GB_LCD_CONTROL_REGISTER_ADDRESS, GB_LCD_CONTROL_REGISTER_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetLCDStatusRegister(), GB_LCD_STATUS_REGISTER_ADDRESS, GB_LCD_STATUS_REGISTER_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetSCY(), GB_SCY_ADDRESS, GB_SCY_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetSCX(), GB_SCX_ADDRESS, GB_SCX_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetLY(), GB_LY_ADDRESS, GB_LY_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetLYC(), GB_LYC_ADDRESS, GB_LYC_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetWY(), GB_WY_ADDRESS, GB_WY_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetWX(), GB_WX_ADDRESS, GB_WX_ADDRESS);
+		memoryMap.AssignDeviceToAddressRange(&ppu.GetDMATransferRegister(), GB_DMA_TRANSFER_REGISTER_ADDRESS, GB_DMA_TRANSFER_REGISTER_ADDRESS);
 	}
 
 	void Emulator::SetDefaultMemoryMapValues()

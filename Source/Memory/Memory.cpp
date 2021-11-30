@@ -9,7 +9,7 @@ namespace SHG
 		memory = std::vector<uint8_t>(memorySize);
 	}
 
-	uint8_t Memory::Read(uint16_t address)
+	uint8_t Memory::Read(uint16_t address) const
 	{
 		if (!IsAddressAvailable(address))
 		{
@@ -27,7 +27,7 @@ namespace SHG
 		if (IsAddressAvailable(address)) memory[address] = value;
 	}
 
-	bool Memory::IsAddressAvailable(uint16_t address)
+	bool Memory::IsAddressAvailable(uint16_t address) const
 	{
 		return address < memory.size();
 	}

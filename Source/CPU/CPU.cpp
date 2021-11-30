@@ -7,7 +7,7 @@
 #include "Logger.hpp"
 #include "InvalidOpcodeException.hpp"
 #include "Utils/Arithmetic.hpp"
-#include "CPU/Interrupts.hpp"
+#include "Utils/Interrupts.hpp"
 
 namespace SHG
 {

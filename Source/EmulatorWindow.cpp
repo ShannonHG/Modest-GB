@@ -210,7 +210,7 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window containing the currently loaded game, if any.
-		RenderWindowWithFramebuffer("Game", ppu.GetFramebuffer());
+		RenderWindowWithFramebuffer("Game", ppu.GetPrimaryFramebuffer());
 	}
 
 	void EmulatorWindow::RenderWindowWithFramebuffer(const std::string& title, Framebuffer& framebuffer, bool* isOpen)
@@ -299,7 +299,7 @@ namespace SHG
 
 			ImGui::SameLine();
 			ImGui::Button("Step");
-				
+
 			// If the step button is held down, then keep invoking the callback.
 			if (ImGui::IsItemActive())
 				stepButtonPressedCallback();
@@ -394,21 +394,21 @@ namespace SHG
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
-			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC()->GetData())).c_str());
+			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC().GetData())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatus()->GetData())).c_str());
+			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatusRegister().GetData())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY()->GetData())).c_str());
+			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY().GetData())).c_str());
 
-			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC()->GetData())).c_str());
+			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC().GetData())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY()->GetData())).c_str());
+			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY().GetData())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX()->GetData())).c_str());
+			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX().GetData())).c_str());
 
-			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY()->GetData())).c_str());
+			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY().GetData())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX()->GetData())).c_str());
+			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX().GetData())).c_str());
 			ImGui::Separator();
 		}
 
@@ -441,7 +441,7 @@ namespace SHG
 					ImGui::SetScrollHereY(0.999f);
 			}
 			ImGui::EndChild();
-		
+
 			ImGui::Separator();
 			if (ImGui::Button("Clear"))
 				clearButtonPressedCallback();

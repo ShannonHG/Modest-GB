@@ -18,12 +18,12 @@ namespace SHG
 		Memory::ChangeBit(0, bitIndex, enable);
 	}
 
-	uint8_t Register8::GetBit(uint8_t bitNumber)
+	uint8_t Register8::GetBit(uint8_t bitNumber) const
 	{
 		return Memory::GetBit(0, bitNumber);
 	}
 
-	uint8_t Register8::GetData()
+	uint8_t Register8::GetData() const
 	{
 		return Read(0);
 	}

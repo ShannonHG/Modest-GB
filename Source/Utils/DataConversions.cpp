@@ -6,7 +6,7 @@
 
 namespace SHG
 {
-	std::string ConvertToHexString(uint16_t data, uint8_t width)
+	std::string ConvertToHexString(uint32_t data, uint8_t width)
 	{
 		// Example format string that allows 2 hexadecimal digits: %02X
 		std::string format = "%0";
@@ -25,5 +25,10 @@ namespace SHG
 	std::string GetHexString16(uint16_t data)
 	{
 		return ConvertToHexString(data, 4);
+	}
+
+	std::string GetHexString32(uint32_t data)
+	{
+		return ConvertToHexString(data, 8);
 	}
 }

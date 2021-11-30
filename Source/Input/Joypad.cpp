@@ -3,7 +3,7 @@
 #include "Input/Joypad.hpp"
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
-#include "CPU/Interrupts.hpp"
+#include "Utils/Interrupts.hpp"
 
 namespace SHG
 {
@@ -44,7 +44,7 @@ namespace SHG
 	}
 
 	// TODO: Revisit
-	uint8_t Joypad::Read(uint16_t address)
+	uint8_t Joypad::Read(uint16_t address) const
 	{
 		uint8_t result = 0xCF;
 
@@ -52,17 +52,17 @@ namespace SHG
 		// otherwise the bit should be 1.
 		if (isDirectionButtonsSelected)
 		{
-			result = !buttonStates[GBButton::Right]
-				| (!buttonStates[GBButton::Left] << 1)
-				| (!buttonStates[GBButton::Up] << 2)
-				| (!buttonStates[GBButton::Down] << 3);
+			result = !buttonStates.at(GBButton::Right)
+				| (!buttonStates.at(GBButton::Left) << 1)
+				| (!buttonStates.at(GBButton::Up) << 2)
+				| (!buttonStates.at(GBButton::Down) << 3);
 		}
 		else if (isActionButtonsSelected)
 		{
-			result = !buttonStates[GBButton::A]
-				| (!buttonStates[GBButton::B] << 1)
-				| (!buttonStates[GBButton::Select] << 2)
-				| (!buttonStates[GBButton::Start] << 3);
+			result = !buttonStates.at(GBButton::A)
+				| (!buttonStates.at(GBButton::B) << 1)
+				| (!buttonStates.at(GBButton::Select) << 2)
+				| (!buttonStates.at(GBButton::Start) << 3);
 		}
 
 		result |= !isDirectionButtonsSelected << 4;
@@ -81,7 +81,7 @@ namespace SHG
 		isActionButtonsSelected = !(value & 0b00100000);
 	}
 
-	bool Joypad::IsAddressAvailable(uint16_t address)
+	bool Joypad::IsAddressAvailable(uint16_t address) const
 	{
 		// This register only contains a single byte.
 		return address == 0;

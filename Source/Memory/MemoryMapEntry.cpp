@@ -20,12 +20,12 @@ namespace SHG
 		RecalculateLimits();
 	}
 
-	uint16_t MemoryMapEntry::GetLowestBoundAddress()
+	uint16_t MemoryMapEntry::GetLowestBoundAddress() const
 	{
 		return lowestBoundAddress;
 	}
 
-	uint16_t MemoryMapEntry::GetHighestBoundAddress()
+	uint16_t MemoryMapEntry::GetHighestBoundAddress() const
 	{
 		return highestBoundAddress;
 	}

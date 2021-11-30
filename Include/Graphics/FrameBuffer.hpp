@@ -13,8 +13,8 @@ namespace SHG
 		void Initialize(SDL_Window* window, uint16_t width, uint16_t height);
 		Color GetPixel(uint16_t x, uint16_t y);
 		void SetPixel(uint16_t x, uint16_t y, const Color& color);
-		int GetWidth();
-		int GetHeight();
+		uint16_t GetWidth() const;
+		uint16_t GetHeight() const;
 		float GetAspectRatio();
 		void UploadData();
 		void Clear(const Color& color = RGBA_WHITE);

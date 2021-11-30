@@ -9,4 +9,9 @@ namespace SHG
 			&& c1.b == c2.b
 			&& c1.a == c2.a;
 	}
+
+	bool operator!=(const Color& c1, const Color& c2)
+	{
+		return !(c1 == c2);
+	}
 }

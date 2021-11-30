@@ -123,7 +123,7 @@ namespace SHG
 		}
 
 		rom = romData;
-		Logger::WriteInfo("ROM Title: " + std::string(title.c_str()));
+		Logger::WriteInfo("ROM Title: " + std::string(title.c_str()), CARTRIDGE_LOG_HEADER);
 
 		// Attach ROM and RAM to the memory bank controller.
 		if (memoryBankController != nullptr)
@@ -163,7 +163,7 @@ namespace SHG
 		return isROMLoaded;
 	}
 
-	uint8_t Cartridge::Read(uint16_t address)
+	uint8_t Cartridge::Read(uint16_t address) const
 	{
 		switch (memoryBankControllerType)
 		{
@@ -211,7 +211,7 @@ namespace SHG
 		return ram.size();
 	}
 
-	bool Cartridge::IsAddressAvailable(uint16_t address)
+	bool Cartridge::IsAddressAvailable(uint16_t address) const
 	{
 		return
 			// Does the address refer to a location in the memory bank controller?
@@ -347,7 +347,7 @@ namespace SHG
 		}
 	}
 
-	bool Cartridge::IsRAMAddress(uint16_t address)
+	bool Cartridge::IsRAMAddress(uint16_t address) const
 	{
 		return address >= OPTIONAL_8KB_RAM_START_ADDRESS && address <= OPTIONAL_8KB_RAM_END_ADDRESS;
 	}

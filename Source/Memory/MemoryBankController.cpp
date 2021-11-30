@@ -19,29 +19,33 @@ namespace SHG
 		this->rom = &rom;
 	}
 
-	void MemoryBankController::WriteMissingROMMessage()
+	void MemoryBankController::Reset()
 	{
-		Logger::WriteError("Attempted to access ROM data through " + GetName() + " but no ROM is attached");
+		if (ram != nullptr)
+			ram->clear();
+
+		if (rom != nullptr)
+			rom->clear();
 	}
 
-
-	void MemoryBankController::WriteMissingRAMMessage()
+	void MemoryBankController::PrintMissingROMMessage() const
 	{
-		Logger::WriteError("Attempted to access RAM data through " + GetName() + " but no RAM is attached");
+		Logger::WriteError("Attempted to access ROM data through, but no ROM is attached", GetMessageHeader());
 	}
 
-	void MemoryBankController::WriteTovalidROMAccesMessage(uint16_t address)
+	void MemoryBankController::PrintMissingRAMMessage() const
 	{
-		std::stringstream stream;
-		stream << "Attempted to access invalid ROM address through " << GetName() << ". Address: " << std::hex << std::setfill('0') << std::setw(4) << address << " | ROM size: " << rom->size() / KiB << " KiB";
-		Logger::WriteError(stream.str());
+		Logger::WriteError("Attempted to access RAM data through " + GetName() + " but no RAM is attached", GetMessageHeader());
 	}
 
-	void MemoryBankController::WriteTovalidRAMAccesMessage(uint16_t address)
+	void MemoryBankController::PrintInvalidROMAccessMessage(uint32_t address) const
 	{
-		std::stringstream stream;
-		stream << "Attempted to access invalid RAM address through " << GetName() << ". Address: " << std::hex << std::setfill('0') << std::setw(4) << address << " | ROM size: " << rom->size() / KiB << " KiB";
-		Logger::WriteError(stream.str());
+		Logger::WriteError("Attempted to access invalid ROM Address: " + GetHexString32(address));
+	}
+
+	void MemoryBankController::PrintInvalidRAMAccesMessage(uint32_t address) const
+	{
+		Logger::WriteError("Attempted to access invalid RAM Address: " + GetHexString32(address));
 	}
 
 	uint32_t MemoryBankController::CalculatePhysicalROMAddress(uint16_t romBankNumber, uint16_t virtualAddressRangeStart, uint16_t targetVirtualAddress)
@@ -60,30 +64,30 @@ namespace SHG
 	{
 		if (ram == nullptr)
 		{
-			WriteMissingRAMMessage();
+			PrintMissingRAMMessage();
 			return;
 		}
 
 		if (address >= ram->size())
 		{
-			WriteTovalidRAMAccesMessage(address);
+			PrintInvalidRAMAccesMessage(address);
 			return;
 		}
 
 		(*ram)[address] = value;
 	}
 
-	uint8_t MemoryBankController::ReadFromRAM(uint32_t address)
+	uint8_t MemoryBankController::ReadFromRAM(uint32_t address) const
 	{
-		if (ram == NULL)
+		if (ram == nullptr)
 		{
-			WriteMissingRAMMessage();
+			PrintMissingRAMMessage();
 			return false;
 		}
 
 		if (address >= ram->size())
 		{
-			WriteTovalidRAMAccesMessage(address);
+			PrintInvalidRAMAccesMessage(address);
 			return false;
 		}
 
@@ -94,44 +98,38 @@ namespace SHG
 	{
 		if (rom == nullptr)
 		{
-			WriteMissingROMMessage();
+			PrintMissingROMMessage();
 			return;
 		}
 
 		if (address >= rom->size())
 		{
-			WriteTovalidROMAccesMessage(address);
+			PrintInvalidROMAccessMessage(address);
 			return;
 		}
 
 		(*rom)[address] = value;
 	}
 
-	uint8_t MemoryBankController::ReadFromROM(uint32_t address)
+	uint8_t MemoryBankController::ReadFromROM(uint32_t address) const
 	{
-		// TODO: This should probably throw an exception
-
 		if (rom == nullptr)
 		{
-			WriteMissingROMMessage();
+			PrintMissingROMMessage();
 			return 0;
 		}
 
 		if (address >= rom->size())
 		{
-			WriteTovalidROMAccesMessage(address);
+			PrintInvalidROMAccessMessage(address);
 			return 0;
 		}
 
 		return (*rom)[address];
 	}
 
-	void MemoryBankController::Reset()
+	std::string MemoryBankController::GetMessageHeader() const
 	{
-		if (ram != nullptr) 
-			ram->clear();
-
-		if (rom != nullptr) 
-			rom->clear();
+		return "[" + GetName() + "]";
 	}
 }

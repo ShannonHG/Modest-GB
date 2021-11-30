@@ -9,10 +9,10 @@ namespace SHG
 	public:
 		Register8();
 
-		uint8_t GetData();
+		uint8_t GetData() const;
 		void SetData(uint8_t data);
 		void ChangeBit(uint8_t bitIndex, bool enable);
-		uint8_t GetBit(uint8_t bitNumber);
+		uint8_t GetBit(uint8_t bitNumber) const;
 		void Increment();
 		void Decrement();
 		void Increase(uint8_t amount);

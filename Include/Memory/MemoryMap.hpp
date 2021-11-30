@@ -18,9 +18,9 @@ namespace SHG
 		void AssignDeviceToAddressRange(DataStorageDevice* device, uint16_t lowerBoundAddress, uint16_t upperBoundAddress);
 		bool IsAddressRangeOccupied(uint16_t lowerBoundAddress, uint16_t upperBoundAddress);
 		void SetReadonlyBitMask(uint16_t address, uint8_t bitMask);
-		uint8_t Read(uint16_t address) override;
+		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) override;
+		bool IsAddressAvailable(uint16_t address) const override;
 		void Reset() override;
 	private:
 		std::vector<MemoryMapWriteCallback> memoryWriteCallbacks;
@@ -28,9 +28,9 @@ namespace SHG
 		std::ofstream blarggOutStream;
 		std::unordered_map<uint16_t, uint8_t> readonlyBitMasks;
 
-		bool IsDeviceMapped(DataStorageDevice* device);
-		MemoryMapEntry* GetEntryForDevice(DataStorageDevice* device);
-		MemoryMapEntry* GetMemoryMapEntryWithAddress(uint16_t address);
-		uint16_t GetNormalizedAddress(MemoryMapEntry* memoryMapEntry, uint16_t address);
+		bool IsDeviceMapped(DataStorageDevice* device) const;
+		const MemoryMapEntry* GetEntryForDevice(DataStorageDevice* device) const;
+		const MemoryMapEntry* GetMemoryMapEntryWithAddress(uint16_t address) const;
+		uint16_t GetNormalizedAddress(const MemoryMapEntry* memoryMapEntry, uint16_t address) const;
 	};
 }
