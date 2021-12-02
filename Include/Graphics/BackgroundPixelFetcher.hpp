@@ -48,5 +48,7 @@ namespace SHG
 		void UpdateHighTileDataFetchState();
 		void UpdateSleepState();
 		void UpdatePixelPushState();
+
+		uint8_t GetAdjustedY();
 	};
 }

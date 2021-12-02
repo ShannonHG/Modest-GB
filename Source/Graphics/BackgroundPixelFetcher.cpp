@@ -27,6 +27,17 @@ namespace SHG
 		return currentMode;
 	}
 
+	void BackgroundPixelFetcher::Reset()
+	{
+		PixelFetcher::Reset();
+		currentState = BackgroundPixelFetcherState::FetchingTileIndex;
+		currentTileIndex = 0;
+		currentStateElapsedCycles = 0;
+		currentLowTileData = 0;
+		currentHighTileData = 0;
+		currentMode = BackgroundPixelFetcherMode::Background;
+	}
+
 	void BackgroundPixelFetcher::Step()
 	{
 		currentStateElapsedCycles++;
@@ -64,7 +75,7 @@ namespace SHG
 		// TODO: Fix vertical scrolling
 		case BackgroundPixelFetcherMode::Background:
 			tileX = static_cast<uint8_t>(std::floor((scx->GetData() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
-			tileY = std::floor(((y + scy->GetData()) & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
+			tileY = std::floor((GetAdjustedY() & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
 
 			currentTileIndex = GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->GetBit(LCDC_BG_TILE_MAP_AREA_BIT_INDEX));
 			break;
@@ -85,7 +96,7 @@ namespace SHG
 		if (currentStateElapsedCycles < TILE_DATA_FETCH_DURATION_IN_CYCLES)
 			return;
 
-		currentLowTileData = memoryMap->Read(GetTileAddress(currentTileIndex, y, lcdc->GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)));
+		currentLowTileData = memoryMap->Read(GetTileAddress(currentTileIndex, GetAdjustedY() , lcdc->GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)));
 
 		currentState = BackgroundPixelFetcherState::FetchingHighTileData;
 		currentStateElapsedCycles = 0;
@@ -96,7 +107,7 @@ namespace SHG
 		if (currentStateElapsedCycles < TILE_DATA_FETCH_DURATION_IN_CYCLES)
 			return;
 
-		currentHighTileData = memoryMap->Read(GetTileAddress(currentTileIndex, y, lcdc->GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)) + 1);
+		currentHighTileData = memoryMap->Read(GetTileAddress(currentTileIndex, GetAdjustedY(), lcdc->GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)) + 1);
 
 		currentState = BackgroundPixelFetcherState::Sleeping;
 		currentStateElapsedCycles = 0;
@@ -134,14 +145,8 @@ namespace SHG
 		currentStateElapsedCycles = 0;
 	}
 
-	void BackgroundPixelFetcher::Reset()
+	uint8_t BackgroundPixelFetcher::GetAdjustedY()
 	{
-		PixelFetcher::Reset();
-		currentState = BackgroundPixelFetcherState::FetchingTileIndex;
-		currentTileIndex = 0;
-		currentStateElapsedCycles = 0;
-		currentLowTileData = 0;
-		currentHighTileData = 0;
-		currentMode = BackgroundPixelFetcherMode::Background;
+		return currentMode == BackgroundPixelFetcherMode::Background ? y + scy->GetData() : y;
 	}
 }
