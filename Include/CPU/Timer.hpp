@@ -34,11 +34,7 @@ namespace SHG
 		uint8_t timerCounter = 0;
 		uint8_t timerModulo = 0; 
 		TimerControlMode currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
-
 		bool isClockEnabled = false;
-		bool isTimerOverflowPending = false;
-		uint8_t count = 0;
-		uint8_t oldTma = 0;
 
 		void PrintStatus() const;
 		uint8_t GetDividerRegister() const;

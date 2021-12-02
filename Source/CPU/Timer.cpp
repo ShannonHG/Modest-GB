@@ -19,10 +19,10 @@ namespace SHG
 
 	const std::map <TimerControlMode, uint8_t> TIMER_CONTROL_MODE_BIT_INDEXES =
 	{
-		{TimerControlMode::TIMER_CONTROL_MODE_1024, 9},
 		{TimerControlMode::TIMER_CONTROL_MODE_16, 3},
 		{TimerControlMode::TIMER_CONTROL_MODE_64, 5},
 		{TimerControlMode::TIMER_CONTROL_MODE_256, 7},
+		{TimerControlMode::TIMER_CONTROL_MODE_1024, 9},
 	};
 
 	// Timer Registers
@@ -31,6 +31,7 @@ namespace SHG
 	// FF06: TIMA - Timer Counter (R/W)
 	// FF07: TAC - Timer Control (R/W)
 
+	// TODO: Handle additional obscure behavior.
 	Timer::Timer(MemoryMap& memoryMap) : memoryMap(memoryMap)
 	{
 
@@ -38,31 +39,8 @@ namespace SHG
 
 	void Timer::Step(uint32_t cycles)
 	{
-		/*if (isTimerOverflowPending)
-		{
-			count += cycles;
-			if (count >= 4)
-			{
-				count = 0;
-				isTimerOverflowPending = false;
-				timerCounter = oldTma;
-				RequestInterrupt(memoryMap, InterruptType::Timer);
-			}
-		}*/
-
 		// Incremented every cycle
 		SetInternalCounter(internalCounter + cycles);
-
-		/*if (cycles > 4)
-		{
-			if (isTimerOverflowPending)
-			{
-				count = 0;
-				isTimerOverflowPending = false;
-				timerCounter = oldTma;
-				RequestInterrupt(memoryMap, InterruptType::Timer);
-			}
-		}*/
 
 		if (Logger::IsSystemEventLoggingEnabled)
 			PrintStatus();
@@ -99,11 +77,8 @@ namespace SHG
 			break;
 		case 0x02:
 			timerCounter = value;
-			//isTimerOverflowPending = false;
-			//count = 0;
 			break;
 		case 0x03:
-			//oldTma = timerModulo;
 			timerModulo = value;
 			break;
 		case 0x04:
@@ -149,15 +124,14 @@ namespace SHG
 
 		internalCounter = value;
 
-		// TODO: Revisit
-		if (isPrevControlBitEnabled && !GetCurrentTimerControlBit())
+		// If the bit designated as the "timer control bit" has changed from 1 to 0, then the timerCounter,
+		// should be incremented.
+		if (isClockEnabled && (isPrevControlBitEnabled && !GetCurrentTimerControlBit()))
 		{
 			if (timerCounter == 255)
 			{
 				timerCounter = timerModulo;
 				RequestInterrupt(memoryMap, InterruptType::Timer);
-				//timerCounter = 0;
-				//isTimerOverflowPending = true;
 			}
 			else
 			{

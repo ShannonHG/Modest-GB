@@ -61,6 +61,7 @@ namespace SHG
 
 		switch (currentMode)
 		{
+		// TODO: Fix vertical scrolling
 		case BackgroundPixelFetcherMode::Background:
 			tileX = static_cast<uint8_t>(std::floor((scx->GetData() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
 			tileY = std::floor(((y + scy->GetData()) & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
@@ -118,12 +119,6 @@ namespace SHG
 
 			queuedPixels.push(pixel);
 			x++;
-
-			if (x >= GB_SCREEN_WIDTH)
-			{
-				x = 0;
-				y++;
-			}
 		}
 
 		currentState = BackgroundPixelFetcherState::FetchingTileIndex;

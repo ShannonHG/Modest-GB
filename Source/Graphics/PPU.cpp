@@ -179,6 +179,8 @@ namespace SHG
 		if (!wasWYConditionTriggered)
 			wasWYConditionTriggered = wy.GetData() == ly.GetData();
 
+		numberOfPixelsToIgnore = scx.GetData() & 0b111;
+		ignoredPixels = 0;
 		spritesOnCurrentScanline.clear();
 		SetCurrentMode(Mode::SearchingOAM);
 		ChangeStatInterruptLineBit(STAT_OAM_INTERRUPT_SOURCE_BIT_INDEX, true);
@@ -301,9 +303,16 @@ namespace SHG
 				backgroundPixelFetcher.Step();
 
 				// If the background is enabled, pixels will only be pushed to the framebuffer when the background pixel fetcher is not empty.
-				if (backgroundPixelFetcher.GetPixelQueueSize() > 0)
+				if (backgroundPixelFetcher.GetPixelQueueSize() > TILE_WIDTH_IN_PIXELS)
 				{
 					selectedPixel = backgroundPixelFetcher.PopPixel();
+
+					// TODO: Add explanation
+					if (backgroundPixelFetcher.GetCurrentMode() == BackgroundPixelFetcherMode::Background && ignoredPixels < numberOfPixelsToIgnore)
+					{
+						ignoredPixels++;
+						continue;
+					}
 
 					if (isSpritePixelAvailable)
 					{

@@ -7,6 +7,7 @@
 
 namespace SHG
 {
+	// TODO: Improve timing accuracy.
 	SpritePixelFetcher::SpritePixelFetcher(MemoryMap* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher)
 		: memoryMap(memoryMap), lcdc(lcdc), backgroundPixelFetcher(backgroundPixelFetcher)
 	{

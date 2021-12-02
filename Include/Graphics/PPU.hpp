@@ -78,6 +78,8 @@ namespace SHG
 		DMATransferRegister dmaRegister = DMATransferRegister();
 		DMATransferState currentDMATransferState = DMATransferState::Idle;
 		uint32_t currentDMATransferElapsedTime = 0;
+		uint8_t numberOfPixelsToIgnore = 0;
+		uint8_t ignoredPixels = 0;
 
 		bool wasWYConditionTriggered = false;
 		bool wasWXConditionTriggered = false;
