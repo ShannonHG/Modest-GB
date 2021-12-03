@@ -55,6 +55,7 @@ namespace SHG
 		// TODO: Does the PPU actually start in this mode?
 		Mode currentMode = Mode::SearchingOAM;
 		uint32_t currentScanlineElapsedCycles = 0;
+
 		std::vector<Sprite> spritesOnCurrentScanline;
 		std::queue<Pixel> queuedSpritePixels;
 		uint8_t currentScanlineX = 0;

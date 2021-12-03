@@ -270,6 +270,7 @@ namespace SHG
 		for (uint32_t cycle = 0; cycle < targetCycles; cycle++)
 		{
 			(*cycles)--;
+			currentScanlineElapsedCycles++;
 
 			wasWXConditionTriggered = (currentScanlineX + 7) == wx.GetData();
 
