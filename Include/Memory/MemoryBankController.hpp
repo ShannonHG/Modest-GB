@@ -3,12 +3,12 @@
 #include <vector>
 #include <string>
 #include "Utils/DataConversions.hpp"
-#include "Utils/MemoryUnits.hpp"
-#include "Memory/DataStorageDevice.hpp"
+#include "Utils/MemoryUtils.hpp"
+#include "Memory/Memory.hpp"
 
 namespace SHG
 {
-	class MemoryBankController : public DataStorageDevice
+	class MemoryBankController : public Memory
 	{
 	public:
 		static const uint16_t ROM_BANK_SIZE;

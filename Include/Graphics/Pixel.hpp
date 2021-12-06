@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "Utils/GBSpecs.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
 
 namespace SHG
 {

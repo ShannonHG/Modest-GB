@@ -2,7 +2,6 @@
 #include <queue>
 #include "Memory/Register8.hpp"
 #include "Graphics/Pixel.hpp"
-#include "Memory/MemoryMap.hpp"
 
 namespace SHG
 {

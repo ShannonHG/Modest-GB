@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "Memory/MemoryMap.hpp"
+#include "Memory/Memory.hpp"
 #include "Memory/Register8.hpp"
 #include "Graphics/Color.hpp"
 
@@ -13,6 +13,8 @@ namespace SHG
 	// OAM Search = 80 cycles
 	// LCD Transfer = 172 - 289 cycles
 
+	const uint16_t SCANLINE_DURATION_IN_CYCLES = 456;
+
 	// LCD Status Register Bits (FF41)
 	// ------------------------------
 	// 0-1 = Mode Flag
@@ -22,7 +24,6 @@ namespace SHG
 	// 5 = OAM Stat Interrupt Source
 	// 6 = LYC=LY Stat Interrupt Source
 
-	const uint16_t SCANLINE_DURATION_IN_CYCLES = 456;
 	const uint8_t STAT_HBLANK_INTERRUPT_SOURCE_BIT_INDEX = 3;
 	const uint8_t STAT_VBLANK_INTERRUPT_SOURCE_BIT_INDEX = 4;
 	const uint8_t STAT_OAM_INTERRUPT_SOURCE_BIT_INDEX = 5;
@@ -62,8 +63,6 @@ namespace SHG
 	//     Bit 6 = Y Flip (0 = Normal, 1 = Vertical flip)
 	//     Bit 7 = BG and Window over OBJ (0 = No, 1 = BG and Window colors 1-3 over Sprite)
 
-	const uint16_t SPRITE_ATTRIBUTE_TABLE_START_ADDRESS = 0xFE00;
-	const uint16_t SPRITE_ATTRIBUTE_TABLE_END_ADDRESS = 0xFE9F;
 	const uint8_t SPRITE_ATTRIBUTE_BYTE_COUNT = 4;
 	const uint8_t SPRITE_FETCH_DURATION_IN_CYCLES = 2;
 	const uint8_t MAX_SPRITES_PER_SCANLINE = 10;
@@ -79,6 +78,7 @@ namespace SHG
 	const uint16_t TILE_MAP_HEIGHT_IN_PIXELS = 256;
 	const uint16_t TILE_MAP_WIDTH_IN_TILES = 32;
 	const uint16_t TILE_MAP_HEIGHT_IN_TILES = 32;
+	const uint16_t MAX_TILE_COUNT = 384;
 
 	const uint8_t MAX_WX = 166;
 	const uint8_t MAX_WY = 143;
@@ -100,7 +100,7 @@ namespace SHG
 		Window
 	};
 
-	uint16_t GetTileIndexFromTileMaps(const MemoryMap& memoryMap, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress);
+	uint16_t GetTileIndexFromTileMaps(const Memory& memoryMap, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress);
 	int32_t GetTileAddress(uint16_t tileIndex, uint8_t scanline, bool useUnsignedAddressingMode);
 	uint8_t GetColorIndexFromTileData(uint8_t pixelIndex, uint8_t lowTileData, uint8_t highTileData);
 	Color GetColorFromColorIndex(uint8_t colorIndex, uint8_t palette);

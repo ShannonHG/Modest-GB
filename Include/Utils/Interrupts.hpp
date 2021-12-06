@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "Memory/MemoryMap.hpp"
+#include "Memory/Memory.hpp"
 
 namespace SHG
 {
@@ -17,5 +17,5 @@ namespace SHG
 	extern const uint16_t INTERRUPT_ENABLE_ADDRESS;
 	extern const std::map<InterruptType, uint8_t> INTERRUPT_OPERATIONS;
 
-	void RequestInterrupt(MemoryMap& memoryMap, InterruptType interruptType);
+	void RequestInterrupt(Memory& memoryMap, InterruptType interruptType);
 }

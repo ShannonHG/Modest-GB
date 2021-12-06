@@ -6,17 +6,17 @@ namespace SHG
 {
 	// TODO: Make jumps dependent on flags
 
-	void TestStandardJump(CPU& processor, DataStorageDevice& memory, uint16_t address)
+	void TestStandardJump(CPU& processor, BasicMemory& memory, uint16_t address)
 	{
 		memory.Write(1, address & 0x00FF);
 		memory.Write(2, address >> 8);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), address);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), address);
 	}
 
-	void TestRelativeJump(CPU& processor, DataStorageDevice& memory)
+	void TestRelativeJump(CPU& processor, BasicMemory& memory)
 	{
 		uint8_t data = 100;
 
@@ -27,10 +27,10 @@ namespace SHG
 		memory.Write(1, data);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), programCounterBeforeExecution + data);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), programCounterBeforeExecution + data);
 	}
 
-	void TestCall(CPU& processor, DataStorageDevice& memory)
+	void TestCall(CPU& processor, BasicMemory& memory)
 	{
 		uint16_t address = 400;
 		uint16_t stackPointerData = 320;
@@ -39,32 +39,32 @@ namespace SHG
 		// one increment for the initial byte fetch, and two increments for fetching a 16 bit number.
 		uint8_t programCounterBeforeExecution = 3;
 
-		processor.GetStackPointer().SetData(stackPointerData);
+		processor.GetStackPointer().Write(stackPointerData);
 
 		memory.Write(1, address & 0x00FF);
 		memory.Write(2, address >> 8);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), address);
-		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
-		EXPECT_EQ(memory.Read(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), address);
+		EXPECT_EQ(processor.GetStackPointer().Read(), stackPointerData - 2);
+		EXPECT_EQ(memory.Read(processor.GetStackPointer().Read()), programCounterBeforeExecution);
 	}
 
-	void TestReturn(CPU& processor, DataStorageDevice& memory)
+	void TestReturn(CPU& processor, BasicMemory& memory)
 	{
 		uint16_t address = 400;
 		uint16_t memData = 500;
 
 		memory.Write(address, memData & 0x00FF);
 		memory.Write(address + 1, memData >> 8);
-		processor.GetStackPointer().SetData(address);
+		processor.GetStackPointer().Write(address);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), memData);
-		EXPECT_EQ(processor.GetStackPointer().GetData(), address + 2);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), memData);
+		EXPECT_EQ(processor.GetStackPointer().Read(), address + 2);
 	}
 
-	void TestRestart(CPU& processor, DataStorageDevice& memory, uint8_t data)
+	void TestRestart(CPU& processor, BasicMemory& memory, uint8_t data)
 	{
 		uint16_t stackPointerData = 320;
 
@@ -72,19 +72,19 @@ namespace SHG
 		// one increment for the initial byte fetch.
 		uint8_t programCounterBeforeExecution = 1;
 
-		processor.GetStackPointer().SetData(stackPointerData);
+		processor.GetStackPointer().Write(stackPointerData);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), data);
-		EXPECT_EQ(processor.GetStackPointer().GetData(), stackPointerData - 2);
-		EXPECT_EQ(memory.Read(processor.GetStackPointer().GetData()), programCounterBeforeExecution);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), data);
+		EXPECT_EQ(processor.GetStackPointer().Read(), stackPointerData - 2);
+		EXPECT_EQ(memory.Read(processor.GetStackPointer().Read()), programCounterBeforeExecution);
 	}
 
 	// JR NZ, I8
 	// Opcode: 0x20
 	TEST(CPUJumpInstructions, JR_NZ_I8)
 	{
-		Memory memory = CreatePresetMemory(0x20);
+		BasicMemory memory = CreatePresetMemory(0x20);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(false);
 		TestRelativeJump(processor, memory);
@@ -94,7 +94,7 @@ namespace SHG
 	// Opcode: 0x30
 	TEST(CPUJumpInstructions, JR_NC_I8)
 	{
-		Memory memory = CreatePresetMemory(0x30);
+		BasicMemory memory = CreatePresetMemory(0x30);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(false);
 		TestRelativeJump(processor, memory);
@@ -104,7 +104,7 @@ namespace SHG
 	// Opcode: 0x18
 	TEST(CPUJumpInstructions, JR_I8)
 	{
-		Memory memory = CreatePresetMemory(0x18);
+		BasicMemory memory = CreatePresetMemory(0x18);
 		auto processor = CPU(memory);
 		
 		TestRelativeJump(processor, memory);
@@ -114,7 +114,7 @@ namespace SHG
 	// Opcode: 0x28
 	TEST(CPUJumpInstructions, JR_Z_I8)
 	{
-		Memory memory = CreatePresetMemory(0x28);
+		BasicMemory memory = CreatePresetMemory(0x28);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(true);
 		TestRelativeJump(processor, memory);
@@ -124,7 +124,7 @@ namespace SHG
 	// Opcode: 0x38
 	TEST(CPUJumpInstructions, JR_C_I8)
 	{
-		Memory memory = CreatePresetMemory(0x38);
+		BasicMemory memory = CreatePresetMemory(0x38);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(true);
 		TestRelativeJump(processor, memory);
@@ -134,7 +134,7 @@ namespace SHG
 	// Opcode: 0xC0
 	TEST(CPUJumpInstructions, RET_NZ)
 	{
-		Memory memory = CreatePresetMemory(0xC0);
+		BasicMemory memory = CreatePresetMemory(0xC0);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(false);
 		TestReturn(processor, memory);
@@ -144,7 +144,7 @@ namespace SHG
 	// Opcode: 0xD0
 	TEST(CPUJumpInstructions, RET_NC)
 	{
-		Memory memory = CreatePresetMemory(0xD0);
+		BasicMemory memory = CreatePresetMemory(0xD0);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(false);
 		TestReturn(processor, memory);
@@ -154,7 +154,7 @@ namespace SHG
 	// Opcode: 0xC2
 	TEST(CPUJumpInstructions, JP_NZ_U16)
 	{
-		Memory memory = CreatePresetMemory(0xC2);
+		BasicMemory memory = CreatePresetMemory(0xC2);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(false);
 		TestStandardJump(processor, memory, 320);
@@ -164,7 +164,7 @@ namespace SHG
 	// Opcode: 0xD2
 	TEST(CPUJumpInstructions, JP_NC_U16)
 	{
-		Memory memory = CreatePresetMemory(0xD2);
+		BasicMemory memory = CreatePresetMemory(0xD2);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(false);
 		TestStandardJump(processor, memory, 510);
@@ -174,7 +174,7 @@ namespace SHG
 	// Opcode: 0xC3
 	TEST(CPUJumpInstructions, JP_U16)
 	{
-		Memory memory = CreatePresetMemory(0xC3);
+		BasicMemory memory = CreatePresetMemory(0xC3);
 		auto processor = CPU(memory);
 
 		TestStandardJump(processor, memory, 345);
@@ -184,7 +184,7 @@ namespace SHG
 	// Opcode: 0xC4
 	TEST(CPUJumpInstructions, CALL_NZ_U16)
 	{
-		Memory memory = CreatePresetMemory(0xC4);
+		BasicMemory memory = CreatePresetMemory(0xC4);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(false);
 		TestCall(processor, memory);
@@ -194,7 +194,7 @@ namespace SHG
 	// Opcode: 0xD4
 	TEST(CPUJumpInstructions, CALL_NC_U16)
 	{
-		Memory memory = CreatePresetMemory(0xD4);
+		BasicMemory memory = CreatePresetMemory(0xD4);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(false);
 		TestCall(processor, memory);
@@ -204,7 +204,7 @@ namespace SHG
 	// Opcode: 0xC7
 	TEST(CPUJumpInstructions, RST_00H)
 	{
-		Memory memory = CreatePresetMemory(0xC7);
+		BasicMemory memory = CreatePresetMemory(0xC7);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x00);
@@ -214,7 +214,7 @@ namespace SHG
 	// Opcode: 0xD7
 	TEST(CPUJumpInstructions, RST_10H)
 	{
-		Memory memory = CreatePresetMemory(0xD7);
+		BasicMemory memory = CreatePresetMemory(0xD7);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x10);
@@ -224,7 +224,7 @@ namespace SHG
 	// Opcode: 0xE7
 	TEST(CPUJumpInstructions, RST_20H)
 	{
-		Memory memory = CreatePresetMemory(0xE7);
+		BasicMemory memory = CreatePresetMemory(0xE7);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x20);
@@ -234,7 +234,7 @@ namespace SHG
 	// Opcode: 0xF7
 	TEST(CPUJumpInstructions, RST_30H)
 	{
-		Memory memory = CreatePresetMemory(0xF7);
+		BasicMemory memory = CreatePresetMemory(0xF7);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x30);
@@ -244,7 +244,7 @@ namespace SHG
 	// Opcode: 0xC8
 	TEST(CPUJumpInstructions, RET_Z)
 	{
-		Memory memory = CreatePresetMemory(0xC8);
+		BasicMemory memory = CreatePresetMemory(0xC8);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(true);
 		TestReturn(processor, memory);
@@ -254,7 +254,7 @@ namespace SHG
 	// Opcode: 0xD8
 	TEST(CPUJumpInstructions, RET_C)
 	{
-		Memory memory = CreatePresetMemory(0xD8);
+		BasicMemory memory = CreatePresetMemory(0xD8);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(true);
 		TestReturn(processor, memory);
@@ -264,7 +264,7 @@ namespace SHG
 	// Opcode: 0xC9
 	TEST(CPUJumpInstructions, RET)
 	{
-		Memory memory = CreatePresetMemory(0xC9);
+		BasicMemory memory = CreatePresetMemory(0xC9);
 		auto processor = CPU(memory);
 
 		TestReturn(processor, memory);
@@ -274,7 +274,7 @@ namespace SHG
 	// Opcode: 0xD9
 	TEST(CPUJumpInstructions, RETI)
 	{
-		Memory memory = CreatePresetMemory(0xD9);
+		BasicMemory memory = CreatePresetMemory(0xD9);
 		auto processor = CPU(memory);
 
 		uint16_t address = 400;
@@ -282,11 +282,11 @@ namespace SHG
 
 		memory.Write(address, memData & 0x00FF);
 		memory.Write(address + 1, memData >> 8);
-		processor.GetStackPointer().SetData(address);
+		processor.GetStackPointer().Write(address);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetProgramCounter().GetData(), memData);
-		EXPECT_EQ(processor.GetStackPointer().GetData(), address + 2);
+		EXPECT_EQ(processor.GetProgramCounter().Read(), memData);
+		EXPECT_EQ(processor.GetStackPointer().Read(), address + 2);
 
 		EXPECT_EQ(processor.GetInterruptMasterEnableFlag(), 1);
 	}
@@ -295,18 +295,18 @@ namespace SHG
 	// Opcode: 0xE9
 	TEST(CPUJumpInstructions, JP_HL)
 	{
-		Memory memory = CreatePresetMemory(0xE9);
+		BasicMemory memory = CreatePresetMemory(0xE9);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterHL().SetData(367);
-		TestStandardJump(processor, memory, processor.GetRegisterHL().GetData());
+		processor.GetRegisterHL().Write(367);
+		TestStandardJump(processor, memory, processor.GetRegisterHL().Read());
 	}
 
 	// JP Z, U16
 	// Opcode: 0xCA
 	TEST(CPUJumpInstructions, JP_Z_U16)
 	{
-		Memory memory = CreatePresetMemory(0xCA);
+		BasicMemory memory = CreatePresetMemory(0xCA);
 		auto processor = CPU(memory);
 
 		processor.ChangeZeroFlag(true);
@@ -317,7 +317,7 @@ namespace SHG
 	// Opcode: 0xDA
 	TEST(CPUJumpInstructions, JP_C_U16)
 	{
-		Memory memory = CreatePresetMemory(0xDA);
+		BasicMemory memory = CreatePresetMemory(0xDA);
 		auto processor = CPU(memory);
 
 		processor.ChangeCarryFlag(true);
@@ -328,7 +328,7 @@ namespace SHG
 	// Opcode: 0xCC
 	TEST(CPUJumpInstructions, CALL_Z_U16)
 	{
-		Memory memory = CreatePresetMemory(0xCC);
+		BasicMemory memory = CreatePresetMemory(0xCC);
 		auto processor = CPU(memory);
 		processor.ChangeZeroFlag(true);
 		TestCall(processor, memory);
@@ -338,7 +338,7 @@ namespace SHG
 	// Opcode: 0xDC
 	TEST(CPUJumpInstructions, CALL_C_U16)
 	{
-		Memory memory = CreatePresetMemory(0xDC);
+		BasicMemory memory = CreatePresetMemory(0xDC);
 		auto processor = CPU(memory);
 		processor.ChangeCarryFlag(true);
 		TestCall(processor, memory);
@@ -348,7 +348,7 @@ namespace SHG
 	// Opcode: 0xCD
 	TEST(CPUJumpInstructions, CALL_U16)
 	{
-		Memory memory = CreatePresetMemory(0xCD);
+		BasicMemory memory = CreatePresetMemory(0xCD);
 		auto processor = CPU(memory);
 
 		TestCall(processor, memory);
@@ -358,7 +358,7 @@ namespace SHG
 	// Opcode: 0xCF
 	TEST(CPUJumpInstructions, RST_08H)
 	{
-		Memory memory = CreatePresetMemory(0xCF);
+		BasicMemory memory = CreatePresetMemory(0xCF);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x08);
@@ -368,7 +368,7 @@ namespace SHG
 	// Opcode: 0xDF
 	TEST(CPUJumpInstructions, RST_18H)
 	{
-		Memory memory = CreatePresetMemory(0xDF);
+		BasicMemory memory = CreatePresetMemory(0xDF);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x18);
@@ -378,7 +378,7 @@ namespace SHG
 	// Opcode: 0xEF
 	TEST(CPUJumpInstructions, RST_28H)
 	{
-		Memory memory = CreatePresetMemory(0xEF);
+		BasicMemory memory = CreatePresetMemory(0xEF);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x28);
@@ -388,7 +388,7 @@ namespace SHG
 	// Opcode: 0xFF
 	TEST(CPUJumpInstructions, RST_38H)
 	{
-		Memory memory = CreatePresetMemory(0xFF);
+		BasicMemory memory = CreatePresetMemory(0xFF);
 		auto processor = CPU(memory);
 
 		TestRestart(processor, memory, 0x38);

@@ -85,6 +85,7 @@ namespace SHG
 	const uint16_t OPTIONAL_8KB_RAM_START_ADDRESS = 0xA000;
 	const uint16_t OPTIONAL_8KB_RAM_END_ADDRESS = 0xBFFF;
 
+	// TODO: Add ROM validation
 	bool Cartridge::Load(const std::string& romFilePath)
 	{
 		auto file = std::ifstream(romFilePath, std::ios::binary);

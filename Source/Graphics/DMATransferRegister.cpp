@@ -1,4 +1,5 @@
 #include "Graphics/DMATransferRegister.hpp"
+
 namespace SHG
 {
 	bool DMATransferRegister::IsTransferPending() const
@@ -21,29 +22,17 @@ namespace SHG
 		return sourceTransferEndAddress;
 	}
 
-	uint8_t DMATransferRegister::Read(uint16_t address) const
+	uint8_t DMATransferRegister::Read() const
 	{
-		if (IsAddressAvailable(address))
-			return data;
-	
-		return 0;
+		return data;
 	}
 
-	void DMATransferRegister::Write(uint16_t address, uint8_t value)
+	void DMATransferRegister::Write(uint8_t value)
 	{
-		if (IsAddressAvailable(address))
-		{
-			data = value;
-			isTransferPending = true;
-			sourceTransferStartAddress = value << 8;
-			sourceTransferEndAddress = sourceTransferEndAddress | 0x9F;
-		}
-	}
-
-	bool DMATransferRegister::IsAddressAvailable(uint16_t address) const
-	{
-		// This register only contains a single byte
-		return address == 0;
+		data = value;
+		isTransferPending = true;
+		sourceTransferStartAddress = value << 8;
+		sourceTransferEndAddress = sourceTransferEndAddress | 0x9F;
 	}
 
 	void DMATransferRegister::Reset()

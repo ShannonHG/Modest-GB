@@ -29,7 +29,7 @@ namespace SHG
 	// Bit 1 - Left or B (0 = Pressed)
 	// Bit 0 - Right or A (0 = Pressed)
 
-	Joypad::Joypad(InputManager& inputManager, MemoryMap& memoryMap) : memoryMap(memoryMap)
+	Joypad::Joypad(InputManager& inputManager, Memory& memoryMap) : memoryMap(memoryMap)
 	{
 		ResetButtonStates();
 		LoadControllerMapping(DEFAULT_CONTROLLER_MAPPING);
@@ -44,7 +44,7 @@ namespace SHG
 	}
 
 	// TODO: Revisit
-	uint8_t Joypad::Read(uint16_t address) const
+	uint8_t Joypad::Read() const
 	{
 		uint8_t result = 0xCF;
 
@@ -73,18 +73,12 @@ namespace SHG
 		return result;
 	}
 
-	void Joypad::Write(uint16_t address, uint8_t value)
+	void Joypad::Write(uint8_t value)
 	{
 		// An option is enabled when its respective bit is set to 0, 
 		// otherwise the option is disabled.
 		isDirectionButtonsSelected = !(value & 0b00010000);
 		isActionButtonsSelected = !(value & 0b00100000);
-	}
-
-	bool Joypad::IsAddressAvailable(uint16_t address) const
-	{
-		// This register only contains a single byte.
-		return address == 0;
 	}
 
 	void Joypad::Reset()

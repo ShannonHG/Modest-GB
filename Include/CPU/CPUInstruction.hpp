@@ -10,8 +10,8 @@ namespace SHG
 	{
 		CPUInstruction();
 		CPUInstruction(const char* mnemonic, uint8_t cyles, void (CPU::* operation)());
-		const char* mnemonic;
-		uint8_t cycles;
+		const char* mnemonic = nullptr;
+		uint8_t cycles = 0;
 		void (CPU::* operation)() = nullptr;
 	};
 }

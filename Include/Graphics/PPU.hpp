@@ -2,19 +2,20 @@
 #include <cstdint>
 #include "SDL.h"
 #include "Graphics/Framebuffer.hpp"
-#include "Memory/MemoryMap.hpp"
+#include "Memory/Memory.hpp"
 #include "Memory/Register8.hpp"
 #include "Graphics/Sprite.hpp"
 #include "Graphics/BackgroundPixelFetcher.hpp"
 #include "Graphics/SpritePixelFetcher.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
+#include "Graphics/DMATransferRegister.hpp"
 
 namespace SHG
 {
 	class PPU
 	{
 	public:
-		PPU(MemoryMap& memoryMap);
+		PPU(Memory& memoryMap);
 		void Step(uint32_t cycles);
 		void Reset();
 		void InitializeFramebuffer(SDL_Window* window);
@@ -59,7 +60,7 @@ namespace SHG
 		std::vector<Sprite> spritesOnCurrentScanline;
 		std::queue<Pixel> queuedSpritePixels;
 		uint8_t currentScanlineX = 0;
-		MemoryMap& memoryMap;
+		Memory& memoryMap;
 		Framebuffer primaryFramebuffer;
 		Framebuffer tileDebugFramebuffer;
 		Framebuffer spriteDebugFramebuffer;
@@ -91,6 +92,9 @@ namespace SHG
 		uint8_t debugWindowMapScanlineX = 0;
 		uint8_t debugWindowMapScanlineY = 0;
 		uint8_t debugCurrentSpriteIndex = 0;
+		uint8_t debugSpriteScanline = 0;
+		uint8_t debugTileScanline = 0;
+		uint16_t debugTileIndex = 0;
 
 		void SetCurrentMode(Mode mode);
 		void ChangeStatInterruptLineBit(uint8_t bitIndex, bool value);
@@ -113,6 +117,6 @@ namespace SHG
 		void UpdateDMATransferProcess(uint32_t cycles);
 		void RenderPixel(const Pixel& pixel);
 
-		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress);
+		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType);
 	};
 }

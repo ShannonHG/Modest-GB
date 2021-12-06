@@ -1,26 +1,24 @@
 #pragma once
 #include <vector>
 #include <map>
-#include "Memory/DataStorageDevice.hpp"
 #include "Input/InputManager.hpp"
 #include "Input/GBButtons.hpp"
-#include "Memory/MemoryMap.hpp"
+#include "Memory/Memory.hpp"
 
 namespace SHG
 {
-	class Joypad : public DataStorageDevice
+	class Joypad
 	{
 	public:
-		Joypad(InputManager& inputManager, MemoryMap& memoryMap);
+		Joypad(InputManager& inputManager, Memory& memoryMap);
 		void LoadControllerMapping(const std::map<KeyCode, GBButton>& mapping);
 
-		uint8_t Read(uint16_t address) const override;
-		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) const override;
-		void Reset() override;
+		uint8_t Read() const;
+		void Write(uint8_t value);
+		void Reset();
 
 	private:
-		MemoryMap& memoryMap;
+		Memory& memoryMap;
 
 		std::map<KeyCode, GBButton> controllerMapping;
 		std::map<GBButton, bool> buttonStates;

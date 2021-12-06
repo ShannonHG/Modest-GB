@@ -4,7 +4,7 @@
 #include "Utils/Interrupts.hpp"
 #include "Utils/GBSpecs.hpp"
 #include "Logger.hpp"
-#include "Utils/GBMemoryMapAddresses.hpp"
+#include "Utils/MemoryUtils.hpp"
 #include "Utils/Arithmetic.hpp"
 
 namespace SHG
@@ -12,7 +12,13 @@ namespace SHG
 	const uint8_t SPRITE_DEBUG_FRAMEBUFFER_WIDTH = 89;
 	const uint8_t SPRITE_DEBUG_FRAMEBUFFER_HEIGHT = 71;
 
-	PPU::PPU(MemoryMap& memoryMap) : memoryMap(memoryMap),
+	const uint8_t TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_PIXELS = 215;
+	const uint8_t TILE_DEBUG_FRAMEBUFFER_HEIGHT_IN_PIXELS = 143;
+	const uint8_t TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES = 24;
+	const uint8_t TILE_DEBUG_FRAMEBUFFER_HEIGHT_IN_TILES = 16;
+	const Color SCROLL_BOX_DEBUG_COLOR = { 0, 100, 170, 255 };
+
+	PPU::PPU(Memory& memoryMap) : memoryMap(memoryMap),
 		backgroundPixelFetcher(&memoryMap, &lcdc, &scx, &scy, &wx, &wy),
 		spritePixelFetcher(&memoryMap, &lcdc, &backgroundPixelFetcher)
 	{
@@ -25,6 +31,7 @@ namespace SHG
 		backgroundDebugFramebuffer = Framebuffer(window, TILE_MAP_WIDTH_IN_PIXELS, TILE_MAP_HEIGHT_IN_PIXELS);
 		windowDebugFramebuffer = Framebuffer(window, TILE_MAP_WIDTH_IN_PIXELS, TILE_MAP_HEIGHT_IN_PIXELS);
 		spriteDebugFramebuffer = Framebuffer(window, SPRITE_DEBUG_FRAMEBUFFER_WIDTH, SPRITE_DEBUG_FRAMEBUFFER_HEIGHT);
+		tileDebugFramebuffer = Framebuffer(window, TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_PIXELS, TILE_DEBUG_FRAMEBUFFER_HEIGHT_IN_PIXELS);
 	}
 
 	void PPU::Reset()
@@ -46,7 +53,8 @@ namespace SHG
 		spriteDebugFramebuffer.Clear(RGBA_BLACK);
 		spriteDebugFramebuffer.UploadData();
 
-		// TODO: Reset other components
+		tileDebugFramebuffer.Clear(RGBA_BLACK);
+		tileDebugFramebuffer.UploadData();
 	}
 
 	void PPU::Step(uint32_t cycles)
@@ -58,7 +66,7 @@ namespace SHG
 			{
 				SetCurrentMode(Mode::HBlank);
 				stat.ChangeBit(STAT_LYC_FLAG_INDEX, 0);
-				ly.SetData(0);
+				ly.Write(0);
 
 				currentDMATransferState = DMATransferState::Idle;
 
@@ -115,7 +123,7 @@ namespace SHG
 			currentScanlineX = 0;
 			ChangeStatInterruptLineBit(STAT_HBLANK_INTERRUPT_SOURCE_BIT_INDEX, false);
 
-			if (ly.GetData() == GB_SCREEN_HEIGHT)
+			if (ly.Read() == GB_SCREEN_HEIGHT)
 				EnterVBlankMode();
 			else
 				EnterOAMSearchMode();
@@ -152,12 +160,12 @@ namespace SHG
 			currentScanlineElapsedCycles = 0;
 
 			ly.Increment();
-			if (ly.GetData() == VBLANK_END_LINE)
+			if (ly.Read() == VBLANK_END_LINE)
 			{
 				// TODO: Is this correct?
 				backgroundPixelFetcher.Reset();
 				spritePixelFetcher.Reset();
-				ly.SetData(0);
+				ly.Write(0);
 				wasWYConditionTriggered = false;
 				wasWXConditionTriggered = false;
 				windowLineCounter = 0;
@@ -177,9 +185,9 @@ namespace SHG
 	void PPU::EnterOAMSearchMode()
 	{
 		if (!wasWYConditionTriggered)
-			wasWYConditionTriggered = wy.GetData() == ly.GetData();
+			wasWYConditionTriggered = wy.Read() == ly.Read();
 
-		numberOfPixelsToIgnore = scx.GetData() & 0b111;
+		numberOfPixelsToIgnore = scx.Read() & 0b111;
 		ignoredPixels = 0;
 		spritesOnCurrentScanline.clear();
 		SetCurrentMode(Mode::SearchingOAM);
@@ -208,7 +216,7 @@ namespace SHG
 				uint8_t spriteSize = lcdc.GetBit(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
 
 				// If the sprite is on the current scanline, then added it to the list.
-				if (ly.GetData() >= sprite.y && ly.GetData() < sprite.y + spriteSize)
+				if (ly.Read() >= sprite.y && ly.Read() < sprite.y + spriteSize)
 				{
 					spritesOnCurrentScanline.push_back(sprite);
 				}
@@ -226,7 +234,7 @@ namespace SHG
 	Sprite PPU::GetSpriteAtIndex(uint8_t index)
 	{
 		// Each sprite has 4-bytes of attribute data in OAM.
-		uint16_t attributeAddress = SPRITE_ATTRIBUTE_TABLE_START_ADDRESS + (index * SPRITE_ATTRIBUTE_BYTE_COUNT);
+		uint16_t attributeAddress = GB_OAM_START_ADDRESS + (index * SPRITE_ATTRIBUTE_BYTE_COUNT);
 		uint8_t flags = memoryMap.Read(attributeAddress + 3);
 
 		Sprite sprite =
@@ -254,12 +262,12 @@ namespace SHG
 	void PPU::EnterLCDTransferMode()
 	{
 		backgroundPixelFetcher.Reset();
-		backgroundPixelFetcher.SetY(ly.GetData());
+		backgroundPixelFetcher.SetY(ly.Read());
 		backgroundPixelFetcher.SetMode(BackgroundPixelFetcherMode::Background);
 
 		spritePixelFetcher.Reset();
 		spritePixelFetcher.SetSpritesOnScanline(spritesOnCurrentScanline);
-		spritePixelFetcher.SetY(ly.GetData());
+		spritePixelFetcher.SetY(ly.Read());
 
 		SetCurrentMode(Mode::LCDTransfer);
 	}
@@ -272,7 +280,7 @@ namespace SHG
 			(*cycles)--;
 			currentScanlineElapsedCycles++;
 
-			wasWXConditionTriggered = (currentScanlineX + 7) == wx.GetData();
+			wasWXConditionTriggered = (currentScanlineX + 7) == wx.Read();
 
 			// If all of the conditions to render the window have been satisfied, then reset the background
 			// pixel fetcher, and set it to 'Window' mode.
@@ -350,7 +358,7 @@ namespace SHG
 
 	void PPU::RenderPixel(const Pixel& pixel)
 	{
-		primaryFramebuffer.SetPixel(currentScanlineX, ly.GetData(), GetColorFromColorIndex(pixel.colorIndex, memoryMap.Read(pixel.paletteAddress)));
+		primaryFramebuffer.SetPixel(currentScanlineX, ly.Read(), GetColorFromColorIndex(pixel.colorIndex, memoryMap.Read(pixel.paletteAddress)));
 		currentScanlineX++;
 	}
 
@@ -376,7 +384,7 @@ namespace SHG
 		// The STAT interrupt sources (LYC=LY, OAM Search, HBlank, VBlank), have their
 		// states logically OR'ed into the STAT interrupt line. If a source sets its bit to 1,
 		// and the STAT interrupt line is currently 0, then a STAT interrupt will be triggered.
-		if (!statInterruptLine.GetData() && value)
+		if (!statInterruptLine.Read() && value)
 			RequestInterrupt(memoryMap, InterruptType::LCDStat);
 
 		statInterruptLine.ChangeBit(bitIndex, value);
@@ -384,7 +392,7 @@ namespace SHG
 
 	void PPU::RefreshLYCFlag()
 	{
-		bool result = lyc.GetData() == ly.GetData();
+		bool result = lyc.Read() == ly.Read();
 		stat.ChangeBit(STAT_LYC_FLAG_INDEX, result);
 
 		ChangeStatInterruptLineBit(STAT_LYC_INTERRUPT_SOURCE_BIT_INDEX, result);
@@ -490,7 +498,7 @@ namespace SHG
 		return windowDebugFramebuffer;
 	}
 
-	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress)
+	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType)
 	{
 		uint16_t tileIndex = GetTileIndexFromTileMaps(memoryMap, scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS), scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS), useAlternateTileMapAddress);
 		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
@@ -498,11 +506,29 @@ namespace SHG
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
-			// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
-			// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
-			uint8_t colorIndex = GetColorIndexFromTileData(px, memoryMap.Read(tileAddress), memoryMap.Read(tileAddress + 1));
+			Color color;
+			uint8_t minX = scx.Read();
+			uint8_t maxX = (scx.Read() + GB_SCREEN_WIDTH) & 255;
+			uint8_t minY = scy.Read();
+			uint8_t maxY = (scy.Read() + GB_SCREEN_HEIGHT) & 255;
 
-			framebuffer.SetPixel(scanlineX, scanlineY, GetColorFromColorIndex(colorIndex, memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS)));
+			// TODO: Cleanup
+			bool isOnXScrollBox = (scanlineX == minX || scanlineX == maxX) && (maxY > minY ? (scanlineY >= minY && scanlineY <= maxY) : (scanlineY >= minY || scanlineY <= maxY));
+			bool isOnYScrollBox = (scanlineY == minY || scanlineY == maxY) && (maxX > minX ? (scanlineX >= minX && scanlineX <= maxX) : (scanlineX >= minX || scanlineX <= maxX));
+
+			if (tileMapType == TileMapType::Background && (isOnXScrollBox || isOnYScrollBox))
+			{
+				color = SCROLL_BOX_DEBUG_COLOR;
+			}
+			else
+			{
+				// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
+				// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
+				uint8_t colorIndex = GetColorIndexFromTileData(px, memoryMap.Read(tileAddress), memoryMap.Read(tileAddress + 1));
+				color = GetColorFromColorIndex(colorIndex, memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS));
+			}
+
+			framebuffer.SetPixel(scanlineX, scanlineY, color);
 
 			// HBlank
 			if (scanlineX == TILE_MAP_WIDTH_IN_PIXELS - 1)
@@ -530,19 +556,19 @@ namespace SHG
 
 	void PPU::DebugDrawBackgroundTileMap()
 	{
-		DebugDrawTileMap(backgroundDebugFramebuffer, debugBackgroundMapScanlineX, debugBackgroundMapScanlineY, lcdc.GetBit(LCDC_BG_TILE_MAP_AREA_BIT_INDEX));
+		DebugDrawTileMap(backgroundDebugFramebuffer, debugBackgroundMapScanlineX, debugBackgroundMapScanlineY, lcdc.GetBit(LCDC_BG_TILE_MAP_AREA_BIT_INDEX), TileMapType::Background);
 	}
 
 	void PPU::DebugDrawWindowTileMap()
 	{
-		DebugDrawTileMap(windowDebugFramebuffer, debugWindowMapScanlineX, debugWindowMapScanlineY, lcdc.GetBit(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX));
+		DebugDrawTileMap(windowDebugFramebuffer, debugWindowMapScanlineX, debugWindowMapScanlineY, lcdc.GetBit(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX), TileMapType::Window);
 	}
 
 	void PPU::DebugDrawSprites()
 	{
 		Sprite sprite = GetSpriteAtIndex(debugCurrentSpriteIndex);
 
-		uint16_t palette = memoryMap.Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
+		uint8_t palette = memoryMap.Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
 		uint8_t spriteSizeInTiles = lcdc.GetBit(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
 
@@ -551,39 +577,68 @@ namespace SHG
 		uint8_t xSpacing = TILE_WIDTH_IN_PIXELS + 1;
 		uint8_t ySpacing = TILE_HEIGHT_IN_PIXELS * spriteSizeInTiles + 1;
 
-		// Loops through each tile in the sprite.
-		for (uint8_t tile = 0; tile < spriteSizeInTiles; tile++)
+		uint8_t tile = std::floor(debugSpriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
+		uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - debugSpriteScanline : debugSpriteScanline) % TILE_HEIGHT_IN_PIXELS;
+
+		uint8_t lowTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
+		uint8_t highTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, tileScanline, true) + 1);
+
+		uint8_t y = (tileY * ySpacing) + debugSpriteScanline;
+
+		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
-			// Goes through each scanline in the tile.
-			for (uint8_t scanline = 0; scanline < TILE_HEIGHT_IN_PIXELS; scanline++)
-			{
-				uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - scanline : scanline) + (tile * TILE_HEIGHT_IN_PIXELS);
+			uint8_t x = (tileX * xSpacing) + (sprite.xFlip ? 7 - px : px);
 
-				uint8_t lowTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, scanline, true));
-				uint8_t highTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, scanline, true) + 1);
-
-				for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
-				{
-					uint8_t x = tileX * xSpacing + (sprite.xFlip ? 7 - px : px);
-					uint8_t y = tileY * ySpacing + tileScanline;
-
-					uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
-					spriteDebugFramebuffer.SetPixel(x, y, GetColorFromColorIndex(colorIndex, palette));
-				}
-			}
+			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
+			spriteDebugFramebuffer.SetPixel(x, y, GetColorFromColorIndex(colorIndex, palette));
 		}
 
-		debugCurrentSpriteIndex++;
-		if (debugCurrentSpriteIndex >= MAX_SPRITE_COUNT)
+		debugSpriteScanline++;
+
+		if (debugSpriteScanline >= spriteSizeInPixels)
 		{
-			debugCurrentSpriteIndex = 0;
-			spriteDebugFramebuffer.UploadData();
-			spriteDebugFramebuffer.Clear(RGBA_BLACK);
+			debugSpriteScanline = 0;
+			debugCurrentSpriteIndex++;
+			if (debugCurrentSpriteIndex >= MAX_SPRITE_COUNT)
+			{
+				debugCurrentSpriteIndex = 0;
+				spriteDebugFramebuffer.UploadData();
+				spriteDebugFramebuffer.Clear(RGBA_BLACK);
+			}
 		}
 	}
 
 	void PPU::DebugDrawTiles()
 	{
-		// TODO: Implement
+		uint8_t palette = memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS);
+		uint8_t tileX = debugTileIndex % TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES;
+		uint8_t tileY = std::floor(debugTileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES));
+		uint8_t spacing = TILE_WIDTH_IN_PIXELS + 1;
+
+		uint8_t lowTileData = memoryMap.Read(GetTileAddress(debugTileIndex, debugTileScanline, true));
+		uint8_t highTileData = memoryMap.Read(GetTileAddress(debugTileIndex, debugTileScanline, true) + 1);
+
+		uint8_t y = (tileY * spacing) + debugTileScanline;
+
+		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
+		{
+			uint8_t x = (tileX * spacing) + px;
+			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
+			tileDebugFramebuffer.SetPixel(x, y, GetColorFromColorIndex(colorIndex, palette));
+		}
+
+		debugTileScanline++;
+
+		if (debugTileScanline >= TILE_HEIGHT_IN_PIXELS)
+		{
+			debugTileScanline = 0;
+			debugTileIndex++;
+			if (debugTileIndex >= MAX_TILE_COUNT)
+			{
+				debugTileIndex = 0;
+				tileDebugFramebuffer.UploadData();
+				tileDebugFramebuffer.Clear(RGBA_BLACK);
+			}
+		}
 	}
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "Graphics/PixelFetcher.hpp"
-#include "Memory/MemoryMap.hpp"
 #include "Memory/Register8.hpp"
 
 namespace SHG
@@ -23,7 +22,7 @@ namespace SHG
 	class BackgroundPixelFetcher : public PixelFetcher
 	{
 	public:
-		BackgroundPixelFetcher(MemoryMap* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy);
+		BackgroundPixelFetcher(Memory* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy);
 		void SetMode(BackgroundPixelFetcherMode mode);
 		BackgroundPixelFetcherMode GetCurrentMode();
 		void Step() override;
@@ -41,7 +40,7 @@ namespace SHG
 		Register8* scy = nullptr;
 		Register8* wx = nullptr;
 		Register8* wy = nullptr;
-		MemoryMap* memoryMap = nullptr;
+		Memory* memoryMap = nullptr;
 
 		void UpdateTileIndexFetchState();
 		void UpdateLowTileDataFetchState();

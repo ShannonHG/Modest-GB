@@ -1,14 +1,14 @@
 #include <string>
 #include "Graphics/SpritePixelFetcher.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
 #include "Utils/GBSpecs.hpp"
-#include "Utils/GBMemoryMapAddresses.hpp"
+#include "Utils/MemoryUtils.hpp"
 #include "Logger.hpp"
 
 namespace SHG
 {
 	// TODO: Improve timing accuracy.
-	SpritePixelFetcher::SpritePixelFetcher(MemoryMap* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher)
+	SpritePixelFetcher::SpritePixelFetcher(Memory* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher)
 		: memoryMap(memoryMap), lcdc(lcdc), backgroundPixelFetcher(backgroundPixelFetcher)
 	{
 

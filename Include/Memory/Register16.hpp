@@ -4,12 +4,12 @@
 
 namespace SHG
 {
-	class Register16 : public Memory
+	class Register16
 	{
 	public:
 		Register16();
-		uint16_t GetData() const;
-		void SetData(uint16_t data);
+		uint16_t Read() const;
+		void Write(uint16_t data);
 		void SetBit(uint8_t bitNumber, bool enabled);
 		uint8_t GetBit(uint8_t bitNumber) const;
 		void Increment();
@@ -23,11 +23,6 @@ namespace SHG
 		void SetLowByte(uint8_t data);
 		Register8& GetHighRegister();
 		Register8& GetLowRegister();
-
-		uint8_t Read(uint16_t address) const override;
-		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) const override;
-		void Reset() override;
 	private:
 		Register8 highRegister;
 		Register8 lowRegister;

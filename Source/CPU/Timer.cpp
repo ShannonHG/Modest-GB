@@ -1,5 +1,5 @@
 #include <map>
-#include "CPU/Timer.hpp"
+#include "Timer.hpp"
 #include "Utils/DataConversions.hpp"
 #include "Utils/Interrupts.hpp"
 #include "Logger.hpp"
@@ -8,14 +8,6 @@
 namespace SHG
 {
 	const std::string TIMER_MESSAGE_HEADER = "[TIMER]";
-
-	const uint16_t DIVIDER_INCREMENTS_PER_SECOND = 16384;
-	const double DIVIDER_INCREMENTS_PER_CYCLE = DIVIDER_INCREMENTS_PER_SECOND / (double)GB_CLOCK_SPEED;
-
-	const double TIMER_CONTROL_MODE_0_FREQ = (GB_CLOCK_SPEED / 1024.0) / (double)GB_CLOCK_SPEED;
-	const double TIMER_CONTROL_MODE_1_FREQ = (GB_CLOCK_SPEED / 16.0) / (double)GB_CLOCK_SPEED;
-	const double TIMER_CONTROL_MODE_2_FREQ = (GB_CLOCK_SPEED / 64.0) / (double)GB_CLOCK_SPEED;
-	const double TIMER_CONTROL_MODE_3_FREQ = (GB_CLOCK_SPEED / 256.0) / (double)GB_CLOCK_SPEED;
 
 	const std::map <TimerControlMode, uint8_t> TIMER_CONTROL_MODE_BIT_INDEXES =
 	{
@@ -32,7 +24,7 @@ namespace SHG
 	// FF07: TAC - Timer Control (R/W)
 
 	// TODO: Handle additional obscure behavior.
-	Timer::Timer(MemoryMap& memoryMap) : memoryMap(memoryMap)
+	Timer::Timer(Memory& memoryMap) : memoryMap(memoryMap)
 	{
 
 	}
@@ -46,60 +38,19 @@ namespace SHG
 			PrintStatus();
 	}
 
-	uint8_t Timer::Read(uint16_t address) const
+	uint8_t Timer::GetTimerCounter() const
 	{
-		switch (address)
-		{
-		case 0x00:
-			return internalCounter & 0x00FF;
-		case 0x01:
-			return GetDividerRegister();
-		case 0x02:
-			return timerCounter;
-		case 0x03:
-			return timerModulo;
-		case 0x04:
-			return GetTimerControlRegister();
-		}
-
-		return 0;
+		return timerCounter;
 	}
 
-	void Timer::Write(uint16_t address, uint8_t value)
+	uint8_t Timer::GetTimerModulo() const
 	{
-		switch (address)
-		{
-		case 0x00:
-			break;
-		case 0x01:
-			// Writing any value to this address resets the internal counter (and divider register).
-			SetInternalCounter(0);
-			break;
-		case 0x02:
-			timerCounter = value;
-			break;
-		case 0x03:
-			timerModulo = value;
-			break;
-		case 0x04:
-			isClockEnabled = (value & 0b100) >> 2;
-			currentTimerControlMode = static_cast<TimerControlMode>(value & 0b11);
-			break;
-		}
+		return timerModulo;
 	}
 
-	bool Timer::IsAddressAvailable(uint16_t address) const
+	uint8_t Timer::GetLowerInternalCounter() const
 	{
-		return address <= 4;
-	}
-
-	void Timer::Reset()
-	{
-		internalCounter = 0;
-		timerCounter = 0;
-		timerModulo = 0;
-		isClockEnabled = false;
-		currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
+		return internalCounter & 0x00FF;
 	}
 
 	uint8_t Timer::GetDividerRegister() const
@@ -111,6 +62,36 @@ namespace SHG
 	uint8_t Timer::GetTimerControlRegister() const
 	{
 		return (isClockEnabled << 2) | static_cast<uint8_t>(currentTimerControlMode);
+	}
+
+	void Timer::WriteToTimerCounter(uint8_t value)
+	{
+		timerCounter = value;
+	}
+
+	void Timer::WriteToTimerModulo(uint8_t value)
+	{
+		timerModulo = value;
+	}
+
+	void Timer::WriteToTimerControlRegister(uint8_t value)
+	{
+		isClockEnabled = (value & 0b100) >> 2;
+		currentTimerControlMode = static_cast<TimerControlMode>(value & 0b11);
+	}
+
+	void Timer::WriteToDividerRegister(uint8_t value)
+	{
+		SetInternalCounter(0);
+	}
+
+	void Timer::Reset()
+	{
+		internalCounter = 0;
+		timerCounter = 0;
+		timerModulo = 0;
+		isClockEnabled = false;
+		currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
 	}
 
 	bool Timer::GetCurrentTimerControlBit() const
@@ -139,7 +120,6 @@ namespace SHG
 			}
 		}
 	}
-
 
 	void Timer::PrintStatus() const
 	{

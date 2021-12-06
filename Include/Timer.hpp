@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
-#include "Memory/MemoryMap.hpp"
-#include "Memory/DataStorageDevice.hpp"
-#include "Memory/Register8.hpp"
+#include "Memory/Memory.hpp"
 
 namespace SHG
 {
@@ -18,17 +16,25 @@ namespace SHG
 		TIMER_CONTROL_MODE_256 = 3
 	};
 
-	class Timer : public DataStorageDevice
+	class Timer
 	{
 	public:
-		Timer(MemoryMap& memoryMap);
+		Timer(Memory& memory);
 		void Step(uint32_t cycles);
-		uint8_t Read(uint16_t address) const override;
-		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) const override;
-		void Reset() override;
+		uint8_t GetTimerCounter() const;
+		uint8_t GetTimerModulo() const;
+		uint8_t GetTimerControlRegister() const;
+		uint8_t GetDividerRegister() const;
+		uint8_t GetLowerInternalCounter() const;
+
+		void WriteToTimerCounter(uint8_t value);
+		void WriteToTimerModulo(uint8_t value);
+		void WriteToTimerControlRegister(uint8_t value);
+		void WriteToDividerRegister(uint8_t value);
+
+		void Reset();
 	private:
-		MemoryMap& memoryMap;
+		Memory& memoryMap;
 
 		uint16_t internalCounter = 0;
 		uint8_t timerCounter = 0;
@@ -36,10 +42,9 @@ namespace SHG
 		TimerControlMode currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
 		bool isClockEnabled = false;
 
-		void PrintStatus() const;
-		uint8_t GetDividerRegister() const;
-		uint8_t GetTimerControlRegister() const;
 		bool GetCurrentTimerControlBit() const;
 		void SetInternalCounter(uint16_t value);
+
+		void PrintStatus() const;
 	};
 }

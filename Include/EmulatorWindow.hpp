@@ -36,6 +36,13 @@ namespace SHG
 		void SetPauseButtonLabel(const std::string& label);
 
 		bool IsTraceEnabled();
+		int GetWidth();
+		int GetHeight();
+		void SetSize(int width, int height);
+
+		int GetX();
+		int GetY();
+		void SetPosition(int x, int y);
 
 	private:
 		SDL_Window* sdlWindow = nullptr;

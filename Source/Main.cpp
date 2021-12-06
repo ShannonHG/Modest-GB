@@ -1,7 +1,7 @@
+#include <string>
 #include "Logger.hpp"
-#include "AppConfig.hpp"
-#include "CommandLineParser.hpp"
 #include "Emulator.hpp"
+#include "Utils/Arithmetic.hpp"
 
 int main(int argc, char* argv[])
 {

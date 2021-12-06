@@ -1,8 +1,8 @@
 #include <string>
 #include "Graphics/BackgroundPixelFetcher.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
 #include "Logger.hpp"
-#include "Utils/GBMemoryMapAddresses.hpp"
+#include "Utils/MemoryUtils.hpp"
 #include "Utils/GBSpecs.hpp"
 
 namespace SHG
@@ -11,7 +11,7 @@ namespace SHG
 	const uint8_t TILE_DATA_FETCH_DURATION_IN_CYCLES = 2;
 	const uint8_t SLEEP_DURATION_IN_CYCLES = 2;
 
-	BackgroundPixelFetcher::BackgroundPixelFetcher(MemoryMap* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy)
+	BackgroundPixelFetcher::BackgroundPixelFetcher(Memory* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy)
 		: memoryMap(memoryMap), lcdc(lcdc), scx(scx), scy(scy), wx(wx), wy(wy)
 	{
 
@@ -74,7 +74,7 @@ namespace SHG
 		{
 		// TODO: Fix vertical scrolling
 		case BackgroundPixelFetcherMode::Background:
-			tileX = static_cast<uint8_t>(std::floor((scx->GetData() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
+			tileX = static_cast<uint8_t>(std::floor((scx->Read() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
 			tileY = std::floor((GetAdjustedY() & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
 
 			currentTileIndex = GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->GetBit(LCDC_BG_TILE_MAP_AREA_BIT_INDEX));
@@ -147,6 +147,6 @@ namespace SHG
 
 	uint8_t BackgroundPixelFetcher::GetAdjustedY()
 	{
-		return currentMode == BackgroundPixelFetcherMode::Background ? y + scy->GetData() : y;
+		return currentMode == BackgroundPixelFetcherMode::Background ? y + scy->Read() : y;
 	}
 }

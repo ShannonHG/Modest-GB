@@ -21,7 +21,7 @@ namespace SHG
 		HuC3
 	};
 
-	class Cartridge : public DataStorageDevice
+	class Cartridge : public Memory
 	{
 	public:
 		bool Load(const std::string& romFilePath);
@@ -34,8 +34,8 @@ namespace SHG
 
 		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
-		bool IsAddressAvailable(uint16_t address) const override;
 		void Reset() override;
+		bool IsAddressAvailable(uint16_t address) const override;
 	private:
 		bool isROMLoaded = false;
 

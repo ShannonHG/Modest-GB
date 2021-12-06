@@ -11,6 +11,10 @@ namespace SHG::Arithmetic
 	bool GetBit(uint8_t data, uint8_t bitIndex);
 	void ChangeBit(uint8_t& data, uint8_t bitIndex, bool isSet);
 	void SetBit(uint8_t& data, uint8_t bitIndex);
-	void ResetBit(uint8_t& data, uint8_t bitIndex);
+	void ClearBit(uint8_t& data, uint8_t bitIndex);
 	uint32_t EvenCeil(uint32_t operand);
+	bool IsInRange(int operand, int lowerLimit, int upperLimit);
+
+	// Remaps the operand to a value between 0 and [upperBound - lowerBound].
+	int Normalize(int operand, int lowerBound, int upperBound);
 }

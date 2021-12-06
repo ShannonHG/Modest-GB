@@ -1,8 +1,8 @@
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
 
 namespace SHG
 {
-	uint16_t GetTileIndexFromTileMaps(const MemoryMap& memoryMap, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress)
+	uint16_t GetTileIndexFromTileMaps(const Memory& memoryMap, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress)
 	{
 		return memoryMap.Read((tileX + tileY * TILE_MAP_WIDTH_IN_TILES) + (useAlternateTileMapAddress ? ALTERNATE_TILE_MAP_ADDRESS : DEFAULT_TILE_MAP_ADDRESS));
 	}

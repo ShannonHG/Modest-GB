@@ -5,11 +5,12 @@
 #include "CPU/CPU.hpp"
 #include "Graphics/PPU.hpp"
 #include "Memory/Cartridge.hpp"
-#include "CPU/Timer.hpp"
+#include "Timer.hpp"
 #include "EmulatorWindow.hpp"
 #include "Logger.hpp"
 #include "Input/Joypad.hpp"
 #include "Input/InputManager.hpp"
+#include "Utils/MemoryUtils.hpp"
 
 namespace SHG
 {
@@ -26,16 +27,15 @@ namespace SHG
 		CPU processor = CPU(memoryMap);
 		PPU ppu = PPU(memoryMap);
 		Timer timer = Timer(memoryMap);
-		Memory vram = Memory(8 * KiB);
-		Memory wram = Memory(8 * KiB);
-		Memory hram = Memory(127);
-		Memory oam = Memory(160);
-		Memory echoRam = Memory(122368);
-		Memory restrictedMemory = Memory(130464);
-		Memory ioRegisters = Memory(127);
+		BasicMemory vram = BasicMemory(8 * KiB);
+		BasicMemory wram = BasicMemory(8 * KiB);
+		BasicMemory hram = BasicMemory(127);
+		BasicMemory oam = BasicMemory(160);
+		BasicMemory echoRam = BasicMemory(122368);
+		BasicMemory restrictedMemory = BasicMemory(130464);
+		BasicMemory ioRegisters = BasicMemory(128);
 		Register8 interruptEnableRegister;
 		Register8 interruptFlagRegister;
-		Memory serialOutputRegister = Memory(4);
 		Joypad joypad = Joypad(inputManager, memoryMap);
 
 		bool isRunning = false;
@@ -55,14 +55,15 @@ namespace SHG
 
 		bool LoadROM(std::string& romFilePath);
 
-		void AssignMemoryMapAddresses();
-		void SetDefaultMemoryMapValues();
+		void SetupMemoryMap();
 
 		void SaveConfigurationFile();
 		void LoadConfigurationFile();
 		void LoadConfigurationItem(std::ifstream& stream, const std::string& key, std::string& value);
 		void LoadConfigurationItemAsBool(std::ifstream& stream, const std::string& key, bool& value);
+		void LoadConfigurationItemAsInt(std::ifstream& stream, const std::string& key, int& value);
 		void SaveConfigurationItem(std::ofstream& stream, const std::string& key, const std::string& value);
-		void SaveBoolConfigurationItem(std::ofstream& stream, const std::string& key, const bool& value);
+		void SaveBoolConfigurationItem(std::ofstream& stream, const std::string& key, bool value);
+		void SaveIntConfigurationItem(std::ofstream& stream, const std::string& key, int value);
 	};
 }

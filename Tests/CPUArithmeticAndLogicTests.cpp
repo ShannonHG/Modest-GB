@@ -10,12 +10,12 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2);
 	}
 
 	void Test16BitAddition(CPU& processor, Register16& targetRegister)
@@ -23,12 +23,12 @@ namespace SHG
 		uint16_t operand1 = 300;
 		uint16_t operand2 = 500;
 
-		processor.GetRegisterHL().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterHL().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterHL().GetData(), operand1 + operand2);
+		EXPECT_EQ(processor.GetRegisterHL().Read(), operand1 + operand2);
 	}
 
 	void Test8BitSubtraction(CPU& processor, Register8& targetRegister)
@@ -36,12 +36,12 @@ namespace SHG
 		uint8_t operand1 = 7;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2);
 	}
 
 	void Test8BitAND(CPU& processor, Register8& targetRegister)
@@ -49,12 +49,12 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 & operand2);
 	}
 
 	void Test8BitXOR(CPU& processor, Register8& targetRegister)
@@ -62,12 +62,12 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 ^ operand2);
 	}
 
 	void Test8BitOR(CPU& processor, Register8& targetRegister)
@@ -75,12 +75,12 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 | operand2);
 	}
 
 	void Test8BitAddWithCarry(CPU& processor, Register8& targetRegister)
@@ -90,12 +90,12 @@ namespace SHG
 		uint8_t carryFlag = 1;
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2 + carryFlag);
 	}
 
 	void Test8BitSubtractWithCarry(CPU& processor, Register8& targetRegister)
@@ -105,56 +105,56 @@ namespace SHG
 		uint8_t carryFlag = 1;
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2 - carryFlag);
 	}
 
 	void Test8BitIncrement(CPU& processor, Register8& targetRegister)
 	{
 		uint8_t operand = 5;
 
-		targetRegister.SetData(operand);
+		targetRegister.Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(targetRegister.GetData(), operand + 1);
+		EXPECT_EQ(targetRegister.Read(), operand + 1);
 	}
 
 	void Test16BitIncrement(CPU& processor, Register16& targetRegister)
 	{
 		uint8_t operand = 5;
 
-		targetRegister.SetData(operand);
+		targetRegister.Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(targetRegister.GetData(), operand + 1);
+		EXPECT_EQ(targetRegister.Read(), operand + 1);
 	}
 
 	void Test8BitDecrement(CPU& processor, Register8& targetRegister)
 	{
 		uint8_t operand = 5;
 
-		targetRegister.SetData(operand);
+		targetRegister.Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(targetRegister.GetData(), operand - 1);
+		EXPECT_EQ(targetRegister.Read(), operand - 1);
 	}
 
 	void Test16BitDecrement(CPU& processor, Register16& targetRegister)
 	{
 		uint8_t operand = 5;
 
-		targetRegister.SetData(operand);
+		targetRegister.Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(targetRegister.GetData(), operand - 1);
+		EXPECT_EQ(targetRegister.Read(), operand - 1);
 	}
 
 	void Test8BitCompare(CPU& processor, Register8& targetRegister)
@@ -162,8 +162,8 @@ namespace SHG
 		uint8_t operand1 = 5;
 		uint8_t operand2 = 5;
 
-		processor.GetRegisterA().SetData(operand1);
-		targetRegister.SetData(operand2);
+		processor.GetRegisterA().Write(operand1);
+		targetRegister.Write(operand2);
 
 		processor.Step();
 
@@ -174,7 +174,7 @@ namespace SHG
 	// Opcode: 0x03
 	TEST(CPUArithmeticAndLogic, INC_BC)
 	{
-		Memory memory = CreatePresetMemory(0x03);
+		BasicMemory memory = CreatePresetMemory(0x03);
 		auto processor = CPU(memory);
 
 		Test16BitIncrement(processor, processor.GetRegisterBC());
@@ -184,7 +184,7 @@ namespace SHG
 	// Opcode: 0x13
 	TEST(CPUArithmeticAndLogic, INC_DE)
 	{
-		Memory memory = CreatePresetMemory(0x13);
+		BasicMemory memory = CreatePresetMemory(0x13);
 		auto processor = CPU(memory);
 
 		Test16BitIncrement(processor, processor.GetRegisterDE());
@@ -194,7 +194,7 @@ namespace SHG
 	// Opcode: 0x23
 	TEST(CPUArithmeticAndLogic, INC_HL)
 	{
-		Memory memory = CreatePresetMemory(0x23);
+		BasicMemory memory = CreatePresetMemory(0x23);
 		auto processor = CPU(memory);
 
 		Test16BitIncrement(processor, processor.GetRegisterHL());
@@ -204,7 +204,7 @@ namespace SHG
 	// Opcode: 0x33
 	TEST(CPUArithmeticAndLogic, INC_SP)
 	{
-		Memory memory = CreatePresetMemory(0x33);
+		BasicMemory memory = CreatePresetMemory(0x33);
 		auto processor = CPU(memory);
 
 		Test16BitIncrement(processor, processor.GetStackPointer());
@@ -214,7 +214,7 @@ namespace SHG
 	// Opcode: 0x04
 	TEST(CPUArithmeticAndLogic, INC_B)
 	{
-		Memory memory = CreatePresetMemory(0x04);
+		BasicMemory memory = CreatePresetMemory(0x04);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterB());
@@ -224,7 +224,7 @@ namespace SHG
 	// Opcode: 0x14
 	TEST(CPUArithmeticAndLogic, INC_D)
 	{
-		Memory memory = CreatePresetMemory(0x14);
+		BasicMemory memory = CreatePresetMemory(0x14);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterD());
@@ -234,7 +234,7 @@ namespace SHG
 	// Opcode: 0x24
 	TEST(CPUArithmeticAndLogic, INC_H)
 	{
-		Memory memory = CreatePresetMemory(0x24);
+		BasicMemory memory = CreatePresetMemory(0x24);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterH());
@@ -247,11 +247,11 @@ namespace SHG
 		uint8_t value = 5;
 		uint16_t address = 300;
 
-		Memory memory = CreatePresetMemory(0x34);
+		BasicMemory memory = CreatePresetMemory(0x34);
 		auto processor = CPU(memory);
 
 		memory.Write(address, value);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
@@ -262,7 +262,7 @@ namespace SHG
 	// Opcode: 0x05
 	TEST(CPUArithmeticAndLogic, DEC_B)
 	{
-		Memory memory = CreatePresetMemory(0x05);
+		BasicMemory memory = CreatePresetMemory(0x05);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterB());
@@ -272,7 +272,7 @@ namespace SHG
 	// Opcode: 0x15
 	TEST(CPUArithmeticAndLogic, DEC_D)
 	{
-		Memory memory = CreatePresetMemory(0x15);
+		BasicMemory memory = CreatePresetMemory(0x15);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterD());
@@ -282,7 +282,7 @@ namespace SHG
 	// Opcode: 0x25
 	TEST(CPUArithmeticAndLogic, DEC_H)
 	{
-		Memory memory = CreatePresetMemory(0x25);
+		BasicMemory memory = CreatePresetMemory(0x25);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterH());
@@ -295,11 +295,11 @@ namespace SHG
 		uint8_t value = 7;
 		uint16_t address = 300;
 
-		Memory memory = CreatePresetMemory(0x35);
+		BasicMemory memory = CreatePresetMemory(0x35);
 		auto processor = CPU(memory);
 
 		memory.Write(address, value);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
@@ -314,20 +314,20 @@ namespace SHG
 		uint8_t operand2 = 0x57;
 		uint8_t expectedResult = 0x81;
 
-		Memory memory = CreatePresetMemory(0x27);
+		BasicMemory memory = CreatePresetMemory(0x27);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1 + operand2);
+		processor.GetRegisterA().Write(operand1 + operand2);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), expectedResult);
+		EXPECT_EQ(processor.GetRegisterA().Read(), expectedResult);
 	}
 
 	// SCF
 	// Opcode: 0x37
 	TEST(CPUArithmeticAndLogic, SCF)
 	{
-		Memory memory = CreatePresetMemory(0x37);
+		BasicMemory memory = CreatePresetMemory(0x37);
 		auto processor = CPU(memory);
 
 		processor.ChangeCarryFlag(false);
@@ -340,7 +340,7 @@ namespace SHG
 	// Opcode: 0x09
 	TEST(CPUArithmeticAndLogic, ADD_HL_BC)
 	{
-		Memory memory = CreatePresetMemory(0x09);
+		BasicMemory memory = CreatePresetMemory(0x09);
 		auto processor = CPU(memory);
 
 		Test16BitAddition(processor, processor.GetRegisterBC());
@@ -350,7 +350,7 @@ namespace SHG
 	// Opcode: 0x19
 	TEST(CPUArithmeticAndLogic, ADD_HL_DE)
 	{
-		Memory memory = CreatePresetMemory(0x19);
+		BasicMemory memory = CreatePresetMemory(0x19);
 		auto processor = CPU(memory);
 
 		Test16BitAddition(processor, processor.GetRegisterDE());
@@ -362,20 +362,20 @@ namespace SHG
 	{
 		uint16_t value = 300;
 
-		Memory memory = CreatePresetMemory(0x29);
+		BasicMemory memory = CreatePresetMemory(0x29);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterHL().SetData(value);
+		processor.GetRegisterHL().Write(value);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterHL().GetData(), value * 2);
+		EXPECT_EQ(processor.GetRegisterHL().Read(), value * 2);
 	}
 
 	// ADD HL, SP
 	// Opcode: 0x39
 	TEST(CPUArithmeticAndLogic, ADD_HL_SP)
 	{
-		Memory memory = CreatePresetMemory(0x39);
+		BasicMemory memory = CreatePresetMemory(0x39);
 		auto processor = CPU(memory);
 
 		Test16BitAddition(processor, processor.GetStackPointer());
@@ -385,7 +385,7 @@ namespace SHG
 	// Opcode: 0x0B
 	TEST(CPUArithmeticAndLogic, DEC_BC)
 	{
-		Memory memory = CreatePresetMemory(0x0B);
+		BasicMemory memory = CreatePresetMemory(0x0B);
 		auto processor = CPU(memory);
 
 		Test16BitDecrement(processor, processor.GetRegisterBC());
@@ -395,7 +395,7 @@ namespace SHG
 	// Opcode: 0x1B
 	TEST(CPUArithmeticAndLogic, DEC_DE)
 	{
-		Memory memory = CreatePresetMemory(0x1B);
+		BasicMemory memory = CreatePresetMemory(0x1B);
 		auto processor = CPU(memory);
 
 		Test16BitDecrement(processor, processor.GetRegisterDE());
@@ -405,7 +405,7 @@ namespace SHG
 	// Opcode: 0x2B
 	TEST(CPUArithmeticAndLogic, DEC_HL)
 	{
-		Memory memory = CreatePresetMemory(0x2B);
+		BasicMemory memory = CreatePresetMemory(0x2B);
 		auto processor = CPU(memory);
 
 		Test16BitDecrement(processor, processor.GetRegisterHL());
@@ -415,7 +415,7 @@ namespace SHG
 	// Opcode: 0x3B
 	TEST(CPUArithmeticAndLogic, DEC_SP)
 	{
-		Memory memory = CreatePresetMemory(0x3B);
+		BasicMemory memory = CreatePresetMemory(0x3B);
 		auto processor = CPU(memory);
 
 		Test16BitDecrement(processor, processor.GetStackPointer());
@@ -425,7 +425,7 @@ namespace SHG
 	// Opcode: 0x0C
 	TEST(CPUArithmeticAndLogic, INC_C)
 	{
-		Memory memory = CreatePresetMemory(0x0C);
+		BasicMemory memory = CreatePresetMemory(0x0C);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterC());
@@ -435,7 +435,7 @@ namespace SHG
 	// Opcode: 0x1C
 	TEST(CPUArithmeticAndLogic, INC_E)
 	{
-		Memory memory = CreatePresetMemory(0x1C);
+		BasicMemory memory = CreatePresetMemory(0x1C);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterE());
@@ -445,7 +445,7 @@ namespace SHG
 	// Opcode: 0x2C
 	TEST(CPUArithmeticAndLogic, INC_L)
 	{
-		Memory memory = CreatePresetMemory(0x2C);
+		BasicMemory memory = CreatePresetMemory(0x2C);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterL());
@@ -455,7 +455,7 @@ namespace SHG
 	// Opcode: 0x3C
 	TEST(CPUArithmeticAndLogic, INC_A)
 	{
-		Memory memory = CreatePresetMemory(0x3C);
+		BasicMemory memory = CreatePresetMemory(0x3C);
 		auto processor = CPU(memory);
 
 		Test8BitIncrement(processor, processor.GetRegisterA());
@@ -465,7 +465,7 @@ namespace SHG
 	// Opcode: 0x0D
 	TEST(CPUArithmeticAndLogic, DEC_C)
 	{
-		Memory memory = CreatePresetMemory(0x0D);
+		BasicMemory memory = CreatePresetMemory(0x0D);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterC());
@@ -475,7 +475,7 @@ namespace SHG
 	// Opcode: 0x1D
 	TEST(CPUArithmeticAndLogic, DEC_E)
 	{
-		Memory memory = CreatePresetMemory(0x1D);
+		BasicMemory memory = CreatePresetMemory(0x1D);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterE());
@@ -485,7 +485,7 @@ namespace SHG
 	// Opcode: 0x2D
 	TEST(CPUArithmeticAndLogic, DEC_L)
 	{
-		Memory memory = CreatePresetMemory(0x2D);
+		BasicMemory memory = CreatePresetMemory(0x2D);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterL());
@@ -495,7 +495,7 @@ namespace SHG
 	// Opcode: 0x3D
 	TEST(CPUArithmeticAndLogic, DEC_A)
 	{
-		Memory memory = CreatePresetMemory(0x3D);
+		BasicMemory memory = CreatePresetMemory(0x3D);
 		auto processor = CPU(memory);
 
 		Test8BitDecrement(processor, processor.GetRegisterA());
@@ -507,13 +507,13 @@ namespace SHG
 	{
 		uint8_t operand = 5;
 
-		Memory memory = CreatePresetMemory(0x2F);
+		BasicMemory memory = CreatePresetMemory(0x2F);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand ^ 0x00FF);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand ^ 0x00FF);
 	}
 
 	// CCF
@@ -522,7 +522,7 @@ namespace SHG
 	{
 		uint8_t opcode = 0x3F;
 
-		Memory memory = CreatePresetMemory(opcode);
+		BasicMemory memory = CreatePresetMemory(opcode);
 		auto processor = CPU(memory);
 		memory.Write(1, opcode);
 
@@ -540,7 +540,7 @@ namespace SHG
 	// Opcode: 0x80
 	TEST(CPUArithmeticAndLogic, ADD_A_B)
 	{
-		Memory memory = CreatePresetMemory(0x80);
+		BasicMemory memory = CreatePresetMemory(0x80);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterB());
@@ -550,7 +550,7 @@ namespace SHG
 	// Opcode: 0x81
 	TEST(CPUArithmeticAndLogic, ADD_A_C)
 	{
-		Memory memory = CreatePresetMemory(0x81);
+		BasicMemory memory = CreatePresetMemory(0x81);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterC());
@@ -560,7 +560,7 @@ namespace SHG
 	// Opcode: 0x82
 	TEST(CPUArithmeticAndLogic, ADD_A_D)
 	{
-		Memory memory = CreatePresetMemory(0x82);
+		BasicMemory memory = CreatePresetMemory(0x82);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterD());
@@ -570,7 +570,7 @@ namespace SHG
 	// Opcode: 0x83
 	TEST(CPUArithmeticAndLogic, ADD_A_E)
 	{
-		Memory memory = CreatePresetMemory(0x83);
+		BasicMemory memory = CreatePresetMemory(0x83);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterE());
@@ -580,7 +580,7 @@ namespace SHG
 	// Opcode: 0x84
 	TEST(CPUArithmeticAndLogic, ADD_A_H)
 	{
-		Memory memory = CreatePresetMemory(0x84);
+		BasicMemory memory = CreatePresetMemory(0x84);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterH());
@@ -590,7 +590,7 @@ namespace SHG
 	// Opcode: 0x85
 	TEST(CPUArithmeticAndLogic, ADD_A_L)
 	{
-		Memory memory = CreatePresetMemory(0x85);
+		BasicMemory memory = CreatePresetMemory(0x85);
 		auto processor = CPU(memory);
 
 		Test8BitAddition(processor, processor.GetRegisterL());
@@ -604,17 +604,17 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint16_t address = 320;
 
-		Memory memory = CreatePresetMemory(0x86);
+		BasicMemory memory = CreatePresetMemory(0x86);
 		memory.Write(address, operand2);
 
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2);
 	}
 
 	// ADD A, A
@@ -623,20 +623,20 @@ namespace SHG
 	{
 		uint8_t value = 10;
 
-		Memory memory = CreatePresetMemory(0x87);
+		BasicMemory memory = CreatePresetMemory(0x87);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(value);
+		processor.GetRegisterA().Write(value);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), value * 2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), value * 2);
 	}
 
 	// ADC A, B
 	// Opcode: 0x88
 	TEST(CPUArithmeticAndLogic, ADC_A_B)
 	{
-		Memory memory = CreatePresetMemory(0x88);
+		BasicMemory memory = CreatePresetMemory(0x88);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterB());
@@ -646,7 +646,7 @@ namespace SHG
 	// Opcode: 0x89
 	TEST(CPUArithmeticAndLogic, ADC_A_C)
 	{
-		Memory memory = CreatePresetMemory(0x89);
+		BasicMemory memory = CreatePresetMemory(0x89);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterC());
@@ -656,7 +656,7 @@ namespace SHG
 	// Opcode: 0x8A
 	TEST(CPUArithmeticAndLogic, ADC_A_D)
 	{
-		Memory memory = CreatePresetMemory(0x8A);
+		BasicMemory memory = CreatePresetMemory(0x8A);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterD());
@@ -666,7 +666,7 @@ namespace SHG
 	// Opcode: 0x8B
 	TEST(CPUArithmeticAndLogic, ADC_A_E)
 	{
-		Memory memory = CreatePresetMemory(0x8B);
+		BasicMemory memory = CreatePresetMemory(0x8B);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterE());
@@ -676,7 +676,7 @@ namespace SHG
 	// Opcode: 0x8C
 	TEST(CPUArithmeticAndLogic, ADC_A_H)
 	{
-		Memory memory = CreatePresetMemory(0x8C);
+		BasicMemory memory = CreatePresetMemory(0x8C);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterH());
@@ -686,7 +686,7 @@ namespace SHG
 	// Opcode: 0x8D
 	TEST(CPUArithmeticAndLogic, ADC_A_L)
 	{
-		Memory memory = CreatePresetMemory(0x8D);
+		BasicMemory memory = CreatePresetMemory(0x8D);
 		auto processor = CPU(memory);
 
 		Test8BitAddWithCarry(processor, processor.GetRegisterL());
@@ -701,18 +701,18 @@ namespace SHG
 		uint16_t address = 300;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0x8E);
+		BasicMemory memory = CreatePresetMemory(0x8E);
 		auto processor = CPU(memory);
 
 		memory.Write(address, operand2);
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2 + carryFlag);
 	}
 
 	// ADC A, A
@@ -722,22 +722,22 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0x8F);
+		BasicMemory memory = CreatePresetMemory(0x8F);
 		auto processor = CPU(memory);
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand1 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand1 + carryFlag);
 	}
 
 	// SUB A, B
 	// Opcode: 0x90
 	TEST(CPUArithmeticAndLogic, SUB_A_B)
 	{
-		Memory memory = CreatePresetMemory(0x90);
+		BasicMemory memory = CreatePresetMemory(0x90);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterB());
@@ -747,7 +747,7 @@ namespace SHG
 	// Opcode: 0x91
 	TEST(CPUArithmeticAndLogic, SUB_A_C)
 	{
-		Memory memory = CreatePresetMemory(0x91);
+		BasicMemory memory = CreatePresetMemory(0x91);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterC());
@@ -757,7 +757,7 @@ namespace SHG
 	// Opcode: 0x92
 	TEST(CPUArithmeticAndLogic, SUB_A_D)
 	{
-		Memory memory = CreatePresetMemory(0x92);
+		BasicMemory memory = CreatePresetMemory(0x92);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterD());
@@ -767,7 +767,7 @@ namespace SHG
 	// Opcode: 0x93
 	TEST(CPUArithmeticAndLogic, SUB_A_E)
 	{
-		Memory memory = CreatePresetMemory(0x93);
+		BasicMemory memory = CreatePresetMemory(0x93);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterE());
@@ -777,7 +777,7 @@ namespace SHG
 	// Opcode: 0x94
 	TEST(CPUArithmeticAndLogic, SUB_A_H)
 	{
-		Memory memory = CreatePresetMemory(0x94);
+		BasicMemory memory = CreatePresetMemory(0x94);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterH());
@@ -787,7 +787,7 @@ namespace SHG
 	// Opcode: 0x95
 	TEST(CPUArithmeticAndLogic, SUB_A_L)
 	{
-		Memory memory = CreatePresetMemory(0x95);
+		BasicMemory memory = CreatePresetMemory(0x95);
 		auto processor = CPU(memory);
 
 		Test8BitSubtraction(processor, processor.GetRegisterL());
@@ -801,17 +801,17 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint16_t address = 320;
 
-		Memory memory = CreatePresetMemory(0x96);
+		BasicMemory memory = CreatePresetMemory(0x96);
 		memory.Write(address, operand2);
 
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2);
 	}
 
 	// SUB A, A
@@ -820,21 +820,21 @@ namespace SHG
 	{
 		uint8_t operand = 2;
 
-		Memory memory = CreatePresetMemory(0x97);
+		BasicMemory memory = CreatePresetMemory(0x97);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), 0);
+		EXPECT_EQ(processor.GetRegisterA().Read(), 0);
 	}
 
 	// SBC A, B
 	// Opcode: 0x98
 	TEST(CPUArithmeticAndLogic, SBC_A_B)
 	{
-		Memory memory = CreatePresetMemory(0x98);
+		BasicMemory memory = CreatePresetMemory(0x98);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterB());
@@ -844,7 +844,7 @@ namespace SHG
 	// Opcode: 0x99
 	TEST(CPUArithmeticAndLogic, SBC_A_C)
 	{
-		Memory memory = CreatePresetMemory(0x99);
+		BasicMemory memory = CreatePresetMemory(0x99);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterC());
@@ -854,7 +854,7 @@ namespace SHG
 	// Opcode: 0x9A
 	TEST(CPUArithmeticAndLogic, SBC_A_D)
 	{
-		Memory memory = CreatePresetMemory(0x9A);
+		BasicMemory memory = CreatePresetMemory(0x9A);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterD());
@@ -864,7 +864,7 @@ namespace SHG
 	// Opcode: 0x9B
 	TEST(CPUArithmeticAndLogic, SBC_A_E)
 	{
-		Memory memory = CreatePresetMemory(0x9B);
+		BasicMemory memory = CreatePresetMemory(0x9B);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterE());
@@ -874,7 +874,7 @@ namespace SHG
 	// Opcode: 0x9C
 	TEST(CPUArithmeticAndLogic, SBC_A_H)
 	{
-		Memory memory = CreatePresetMemory(0x9C);
+		BasicMemory memory = CreatePresetMemory(0x9C);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterH());
@@ -884,7 +884,7 @@ namespace SHG
 	// Opcode: 0x9D
 	TEST(CPUArithmeticAndLogic, SBC_A_L)
 	{
-		Memory memory = CreatePresetMemory(0x9D);
+		BasicMemory memory = CreatePresetMemory(0x9D);
 		auto processor = CPU(memory);
 
 		Test8BitSubtractWithCarry(processor, processor.GetRegisterL());
@@ -899,18 +899,18 @@ namespace SHG
 		uint16_t address = 300;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0x9E);
+		BasicMemory memory = CreatePresetMemory(0x9E);
 		auto processor = CPU(memory);
 
 		memory.Write(address, operand2);
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2 - carryFlag);
 	}
 
 	// SBC A, A
@@ -921,23 +921,23 @@ namespace SHG
 		uint16_t address = 300;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0x9F);
+		BasicMemory memory = CreatePresetMemory(0x9F);
 		auto processor = CPU(memory);
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
 		// TODO: Re-assess this
-		EXPECT_EQ(processor.GetRegisterA().GetData(), (uint8_t)-1);
+		EXPECT_EQ(processor.GetRegisterA().Read(), (uint8_t)-1);
 	}
 
 	// AND A, B
 	// Opcode: 0xA0
 	TEST(CPUArithmeticAndLogic, AND_A_B)
 	{
-		Memory memory = CreatePresetMemory(0xA0);
+		BasicMemory memory = CreatePresetMemory(0xA0);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterB());
@@ -947,7 +947,7 @@ namespace SHG
 	// Opcode: 0xA1
 	TEST(CPUArithmeticAndLogic, AND_A_C)
 	{
-		Memory memory = CreatePresetMemory(0xA1);
+		BasicMemory memory = CreatePresetMemory(0xA1);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterC());
@@ -957,7 +957,7 @@ namespace SHG
 	// Opcode: 0xA2
 	TEST(CPUArithmeticAndLogic, AND_A_D)
 	{
-		Memory memory = CreatePresetMemory(0xA2);
+		BasicMemory memory = CreatePresetMemory(0xA2);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterD());
@@ -967,7 +967,7 @@ namespace SHG
 	// Opcode: 0xA3
 	TEST(CPUArithmeticAndLogic, AND_A_E)
 	{
-		Memory memory = CreatePresetMemory(0xA3);
+		BasicMemory memory = CreatePresetMemory(0xA3);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterE());
@@ -977,7 +977,7 @@ namespace SHG
 	// Opcode: 0xA4
 	TEST(CPUArithmeticAndLogic, AND_A_H)
 	{
-		Memory memory = CreatePresetMemory(0xA4);
+		BasicMemory memory = CreatePresetMemory(0xA4);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterH());
@@ -987,7 +987,7 @@ namespace SHG
 	// Opcode: 0xA5
 	TEST(CPUArithmeticAndLogic, AND_A_L)
 	{
-		Memory memory = CreatePresetMemory(0xA5);
+		BasicMemory memory = CreatePresetMemory(0xA5);
 		auto processor = CPU(memory);
 
 		Test8BitAND(processor, processor.GetRegisterL());
@@ -1001,17 +1001,17 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint16_t address = 320;
 
-		Memory memory = CreatePresetMemory(0xA6);
+		BasicMemory memory = CreatePresetMemory(0xA6);
 		memory.Write(address, operand2);
 
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 & operand2);
 	}
 
 	// AND A, A
@@ -1020,21 +1020,21 @@ namespace SHG
 	{
 		uint8_t operand = 7;
 
-		Memory memory = CreatePresetMemory(0xA7);
+		BasicMemory memory = CreatePresetMemory(0xA7);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand & operand);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand & operand);
 	}
 
 	// XOR A, B
 	// Opcode: 0xA8
 	TEST(CPUArithmeticAndLogic, XOR_A_B)
 	{
-		Memory memory = CreatePresetMemory(0xA8);
+		BasicMemory memory = CreatePresetMemory(0xA8);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterB());
@@ -1044,7 +1044,7 @@ namespace SHG
 	// Opcode: 0xA9
 	TEST(CPUArithmeticAndLogic, XOR_A_C)
 	{
-		Memory memory = CreatePresetMemory(0xA9);
+		BasicMemory memory = CreatePresetMemory(0xA9);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterC());
@@ -1054,7 +1054,7 @@ namespace SHG
 	// Opcode: 0xAA
 	TEST(CPUArithmeticAndLogic, XOR_A_D)
 	{
-		Memory memory = CreatePresetMemory(0xAA);
+		BasicMemory memory = CreatePresetMemory(0xAA);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterD());
@@ -1064,7 +1064,7 @@ namespace SHG
 	// Opcode: 0xAB
 	TEST(CPUArithmeticAndLogic, XOR_A_E)
 	{
-		Memory memory = CreatePresetMemory(0xAB);
+		BasicMemory memory = CreatePresetMemory(0xAB);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterE());
@@ -1074,7 +1074,7 @@ namespace SHG
 	// Opcode: 0xAC
 	TEST(CPUArithmeticAndLogic, XOR_A_H)
 	{
-		Memory memory = CreatePresetMemory(0xAC);
+		BasicMemory memory = CreatePresetMemory(0xAC);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterH());
@@ -1084,7 +1084,7 @@ namespace SHG
 	// Opcode: 0xAD
 	TEST(CPUArithmeticAndLogic, XOR_A_L)
 	{
-		Memory memory = CreatePresetMemory(0xAD);
+		BasicMemory memory = CreatePresetMemory(0xAD);
 		auto processor = CPU(memory);
 
 		Test8BitXOR(processor, processor.GetRegisterL());
@@ -1098,17 +1098,17 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint16_t address = 320;
 
-		Memory memory = CreatePresetMemory(0xAE);
+		BasicMemory memory = CreatePresetMemory(0xAE);
 		memory.Write(address, operand2);
 
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 ^ operand2);
 	}
 
 	// XOR A, A
@@ -1117,21 +1117,21 @@ namespace SHG
 	{
 		uint8_t operand = 7;
 
-		Memory memory = CreatePresetMemory(0xAF);
+		BasicMemory memory = CreatePresetMemory(0xAF);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand ^ operand);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand ^ operand);
 	}
 
 	// OR A, B
 	// Opcode: 0xB0
 	TEST(CPUArithmeticAndLogic, OR_A_B)
 	{
-		Memory memory = CreatePresetMemory(0xB0);
+		BasicMemory memory = CreatePresetMemory(0xB0);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterB());
@@ -1141,7 +1141,7 @@ namespace SHG
 	// Opcode: 0xB1
 	TEST(CPUArithmeticAndLogic, OR_A_C)
 	{
-		Memory memory = CreatePresetMemory(0xB1);
+		BasicMemory memory = CreatePresetMemory(0xB1);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterC());
@@ -1151,7 +1151,7 @@ namespace SHG
 	// Opcode: 0xB2
 	TEST(CPUArithmeticAndLogic, OR_A_D)
 	{
-		Memory memory = CreatePresetMemory(0xB2);
+		BasicMemory memory = CreatePresetMemory(0xB2);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterD());
@@ -1161,7 +1161,7 @@ namespace SHG
 	// Opcode: 0xB3
 	TEST(CPUArithmeticAndLogic, OR_A_E)
 	{
-		Memory memory = CreatePresetMemory(0xB3);
+		BasicMemory memory = CreatePresetMemory(0xB3);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterE());
@@ -1171,7 +1171,7 @@ namespace SHG
 	// Opcode: 0xB4
 	TEST(CPUArithmeticAndLogic, OR_A_H)
 	{
-		Memory memory = CreatePresetMemory(0xB4);
+		BasicMemory memory = CreatePresetMemory(0xB4);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterH());
@@ -1181,7 +1181,7 @@ namespace SHG
 	// Opcode: 0xB5
 	TEST(CPUArithmeticAndLogic, OR_A_L)
 	{
-		Memory memory = CreatePresetMemory(0xB5);
+		BasicMemory memory = CreatePresetMemory(0xB5);
 		auto processor = CPU(memory);
 
 		Test8BitOR(processor, processor.GetRegisterL());
@@ -1195,17 +1195,17 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint16_t address = 320;
 
-		Memory memory = CreatePresetMemory(0xB6);
+		BasicMemory memory = CreatePresetMemory(0xB6);
 		memory.Write(address, operand2);
 
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 | operand2);
 	}
 
 	// OR A, A
@@ -1214,21 +1214,21 @@ namespace SHG
 	{
 		uint8_t operand = 7;
 
-		Memory memory = CreatePresetMemory(0xB7);
+		BasicMemory memory = CreatePresetMemory(0xB7);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand | operand);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand | operand);
 	}
 
 	// CP A, B
 	// Opcode: 0xB8
 	TEST(CPUArithmeticAndLogic, CP_A_B)
 	{
-		Memory memory = CreatePresetMemory(0xB8);
+		BasicMemory memory = CreatePresetMemory(0xB8);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterB());
@@ -1238,7 +1238,7 @@ namespace SHG
 	// Opcode: 0xB9
 	TEST(CPUArithmeticAndLogic, CP_A_C)
 	{
-		Memory memory = CreatePresetMemory(0xB9);
+		BasicMemory memory = CreatePresetMemory(0xB9);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterC());
@@ -1248,7 +1248,7 @@ namespace SHG
 	// Opcode: 0xBA
 	TEST(CPUArithmeticAndLogic, CP_A_D)
 	{
-		Memory memory = CreatePresetMemory(0xBA);
+		BasicMemory memory = CreatePresetMemory(0xBA);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterD());
@@ -1258,7 +1258,7 @@ namespace SHG
 	// Opcode: 0xBB
 	TEST(CPUArithmeticAndLogic, CP_A_E)
 	{
-		Memory memory = CreatePresetMemory(0xBB);
+		BasicMemory memory = CreatePresetMemory(0xBB);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterE());
@@ -1268,7 +1268,7 @@ namespace SHG
 	// Opcode: 0xBC
 	TEST(CPUArithmeticAndLogic, CP_A_H)
 	{
-		Memory memory = CreatePresetMemory(0xBC);
+		BasicMemory memory = CreatePresetMemory(0xBC);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterH());
@@ -1278,7 +1278,7 @@ namespace SHG
 	// Opcode: 0xBD
 	TEST(CPUArithmeticAndLogic, CP_A_L)
 	{
-		Memory memory = CreatePresetMemory(0xBD);
+		BasicMemory memory = CreatePresetMemory(0xBD);
 		auto processor = CPU(memory);
 
 		Test8BitCompare(processor, processor.GetRegisterL());
@@ -1293,12 +1293,12 @@ namespace SHG
 		uint8_t operand2 = 7;
 		uint16_t address = 300;
 
-		Memory memory = CreatePresetMemory(0xBE);
+		BasicMemory memory = CreatePresetMemory(0xBE);
 		auto processor = CPU(memory);
 		memory.Write(address, operand2);
 
-		processor.GetRegisterA().SetData(operand1);
-		processor.GetRegisterHL().SetData(address);
+		processor.GetRegisterA().Write(operand1);
+		processor.GetRegisterHL().Write(address);
 		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
@@ -1308,12 +1308,12 @@ namespace SHG
 	// Opcode: 0xBF
 	TEST(CPUArithmeticAndLogic, CP_A_A)
 	{
-		Memory memory = CreatePresetMemory(0xBF);
+		BasicMemory memory = CreatePresetMemory(0xBF);
 		auto processor = CPU(memory);
 
 		uint8_t operand = 5;
 
-		processor.GetRegisterA().SetData(operand);
+		processor.GetRegisterA().Write(operand);
 		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);
@@ -1326,14 +1326,14 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		Memory memory = CreatePresetMemory(0xC6);
+		BasicMemory memory = CreatePresetMemory(0xC6);
 		auto processor = CPU(memory);
 
 		memory.Write(1, operand2);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2);
 	}
 
 	// SUB A, U8
@@ -1343,16 +1343,16 @@ namespace SHG
 		uint8_t operand1 = 7;
 		uint8_t operand2 = 5;
 
-		Memory memory = CreatePresetMemory(0xD6);
+		BasicMemory memory = CreatePresetMemory(0xD6);
 		auto processor = CPU(memory);
 
 		memory.Write(1, operand2);
 
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2);
 	}
 
 	// AND A, U8
@@ -1362,13 +1362,13 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		Memory memory = CreatePresetMemory(0xE6);
+		BasicMemory memory = CreatePresetMemory(0xE6);
 		auto processor = CPU(memory);
 
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 & operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 & operand2);
 	}
 
 	// OR A, U8
@@ -1378,14 +1378,14 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		Memory memory = CreatePresetMemory(0xF6);
+		BasicMemory memory = CreatePresetMemory(0xF6);
 		auto processor = CPU(memory);
 
 		memory.Write(1, operand2);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 | operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 | operand2);
 	}
 
 	// ADD SP, I8
@@ -1395,14 +1395,14 @@ namespace SHG
 		uint16_t operand1 = 300;
 		int8_t operand2 = -3;
 
-		Memory memory = CreatePresetMemory(0xE8);
+		BasicMemory memory = CreatePresetMemory(0xE8);
 		auto processor = CPU(memory);
 		memory.Write(1, operand2);
 
-		processor.GetStackPointer().SetData(operand1);
+		processor.GetStackPointer().Write(operand1);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetStackPointer().GetData(), operand1 + operand2);
+		EXPECT_EQ(processor.GetStackPointer().Read(), operand1 + operand2);
 	}
 
 	// LD HL, SP + I8
@@ -1412,14 +1412,14 @@ namespace SHG
 		uint16_t stackPointerValue = 320;
 		int8_t signedIntValue = -5;
 
-		Memory memory = CreatePresetMemory(0xF8);
+		BasicMemory memory = CreatePresetMemory(0xF8);
 		auto processor = CPU(memory);
 
 		memory.Write(1, signedIntValue);
-		processor.GetStackPointer().SetData(stackPointerValue);
+		processor.GetStackPointer().Write(stackPointerValue);
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterHL().GetData(), stackPointerValue + signedIntValue);
+		EXPECT_EQ(processor.GetRegisterHL().Read(), stackPointerValue + signedIntValue);
 	}
 
 	// ADC A, U8
@@ -1430,16 +1430,16 @@ namespace SHG
 		uint8_t operand2 = 5;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0xCE);
+		BasicMemory memory = CreatePresetMemory(0xCE);
 		auto processor = CPU(memory);
 		memory.Write(1, operand2);
 
 		processor.ChangeCarryFlag((bool)carryFlag);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 + operand2 + carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 + operand2 + carryFlag);
 	}
 
 	// SBC A, U8
@@ -1450,16 +1450,16 @@ namespace SHG
 		uint8_t operand2 = 2;
 		uint8_t carryFlag = 1;
 
-		Memory memory = CreatePresetMemory(0xDE);
+		BasicMemory memory = CreatePresetMemory(0xDE);
 		auto processor = CPU(memory);
 
 		memory.Write(1, operand2);
 		processor.ChangeCarryFlag(carryFlag);
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 - operand2 - carryFlag);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 - operand2 - carryFlag);
 	}
 
 	// XOR A, U8
@@ -1469,16 +1469,16 @@ namespace SHG
 		uint8_t operand1 = 2;
 		uint8_t operand2 = 5;
 
-		Memory memory = CreatePresetMemory(0xEE);
+		BasicMemory memory = CreatePresetMemory(0xEE);
 		auto processor = CPU(memory);
 
 		memory.Write(1, operand2);
 
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 
 		processor.Step();
 
-		EXPECT_EQ(processor.GetRegisterA().GetData(), operand1 ^ operand2);
+		EXPECT_EQ(processor.GetRegisterA().Read(), operand1 ^ operand2);
 	}
 
 	// CP A, U8
@@ -1488,11 +1488,11 @@ namespace SHG
 		uint8_t operand1 = 9;
 		uint8_t operand2 = 9;
 
-		Memory memory = CreatePresetMemory(0xFE);
+		BasicMemory memory = CreatePresetMemory(0xFE);
 		auto processor = CPU(memory);
 		memory.Write(1, operand2);
 
-		processor.GetRegisterA().SetData(operand1);
+		processor.GetRegisterA().Write(operand1);
 		processor.Step();
 
 		EXPECT_EQ(processor.GetZeroFlag(), 1);

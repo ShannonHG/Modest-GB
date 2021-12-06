@@ -1,10 +1,10 @@
 #include <map>
 #include <string>
 #include "Graphics/PixelFetcher.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Utils/GraphicsUtils.hpp"
 #include "Utils/GBSpecs.hpp"
 #include "Logger.hpp"
-#include "Utils/GBMemoryMapAddresses.hpp"
+#include "Utils/MemoryUtils.hpp"
 
 namespace SHG
 {

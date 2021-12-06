@@ -3,7 +3,7 @@
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
 #include "Utils/GBSpecs.hpp"
-#include "Utils/GBMemoryMapAddresses.hpp"
+#include "Utils/MemoryUtils.hpp"
 
 namespace SHG
 {
@@ -24,7 +24,7 @@ namespace SHG
 		}
 
 		sdlWindow = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-
+		
 		if (sdlWindow == nullptr)
 		{
 			Logger::WriteError("Failed to create SDL window. Error: " + std::string(SDL_GetError()));
@@ -52,6 +52,44 @@ namespace SHG
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 		return true;
+	}
+
+	int EmulatorWindow::GetWidth()
+	{
+		int width = 0;
+		SDL_GetWindowSize(sdlWindow, &width, nullptr);
+		return width;
+	}
+
+	int EmulatorWindow::GetHeight()
+	{
+		int height = 0;
+		SDL_GetWindowSize(sdlWindow, nullptr, &height);
+		return height;
+	}
+
+	void EmulatorWindow::SetSize(int width, int height)
+	{
+		SDL_SetWindowSize(sdlWindow, width, height);
+	}
+
+	int EmulatorWindow::GetX()
+	{
+		int x = 0;
+		SDL_GetWindowPosition(sdlWindow, &x, nullptr);
+		return x;
+	}
+
+	int EmulatorWindow::GetY()
+	{
+		int y = 0;
+		SDL_GetWindowPosition(sdlWindow, &y, nullptr);
+		return y;
+	}
+
+	void EmulatorWindow::SetPosition(int x, int y)
+	{
+		SDL_SetWindowPosition(sdlWindow, x, y);
 	}
 
 	void EmulatorWindow::Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, uint32_t cyclesPerSecond, std::string& logs)
@@ -265,25 +303,25 @@ namespace SHG
 			ImGui::Separator();
 
 			// Print register values 
-			ImGui::Text(("A: " + GetHexString8(processor.GetRegisterA().GetData())).c_str());
+			ImGui::Text(("A: " + GetHexString8(processor.GetRegisterA().Read())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("F: " + GetHexString8(processor.GetRegisterF().GetData())).c_str());
+			ImGui::Text(("F: " + GetHexString8(processor.GetRegisterF().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("B: " + GetHexString8(processor.GetRegisterB().GetData())).c_str());
+			ImGui::Text(("B: " + GetHexString8(processor.GetRegisterB().Read())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("C: " + GetHexString8(processor.GetRegisterC().GetData())).c_str());
+			ImGui::Text(("C: " + GetHexString8(processor.GetRegisterC().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("D: " + GetHexString8(processor.GetRegisterD().GetData())).c_str());
+			ImGui::Text(("D: " + GetHexString8(processor.GetRegisterD().Read())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("E: " + GetHexString8(processor.GetRegisterE().GetData())).c_str());
+			ImGui::Text(("E: " + GetHexString8(processor.GetRegisterE().Read())).c_str());
 
-			ImGui::Text(("H: " + GetHexString8(processor.GetRegisterH().GetData())).c_str());
+			ImGui::Text(("H: " + GetHexString8(processor.GetRegisterH().Read())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("L: " + GetHexString8(processor.GetRegisterL().GetData())).c_str());
+			ImGui::Text(("L: " + GetHexString8(processor.GetRegisterL().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("PC: " + GetHexString16(processor.GetProgramCounter().GetData())).c_str());
+			ImGui::Text(("PC: " + GetHexString16(processor.GetProgramCounter().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SP: " + GetHexString16(processor.GetStackPointer().GetData())).c_str());
+			ImGui::Text(("SP: " + GetHexString16(processor.GetStackPointer().Read())).c_str());
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -335,9 +373,9 @@ namespace SHG
 
 			ImGui::Separator();
 			ImGui::Text("Serial");
-			ImGui::Text(("SB: " + GetHexString8(memoryMap.Read(GB_SB_ADDRESS))).c_str());
+			ImGui::Text(("SB: " + GetHexString8(memoryMap.Read(GB_SERIAL_TRANSFER_DATA_ADDRESS))).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("SC: " + GetHexString8(memoryMap.Read(GB_SC_ADDRESS))).c_str());
+			ImGui::Text(("SC: " + GetHexString8(memoryMap.Read(GB_SERIAL_TRANSFER_CONTROL_ADDRESS))).c_str());
 
 			// TODO: Print sound registers
 			ImGui::Separator();
@@ -394,21 +432,21 @@ namespace SHG
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
-			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC().GetData())).c_str());
+			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatusRegister().GetData())).c_str());
+			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatusRegister().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY().GetData())).c_str());
+			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY().Read())).c_str());
 
-			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC().GetData())).c_str());
+			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY().GetData())).c_str());
+			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX().GetData())).c_str());
+			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX().Read())).c_str());
 
-			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY().GetData())).c_str());
+			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY().Read())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX().GetData())).c_str());
+			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX().Read())).c_str());
 			ImGui::Separator();
 		}
 

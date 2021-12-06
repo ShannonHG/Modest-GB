@@ -6,7 +6,7 @@
 #include <sstream>
 #include <functional>
 #include "CPU/CPUInstruction.hpp"
-#include "Memory/DataStorageDevice.hpp"
+#include "Memory/Memory.hpp"
 #include "Memory/Register16.hpp"
 
 namespace SHG
@@ -14,7 +14,7 @@ namespace SHG
 	class CPU
 	{
 	public:
-		CPU(DataStorageDevice& memoryManagementUnit);
+		CPU(Memory& memoryManagementUnit);
 		uint32_t Step();
 
 		uint8_t GetZeroFlag();
@@ -56,7 +56,7 @@ namespace SHG
 		bool IsPreviousInstructionValid();
 
 	private:
-		DataStorageDevice& memoryManagementUnit;
+		Memory& memoryManagementUnit;
 
 		Register16 regAF;
 		Register16 regBC;
@@ -65,7 +65,7 @@ namespace SHG
 		Register16 programCounter;
 		Register16 stackPointer;
 
-		uint32_t currentCycles = 0;
+		uint32_t currentInstructionCycles = 0;
 		bool isHalted = false;
 		bool interruptMasterEnableFlag = false;
 		CPUInstruction* currentInstruction = nullptr;

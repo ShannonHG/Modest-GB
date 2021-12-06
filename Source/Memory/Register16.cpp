@@ -3,7 +3,7 @@
 
 namespace SHG
 {
-	Register16::Register16() : Memory(2)
+	Register16::Register16()
 	{
 		lowRegister = Register8();
 		highRegister = Register8();
@@ -11,42 +11,44 @@ namespace SHG
 
 	uint8_t Register16::GetHighByte() const
 	{
-		return highRegister.GetData();
+		return highRegister.Read();
 	}
 
 	uint8_t Register16::GetLowByte() const
 	{
-		return lowRegister.GetData();
+		return lowRegister.Read();
 	}
 
-	void Register16::SetData(uint16_t data)
+	void Register16::Write(uint16_t data)
 	{
 		uint8_t highByte = data >> 8;
 		uint8_t lowByte = data & 0x00FF;
 
-		highRegister.SetData(highByte);
-		lowRegister.SetData(lowByte);
+		highRegister.Write(highByte);
+		lowRegister.Write(lowByte);
 	}
 
-	uint16_t Register16::GetData() const
+	uint16_t Register16::Read() const
 	{
-		return (highRegister.GetData() << 8) | lowRegister.GetData();
+		return (highRegister.Read() << 8) | lowRegister.Read();
 	}
 
 	void Register16::SetHighByte(uint8_t data)
 	{
-		highRegister.SetData(data);
+		highRegister.Write(data);
 	}
 
 	void Register16::SetLowByte(uint8_t data)
 	{
-		lowRegister.SetData(data);
+		lowRegister.Write(data);
 	}
 
 	void Register16::SetBit(uint8_t bitNumber, bool enabled)
 	{
-		if (bitNumber < 8) lowRegister.ChangeBit(bitNumber, enabled);
-		else highRegister.ChangeBit(bitNumber - 8, enabled);
+		if (bitNumber < 8)
+			lowRegister.ChangeBit(bitNumber, enabled);
+		else
+			highRegister.ChangeBit(bitNumber - 8, enabled);
 	}
 
 	uint8_t Register16::GetBit(uint8_t bitNumber) const
@@ -56,22 +58,22 @@ namespace SHG
 
 	void Register16::Increment()
 	{
-		SetData(GetData() + 1);
+		Write(Read() + 1);
 	}
 
 	void Register16::Decrement()
 	{
-		SetData(GetData() - 1);
+		Write(Read() - 1);
 	}
 
 	void Register16::Increase(uint16_t amount)
 	{
-		SetData(GetData() + amount);
+		Write(Read() + amount);
 	}
 
 	void Register16::Decrease(uint16_t amount)
 	{
-		SetData(GetData() - amount);
+		Write(Read() - amount);
 	}
 
 	Register8& Register16::GetHighRegister()
@@ -82,30 +84,5 @@ namespace SHG
 	Register8& Register16::GetLowRegister()
 	{
 		return lowRegister;
-	}
-
-	uint8_t Register16::Read(uint16_t address) const
-	{
-		if (IsAddressAvailable(address))
-			return GetData();
-
-		return 0;
-	}
-	
-	void Register16::Write(uint16_t address, uint8_t value)
-	{
-		if (IsAddressAvailable(address))
-			SetData(value);
-	}
-
-	bool Register16::IsAddressAvailable(uint16_t address) const
-	{
-		return address < 2;
-	}
-
-	void Register16::Reset()
-	{
-		lowRegister.Reset();
-		highRegister.Reset();
 	}
 }

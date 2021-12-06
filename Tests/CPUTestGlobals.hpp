@@ -1,8 +1,8 @@
 #pragma once
-#include "Memory/Memory.hpp"
+#include "Memory/BasicMemory.hpp"
 
 namespace SHG
 {
-	Memory CreatePresetMemory(uint8_t value);
-	Memory CreatePresetMemory(const std::vector<uint8_t>& values);
+	BasicMemory CreatePresetMemory(uint8_t value);
+	BasicMemory CreatePresetMemory(const std::vector<uint8_t>& values);
 }

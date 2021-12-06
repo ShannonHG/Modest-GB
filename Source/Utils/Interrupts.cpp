@@ -16,7 +16,7 @@ namespace SHG
 		{ InterruptType::Joypad, 0x60 }
 	};
 
-	void SHG::RequestInterrupt(MemoryMap& memoryMap, InterruptType interruptType)
+	void SHG::RequestInterrupt(Memory& memoryMap, InterruptType interruptType)
 	{
 		memoryMap.SetBit(INTERRUPT_FLAG_ADDRESS, static_cast<uint8_t>(interruptType));
 	}

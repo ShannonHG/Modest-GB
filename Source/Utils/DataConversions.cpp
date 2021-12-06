@@ -1,8 +1,8 @@
 #include <sstream>
-#include "Utils/DataConversions.hpp"
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include "Utils/DataConversions.hpp"
 
 namespace SHG
 {

@@ -1,5 +1,6 @@
 #include <limits>
 #include <cstdint>
+#include <algorithm>
 #include "Utils/Arithmetic.hpp"
 
 namespace SHG::Arithmetic
@@ -51,10 +52,12 @@ namespace SHG::Arithmetic
 		return (sum & 0xF000) != 0;
 	}
 
-	void SHG::Arithmetic::ChangeBit(uint8_t& data, uint8_t bitIndex, bool enable)
+	void SHG::Arithmetic::ChangeBit(uint8_t& data, uint8_t bitIndex, bool isSet)
 	{
-		if (enable) SetBit(data, bitIndex);
-		else ResetBit(data, bitIndex);
+		if (isSet) 
+			SetBit(data, bitIndex);
+		else 
+			ClearBit(data, bitIndex);
 	}
 
 	void SHG::Arithmetic::SetBit(uint8_t& data, uint8_t bitIndex)
@@ -62,7 +65,7 @@ namespace SHG::Arithmetic
 		data |= (1 << bitIndex);
 	}
 
-	void SHG::Arithmetic::ResetBit(uint8_t& data, uint8_t bitIndex)
+	void SHG::Arithmetic::ClearBit(uint8_t& data, uint8_t bitIndex)
 	{
 		data &= ~(1 << bitIndex);
 	}
@@ -75,5 +78,15 @@ namespace SHG::Arithmetic
 			return operand;
 
 		return operand - remainder + 2;
+	}
+
+	bool Arithmetic::IsInRange(int operand, int lowerLimit, int upperLimit)
+	{
+		return operand >= lowerLimit && operand <= upperLimit;
+	}
+
+	int Arithmetic::Normalize(int operand, int lowerBound, int upperBound)
+	{
+		return std::clamp(operand - lowerBound, 0, upperBound);
 	}
 }

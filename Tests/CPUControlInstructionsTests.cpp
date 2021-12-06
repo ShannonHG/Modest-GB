@@ -8,7 +8,7 @@ namespace SHG
 	// Opcode: 0x00
 	TEST(CPUControlInstructions, NOP)
 	{
-		Memory memory = CreatePresetMemory(0x00);
+		BasicMemory memory = CreatePresetMemory(0x00);
 		auto processor = CPU(memory);
 
 		processor.Step();
@@ -20,7 +20,7 @@ namespace SHG
 	// Opcode: 0x10
 	TEST(CPUControlInstructions, STOP)
 	{
-		Memory memory = CreatePresetMemory(0x10);
+		BasicMemory memory = CreatePresetMemory(0x10);
 		auto processor = CPU(memory);
 
 		processor.Step();
@@ -32,7 +32,7 @@ namespace SHG
 	// Opcode: 0x76
 	TEST(CPUControlInstructions, HALT)
 	{
-		Memory memory = CreatePresetMemory(0x76);
+		BasicMemory memory = CreatePresetMemory(0x76);
 		auto processor = CPU(memory);
 
 		processor.Step();
@@ -44,7 +44,7 @@ namespace SHG
 	// Opcode: 0xF3
 	TEST(CPUControlInstructions, DI)
 	{
-		Memory memory = CreatePresetMemory(0xF3);
+		BasicMemory memory = CreatePresetMemory(0xF3);
 		auto processor = CPU(memory);
 
 		processor.ChangeInterruptMasterEnableFlag(true);
@@ -56,7 +56,7 @@ namespace SHG
 	// Opcode: 0xFB
 	TEST(CPUControlInstructions, EI)
 	{
-		Memory memory = CreatePresetMemory(0xFB);
+		BasicMemory memory = CreatePresetMemory(0xFB);
 		auto processor = CPU(memory);
 
 		processor.ChangeInterruptMasterEnableFlag(false);

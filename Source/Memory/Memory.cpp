@@ -1,39 +1,28 @@
-#include <string>
 #include "Memory/Memory.hpp"
-#include "Logger.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG
 {
-	Memory::Memory(uint32_t memorySize)
+	bool Memory::GetBit(uint16_t address, uint8_t bitNum) const
 	{
-		memory = std::vector<uint8_t>(memorySize);
+		uint8_t byte = Read(address);
+		return Arithmetic::GetBit(byte, bitNum);
 	}
 
-	uint8_t Memory::Read(uint16_t address) const
+	void Memory::ChangeBit(uint16_t address, uint8_t bitNum, bool bitValue)
 	{
-		if (!IsAddressAvailable(address))
-		{
-			Logger::WriteWarning("[Memory] Address is out of range. Address: " + std::to_string(address) + " | Memory Size: " + std::to_string(memory.size()));
-			return 0;
-		}
-		else
-		{
-			return memory[address];
-		}
+		uint8_t byte = Read(address);
+		Arithmetic::ChangeBit(byte, bitNum, bitValue);
+		Write(address, byte);
 	}
 
-	void Memory::Write(uint16_t address, uint8_t value)
+	void Memory::SetBit(uint16_t address, uint8_t bitNum)
 	{
-		if (IsAddressAvailable(address)) memory[address] = value;
+		ChangeBit(address, bitNum, true);
 	}
 
-	bool Memory::IsAddressAvailable(uint16_t address) const
+	void Memory::ClearBit(uint16_t address, uint8_t bitNum)
 	{
-		return address < memory.size();
-	}
-
-	void Memory::Reset()
-	{
-		std::memset(memory.data(), 0, sizeof(uint8_t) * memory.size());
+		ChangeBit(address, bitNum, false);
 	}
 }
