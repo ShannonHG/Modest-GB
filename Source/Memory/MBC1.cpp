@@ -111,12 +111,35 @@ namespace SHG
 		}
 		else if (address >= ROM_BANK_NUMBER_START_ADDR && address <= ROM_BANK_NUMBER_END_ADDR)
 		{
-			// The ROM bank number register is only 5-bits wide.
-			uint8_t bitMask = 0b11111;
-
-			romBankNumber = value & bitMask;
-
 			// TODO: Add logic for larger cartridges
+			if (rom->size() >= MiB)
+			{
+				Logger::WriteError("Large cart detected (greater than 1 MiB). ROM bank number selection logic will not work properly.");
+				return;
+			}
+
+			// Determine the number of bits required to address all of the ROM banks. 
+			// For example, a 256 KiB cartridge would require 4 bits to address all 16 of its banks.
+			uint8_t numBitsRequired = std::log2(rom->size() / ROM_BANK_SIZE);
+
+			uint8_t bitMask = std::pow(2, numBitsRequired) - 1;
+			romBankNumber = value & bitMask;
+		}
+		else if (address >= RAM_BANK_NUMBER_START_ADDR && address <= RAM_BANK_NUMBER_END_ADDR)
+		{
+			// TODO: Add logic for larger cartridges
+			if (rom->size() >= MiB)
+			{
+				Logger::WriteError("Large cart detected (greater than 1 MiB). RAM bank number selection logic will not work properly.");
+				return;
+			}
+
+			// The RAM bank register only selects a RAM bank on 32 KiB RAM carts.
+			if (ram == nullptr || ram->size() != 32 * KiB)
+				return;
+
+			// The RAM bank register is only 2 bits wide.
+			ramBankNumber = value & 0b11;
 		}
 		else
 		{
