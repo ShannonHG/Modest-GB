@@ -52,10 +52,10 @@ namespace SHG
 		// otherwise the bit should be 1.
 		if (isDirectionButtonsSelected)
 		{
-			result = !buttonStates.at(GBButton::Right)
-				| (!buttonStates.at(GBButton::Left) << 1)
-				| (!buttonStates.at(GBButton::Up) << 2)
-				| (!buttonStates.at(GBButton::Down) << 3);
+			result = !(buttonStates.at(GBButton::Right) && !buttonStates.at(GBButton::Left))
+				| (!(buttonStates.at(GBButton::Left) && !buttonStates.at(GBButton::Right)) << 1)
+				| (!(buttonStates.at(GBButton::Up) && !buttonStates.at(GBButton::Down)) << 2)
+				| (!(buttonStates.at(GBButton::Down) && !buttonStates.at(GBButton::Up)) << 3);
 		}
 		else if (isActionButtonsSelected)
 		{

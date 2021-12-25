@@ -174,7 +174,7 @@ namespace SHG
 
 	bool MemoryMap::IsAddressAvailable(uint16_t address) const
 	{
-		// TODO: fix
+		// TODO: Revisit
 		return true;
 	}
 
