@@ -5,31 +5,24 @@
 
 namespace SHG
 {
-	// Address range is read only
 	const uint16_t ROM_BANK_X0_START_ADDR = 0x0000;
 	const uint16_t ROM_BANK_X0_END_ADDR = 0x3FFF;
 
-	// Address range is read only
 	const uint16_t ROM_SWITCHABLE_BANK_START_ADDR = 0x4000;
 	const uint16_t ROM_SWITCHABLE_BANK_END_ADDR = 0x7FFF;
 
-	// Address range is both readable and writable
 	const uint16_t RAM_SWITCHABLE_BANK_START_ADDR = 0xA000;
 	const uint16_t RAM_SWITCHABLE_BANK_END_ADDR = 0xBFFF;
 
-	// Address range is write only
 	const uint16_t RAM_ENABLE_START_ADDR = 0x0000;
 	const uint16_t RAM_ENABLE_END_ADDR = 0x1FFF;
 
-	// Address range is write only
 	const uint16_t ROM_BANK_NUMBER_START_ADDR = 0x2000;
 	const uint16_t ROM_BANK_NUMBER_END_ADDR = 0x3FFF;
 
-	// Address range is write only
 	const uint16_t RAM_BANK_NUMBER_START_ADDR = 0x4000;
 	const uint16_t RAM_BANK_NUMBER_END_ADDR = 0x5FFF;
 
-	// Address range is write only
 	const uint16_t BANK_MODE_SELECT_START_ADDR = 0x6000;
 	const uint16_t BANK_MODE_SELECT_END_ADDR = 0x7FFF;
 
@@ -124,5 +117,6 @@ namespace SHG
 		// The ROM bank number defaults to 1;
 		romBankNumber = 1;
 		ramBankNumber = 0;
+		isSimpleBankingModeEnabled = false;
 	}
 }

@@ -7,6 +7,7 @@
 #include "Logger.hpp"
 #include "Memory/MBC1.hpp"
 #include "Memory/MBC3.hpp"
+#include "Memory/MBC5.hpp"
 
 namespace SHG
 {
@@ -275,9 +276,10 @@ namespace SHG
 			break;
 		case MBC2_CODE:
 		case MBC2_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC2());
-			memoryBankControllerType = MemoryBankControllerType::MBC2;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: 'MBC2'", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		case ROM_RAM_CODE:
 			memoryBankControllerType = MemoryBankControllerType::None;
@@ -288,9 +290,10 @@ namespace SHG
 		case MMM01_CODE:
 		case MMM01_RAM_CODE:
 		case MMM01_RAM_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MMM01());
-			memoryBankControllerType = MemoryBankControllerType::MMM01;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: 'MMM01'", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		case MBC3_TIMER_BATTERY_CODE:
 		case MBC3_TIMER_RAM_BATTERY_CODE:
@@ -307,33 +310,37 @@ namespace SHG
 		case MBC5_RUMBLE_CODE:
 		case MBC5_RUMBLE_RAM_CODE:
 		case MBC5_RUMBLE_RAM_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC5());
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC5());
 			memoryBankControllerType = MemoryBankControllerType::MBC5;
 			Logger::WriteInfo("Cartridge type: MBC5", CARTRIDGE_LOG_HEADER);
 			break;
 		case MBC6_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC6());
-			memoryBankControllerType = MemoryBankControllerType::MBC6;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: MBC6", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		case MBC7_SENSOR_RUMBLE_RAM_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC7());
-			memoryBankControllerType = MemoryBankControllerType::MBC7;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: MBC7", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		case 0xFC:
 			memoryBankControllerType = MemoryBankControllerType::None;
 			Logger::WriteInfo("Cartridge type: POCKET CAMERA", CARTRIDGE_LOG_HEADER);
 			break;
 		case HuC3_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new HuC3());
-			memoryBankControllerType = MemoryBankControllerType::HuC3;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: HuC3", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		case HuC1_RAM_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new HuC1());
-			memoryBankControllerType = MemoryBankControllerType::HuC1;
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC1());
+			memoryBankControllerType = MemoryBankControllerType::MBC1;
 			Logger::WriteInfo("Cartridge type: HuC1", CARTRIDGE_LOG_HEADER);
+			WriteUnsupportedMBCMesage();
 			break;
 		}
 	}
@@ -341,5 +348,10 @@ namespace SHG
 	bool Cartridge::IsRAMAddress(uint16_t address) const
 	{
 		return address >= OPTIONAL_8KB_RAM_START_ADDRESS && address <= OPTIONAL_8KB_RAM_END_ADDRESS;
+	}
+
+	void Cartridge::WriteUnsupportedMBCMesage()
+	{
+		Logger::WriteError("The requested memory bank controller type is not supported, MBC1 will be used instead.", CARTRIDGE_LOG_HEADER);
 	}
 }

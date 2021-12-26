@@ -49,5 +49,6 @@ namespace SHG
 		void DecodeROMSize(uint8_t byte);
 		void InitializeRAM(uint8_t byte);
 		bool IsRAMAddress(uint16_t address) const;
+		void WriteUnsupportedMBCMesage();
 	};
 }
