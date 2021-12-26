@@ -6,6 +6,7 @@
 #include "Memory/Cartridge.hpp"
 #include "Logger.hpp"
 #include "Memory/MBC1.hpp"
+#include "Memory/MBC3.hpp"
 
 namespace SHG
 {
@@ -212,17 +213,6 @@ namespace SHG
 		return ram.size();
 	}
 
-	bool Cartridge::IsAddressAvailable(uint16_t address) const
-	{
-		return
-			// Does the address refer to a location in the memory bank controller?
-			(memoryBankController != nullptr && memoryBankController->IsAddressAvailable(address)) ||
-			// Does the address refer to a location in ROM?
-			(memoryBankControllerType == MemoryBankControllerType::None && rom.size() > address) ||
-			// Does the address refer to a location in RAM?
-			(memoryBankControllerType == MemoryBankControllerType::None && ram.size() > 0 && IsRAMAddress(address));
-	}
-
 	MemoryBankControllerType Cartridge::GetMemoryBankControllerType()
 	{
 		return memoryBankControllerType;
@@ -307,7 +297,7 @@ namespace SHG
 		case MBC3_CODE:
 		case MBC3_RAM_CODE:
 		case MBC3_RAM_BATTERY_CODE:
-			//memoryBankController = std::unique_ptr<MemoryBankController>(new MBC3());
+			memoryBankController = std::unique_ptr<MemoryBankController>(new MBC3());
 			memoryBankControllerType = MemoryBankControllerType::MBC3;
 			Logger::WriteInfo("Cartridge type: 'MBC3'", CARTRIDGE_LOG_HEADER);
 			break;

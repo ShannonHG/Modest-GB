@@ -35,7 +35,6 @@ namespace SHG
 		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
 		void Reset() override;
-		bool IsAddressAvailable(uint16_t address) const override;
 	private:
 		bool isROMLoaded = false;
 

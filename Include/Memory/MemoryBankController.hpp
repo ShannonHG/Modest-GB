@@ -20,7 +20,6 @@ namespace SHG
 		void Reset() override;
 		virtual uint8_t Read(uint16_t address) const override = 0;
 		virtual void Write(uint16_t address, uint8_t value) override = 0;
-		virtual bool IsAddressAvailable(uint16_t address) const override = 0;
 
 		// Calculates the physical ROM address using the RAM bank number, and distance from the beginning of 
 		// the ROM bank's address (in the virtual address range) to the target virtual address

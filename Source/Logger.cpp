@@ -1,12 +1,11 @@
 #include <filesystem>
-#include <ctime>
-#include <locale>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include "Logger.hpp"
+#include "Utils/SystemTime.hpp"
 
 namespace SHG
 {
@@ -17,7 +16,6 @@ namespace SHG
 	const std::string SYSTEM_STATUS_MESSAGE_HEADER = "[SYSTEM]";
 
 	std::ofstream logFileStream;
-	std::array<char, 100> logDateTimeBuffer;
 	std::vector<LogEntryEvent> logEntryCallbacks;
 
 	bool Logger::IsSystemEventLoggingEnabled = false;
@@ -52,28 +50,20 @@ namespace SHG
 		logFileStream = std::ofstream(std::filesystem::current_path().string() + "/" + LOG_FILE_NAME, std::ios::out);
 	}
 
-	// TODO: Currently this only fires the log entry callback so that the log can be displayed on screen.
-	// At some point, writing to an actual log file may be useful again.
+	// TODO: Prevent the log file from getting too large.
 	void Logger::WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader, LogMessageType messageType)
 	{
-		if (!logFileStream.is_open()) InitLogFile();
+		if (!logFileStream.is_open()) 
+			InitLogFile();
 
-		std::time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-		std::tm dateTime{};
+		SystemTime::DateTime currentTime = SystemTime::GetCurrentTime();
 
-		// Some compilers complain about localtime() being unsafe due to thread-safety issues, 
-		// so depending on the platform, use the respective safe alternative.
-#if defined(__unix__)
-		localtime_r(&rawTime, &dateTime)
-#elif defined(_MSC_VER)
-		localtime_s(&dateTime, &rawTime);
-#else
-		dateTime = *std::localtime(&rawTime);
-#endif
+		std::stringstream formattedTime;
 
-		// %F %T = Y-m-d H:M
-		std::strftime(&logDateTimeBuffer[0], logDateTimeBuffer.size(), "%F %T", &dateTime);
-		std::string formattedMessage = "[" + std::string(logDateTimeBuffer.data()) + "] " + heading + (customHeader.empty() ? customHeader : " " + customHeader) + ": " + message;
+		// Y-m-d H:M
+		formattedTime << currentTime.year << "-" << currentTime.month << "-" << currentTime.day << " " << currentTime.hour << ":" << currentTime.minutes;
+
+		std::string formattedMessage = "[" + formattedTime.str() + "] " + heading + (customHeader.empty() ? customHeader : " " + customHeader) + ": " + message;
 
 		if (writeToConsole) 
 			std::cout << formattedMessage << std::endl;

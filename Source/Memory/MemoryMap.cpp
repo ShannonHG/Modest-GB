@@ -116,6 +116,7 @@ namespace SHG
 
 	void MemoryMap::Reset()
 	{
+		ppu->GetLY().Write(0);
 		joypad->Write(0xCF);
 		Write(0xFF01, 0x00);
 		Write(0xFF02, 0x7E);
@@ -148,7 +149,6 @@ namespace SHG
 		Write(0xFF41, 0x85);
 		Write(0xFF42, 0x00);
 		Write(0xFF43, 0x00);
-		ppu->GetLY().Write(0);
 		Write(0xFF45, 0x00);
 		Write(0xFF46, 0xFF);
 		Write(0xFF47, 0xFC);
@@ -170,12 +170,6 @@ namespace SHG
 		Write(0xFF6B, 0xFF);
 		Write(0xFF70, 0xFF);
 		Write(0xFFFF, 0x00);
-	}
-
-	bool MemoryMap::IsAddressAvailable(uint16_t address) const
-	{
-		// TODO: Revisit
-		return true;
 	}
 
 	void MemoryMap::AttachCartridge(Cartridge* cartridge)

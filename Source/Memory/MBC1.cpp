@@ -33,19 +33,6 @@ namespace SHG
 	const uint16_t BANK_MODE_SELECT_START_ADDR = 0x6000;
 	const uint16_t BANK_MODE_SELECT_END_ADDR = 0x7FFF;
 
-	// Address to 4-bit register containing the RAM enable flag
-	const uint8_t RAM_ENABLE_REGISTER_ADDR = 0;
-
-	// Address to 5-bit register containing the ROM bank number
-	const uint8_t ROM_BANK_NUM_REGISTER_ADDR = 1;
-
-	// Address to 2-bit register containing the RAM bank number,
-	// or upper bits of ROM bank number
-	const uint8_t SECONDARY_BANK_REGISTER_ADDR = 2;
-
-	// Address to 1-bit register containing the current banking mode
-	const uint8_t BANK_MODE_SELECT_REGISTER_ADDR = 3;
-
 	// TODO: Does not handle 1MB multi-game carts.
 	MBC1::MBC1()
 	{
@@ -80,10 +67,6 @@ namespace SHG
 				return 0;
 
 			return ReadFromRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + (RAM_BANK_SIZE * ramBankNumber));
-		}
-		else
-		{
-			Logger::WriteInfo("Read from other region: " + GetHexString16(address));
 		}
 
 		return 0;
@@ -127,16 +110,6 @@ namespace SHG
 			// The banking mode select register is only 1 bit wide.
 			isSimpleBankingModeEnabled = value & 1;
 		}
-		else
-		{
-			Logger::WriteInfo("Write to other region: " + GetHexString16(address));
-		}
-	}
-
-	bool MBC1::IsAddressAvailable(uint16_t address) const
-	{
-		// TODO: Revisit
-		return true;
 	}
 
 	uint8_t MBC1::GetAdjustedROMBankNumber(uint8_t romBankNumber) const

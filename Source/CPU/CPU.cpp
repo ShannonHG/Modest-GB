@@ -138,12 +138,6 @@ namespace SHG
 		uint16_t address = programCounter.Read();
 		programCounter.Increment();
 
-		if (!memoryManagementUnit.IsAddressAvailable(address))
-		{
-			Logger::WriteError("Failed to fetch data from " + ConvertToHexString(address, 4) + ". Memory address is inaccessible.", CPU_MESSAGE_HEADER);
-			return 0;
-		}
-
 		uint8_t result = memoryManagementUnit.Read(address);
 
 		if (Logger::IsSystemEventLoggingEnabled)
