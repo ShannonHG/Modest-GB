@@ -189,7 +189,7 @@ namespace SHG
 					{
 						// TODO: Opening the file dialog seems to cause a memory leak.
 						nfdchar_t* outPath = nullptr;
-						NFD_OpenDialog(nullptr, nullptr, &outPath);
+						NFD_OpenDialog("gb,rom",  nullptr, &outPath);
 
 						if (outPath != nullptr)
 						{

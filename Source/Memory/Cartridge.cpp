@@ -33,6 +33,11 @@ namespace SHG
 	// RAM Size - Size of external RAM (if any).
 	const uint16_t RAM_SIZE_ADDRESS = 0x0149;
 
+	const uint16_t LOGO_START_ADDRESS = 0x104;
+	const uint16_t LOGO_END_ADDRESS = 0x133;
+
+	const uint16_t HEADER_SIZE_IN_BYTES = 0x143;
+
 	// Catridge header memory bank controller type codes
 
 	const uint8_t ROM_ONLY_CODE = 0x00;
@@ -87,7 +92,13 @@ namespace SHG
 	const uint16_t OPTIONAL_8KB_RAM_START_ADDRESS = 0xA000;
 	const uint16_t OPTIONAL_8KB_RAM_END_ADDRESS = 0xBFFF;
 
-	// TODO: Add ROM validation
+	const std::array<uint8_t, 48> LOGO_BITMAP =
+	{
+		 0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
+		0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
+		0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
+	};
+
 	bool Cartridge::Load(const std::string& romFilePath)
 	{
 		auto file = std::ifstream(romFilePath, std::ios::binary);
@@ -103,6 +114,9 @@ namespace SHG
 
 	bool Cartridge::Load(const std::vector<uint8_t>& romData)
 	{
+		if (romData.size() < HEADER_SIZE_IN_BYTES)
+			return false;
+
 		title.clear();
 		for (uint32_t address = 0; address < romData.size(); address++)
 		{
@@ -110,6 +124,13 @@ namespace SHG
 			{
 				title += (char)romData[address];
 				// TODO: Account for CGB Flag
+			}
+			else if (address >= LOGO_START_ADDRESS && address <= LOGO_END_ADDRESS)
+			{
+				// If the ROM does not contain the correct bitmap data for the logo,
+				// then the ROM should be considered invalid.
+				if (LOGO_BITMAP.at(address - LOGO_START_ADDRESS) != romData[address])
+					return false;
 			}
 			else if (address == CARTRIDGE_TYPE_ADDRESS)
 			{
@@ -222,7 +243,7 @@ namespace SHG
 	void Cartridge::DecodeROMSize(uint8_t byte)
 	{
 		// Calculation reference: https://gbdev.io/pandocs/#the-cartridge-header
-		 uint64_t romSize = (32 << byte) * KiB;
+		uint64_t romSize = (32 << byte) * KiB;
 
 		// Display the ROM size (in KiB) for debugging purposes
 		uint16_t romSizeKB = romSize / (float)KiB;
