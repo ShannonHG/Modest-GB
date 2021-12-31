@@ -18,6 +18,9 @@ namespace SHG
 		bool IsConstrainedByLength() const override;
 		void OnFrequencyTimerReachedZero() override;
 		void OnTrigger() override;
+		ModifierDirection GetVolumeEnvelopeDirection() const;
+		uint8_t GetInitialEnvelopeVolume() const;
+		uint32_t GetVolumeEnvelopeTimerPeriod() const;
 
 	private:
 		uint8_t sampleIndex = 0;

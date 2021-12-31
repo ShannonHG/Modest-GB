@@ -304,6 +304,14 @@ namespace SHG
 			return apu->GetChannel3()->ReadNRX3();
 		case GB_NR34_ADDRESS:
 			return apu->GetChannel3()->ReadNRX4();
+		case GB_NR41_ADDRESS:
+			return apu->GetChannel4()->ReadNRX1();
+		case GB_NR42_ADDRESS:
+			return apu->GetChannel4()->ReadNRX2();
+		case GB_NR43_ADDRESS:
+			return apu->GetChannel4()->ReadNRX3();
+		case GB_NR44_ADDRESS:
+			return apu->GetChannel4()->ReadNRX4();
 		case GB_NR52_ADDRESS:
 			return apu->ReadNR52();
 		default:
@@ -405,10 +413,16 @@ namespace SHG
 			apu->GetChannel3()->WriteToNRX4(value);
 			break;
 		case GB_NR41_ADDRESS:
+			apu->GetChannel4()->WriteToNRX1(value);
+			break;
 		case GB_NR42_ADDRESS:
+			apu->GetChannel4()->WriteToNRX2(value);
+			break;
 		case GB_NR43_ADDRESS:
+			apu->GetChannel4()->WriteToNRX3(value);
+			break;
 		case GB_NR44_ADDRESS:
-			//Logger::WriteInfo("Noise");
+			apu->GetChannel4()->WriteToNRX4(value);
 			break;
 		case GB_NR52_ADDRESS:
 			apu->WriteToNR52(value);

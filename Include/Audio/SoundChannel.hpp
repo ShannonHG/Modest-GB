@@ -54,14 +54,14 @@ namespace SHG
 		virtual void OnTrigger();
 		virtual void OnFrequencyTimerReachedZero();
 
-		virtual ModifierDirection GetVolumeEnvelopeDirection() const;
-		virtual uint8_t GetInitialEnvelopeVolume() const;
+		virtual ModifierDirection GetVolumeEnvelopeDirection() const = 0;
+		virtual uint8_t GetInitialEnvelopeVolume() const = 0;
 		virtual bool IsConstrainedByLength() const = 0;
 		virtual float GenerateSample() const = 0;
 
 		virtual uint32_t GetFrequencyTimerPeriod() const = 0;
 		virtual uint32_t GetLengthTimerPeriod() const = 0;
-		virtual uint32_t GetVolumeEnvelopeTimerPeriod() const;
+		virtual uint32_t GetVolumeEnvelopeTimerPeriod() const = 0;
 
 	private:
 		AudioTimer frequencyTimer;

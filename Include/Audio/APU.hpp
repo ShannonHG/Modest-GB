@@ -3,6 +3,7 @@
 #include "Audio/ToneSoundChannel.hpp"
 #include "Audio/SweepSoundChannel.hpp"
 #include "Audio/WaveSoundChannel.hpp"
+#include "Audio/NoiseSoundChannel.hpp"
 #include "Audio/AudioTimer.hpp"
 
 namespace SHG
@@ -16,6 +17,7 @@ namespace SHG
 		SweepSoundChannel* GetChannel1();
 		ToneSoundChannel* GetChannel2();
 		WaveSoundChannel* GetChannel3();
+		NoiseSoundChannel* GetChannel4();
 
 		void WriteToNR52(uint8_t value);
 		uint8_t ReadNR52();
@@ -28,6 +30,7 @@ namespace SHG
 		SweepSoundChannel channel1;
 		ToneSoundChannel channel2;
 		WaveSoundChannel channel3;
+		NoiseSoundChannel channel4;
 
 		SDL_AudioDeviceID audioDeviceID = 0;
 		std::vector<float> samples;

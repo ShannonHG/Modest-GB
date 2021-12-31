@@ -44,6 +44,7 @@ namespace SHG
 					channel1.TickLengthControlTimer();
 					channel2.TickLengthControlTimer();
 					channel3.TickLengthControlTimer();
+					channel4.TickLengthControlTimer();
 					break;
 				case 1:
 					break;
@@ -52,6 +53,7 @@ namespace SHG
 					channel1.TickLengthControlTimer();
 					channel2.TickLengthControlTimer();
 					channel3.TickLengthControlTimer();
+					channel4.TickLengthControlTimer();
 					break;
 				case 3:
 					break;
@@ -59,6 +61,7 @@ namespace SHG
 					channel1.TickLengthControlTimer();
 					channel2.TickLengthControlTimer();
 					channel3.TickLengthControlTimer();
+					channel4.TickLengthControlTimer();
 					break;
 				case 5:
 					break;
@@ -67,10 +70,12 @@ namespace SHG
 					channel1.TickLengthControlTimer();
 					channel2.TickLengthControlTimer();
 					channel3.TickLengthControlTimer();
+					channel4.TickLengthControlTimer();
 					break;
 				case 7:
 					channel1.TickVolumeEnvelopeTimer();
 					channel2.TickVolumeEnvelopeTimer();
+					channel4.TickVolumeEnvelopeTimer();
 					break;
 				}
 				
@@ -80,6 +85,7 @@ namespace SHG
 			channel1.TickFrequencyTimer();
 			channel2.TickFrequencyTimer();
 			channel3.TickFrequencyTimer();
+			channel4.TickFrequencyTimer();
 
 			if (sampleCollectionTimer.Tick())
 			{
@@ -88,6 +94,7 @@ namespace SHG
 				sample += channel1.GetSample();
 				sample += channel2.GetSample();
 				sample += channel3.GetSample();
+				sample += channel4.GetSample();
 
 				samples.push_back(sample);
 			}
@@ -126,5 +133,10 @@ namespace SHG
 	WaveSoundChannel* APU::GetChannel3()
 	{
 		return &channel3;
+	}	
+	
+	NoiseSoundChannel* APU::GetChannel4()
+	{
+		return &channel4;
 	}
 }

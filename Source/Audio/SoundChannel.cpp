@@ -141,21 +141,6 @@ namespace SHG
 		lengthTimer.Restart();
 	}
 
-	uint8_t SoundChannel::GetInitialEnvelopeVolume() const
-	{
-		return 0;
-	}
-
-	uint32_t SoundChannel::GetVolumeEnvelopeTimerPeriod() const
-	{
-		return 0;
-	}
-
-	SoundChannel::ModifierDirection SoundChannel::GetVolumeEnvelopeDirection() const
-	{
-		return ModifierDirection::Increase;
-	}
-
 	void SoundChannel::OnFrequencyTimerReachedZero()
 	{
 

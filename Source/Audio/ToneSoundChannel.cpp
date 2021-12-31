@@ -13,7 +13,7 @@ namespace SHG
 		{ 3,  {0, 1, 1, 1, 1, 1, 1, 0} }
 	};
 
-	ToneSoundChannel::ToneSoundChannel()
+	ToneSoundChannel::ToneSoundChannel() : SoundChannel()
 	{
 
 	}

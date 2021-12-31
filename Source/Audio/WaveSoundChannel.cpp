@@ -8,7 +8,7 @@ namespace SHG
 	const uint16_t WAVE_PATTERN_RAM_END_ADDRESS = 0xFF3F;
 	const uint8_t NUMBER_OF_SAMPLES = 32;
 
-	WaveSoundChannel::WaveSoundChannel()
+	WaveSoundChannel::WaveSoundChannel() : SoundChannel()
 	{
 		samples = std::vector<uint8_t>(NUMBER_OF_SAMPLES);
 	}
@@ -62,5 +62,20 @@ namespace SHG
 	{
 		SoundChannel::OnTrigger();
 		sampleIndex = 0;
+	}
+
+	uint8_t WaveSoundChannel::GetInitialEnvelopeVolume() const
+	{
+		return 0;
+	}
+
+	uint32_t WaveSoundChannel::GetVolumeEnvelopeTimerPeriod() const
+	{
+		return 0;
+	}
+
+	SoundChannel::ModifierDirection WaveSoundChannel::GetVolumeEnvelopeDirection() const
+	{
+		return ModifierDirection::Increase;
 	}
 }
