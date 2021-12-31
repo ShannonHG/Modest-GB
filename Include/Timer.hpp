@@ -20,7 +20,7 @@ namespace SHG
 	{
 	public:
 		Timer(Memory& memory);
-		void Step(uint32_t cycles);
+		void Tick(uint32_t cycles);
 		uint8_t GetTimerCounter() const;
 		uint8_t GetTimerModulo() const;
 		uint8_t GetTimerControlRegister() const;

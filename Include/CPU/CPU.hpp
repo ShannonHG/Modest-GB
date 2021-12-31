@@ -15,7 +15,7 @@ namespace SHG
 	{
 	public:
 		CPU(Memory& memoryManagementUnit);
-		uint32_t Step();
+		uint32_t Tick();
 
 		uint8_t GetZeroFlag();
 		uint8_t GetSubtractionFlag();

@@ -4,6 +4,7 @@
 #include "Memory/MemoryMap.hpp"
 #include "CPU/CPU.hpp"
 #include "Graphics/PPU.hpp"
+#include "Audio/APU.hpp"
 #include "Memory/Cartridge.hpp"
 #include "Timer.hpp"
 #include "EmulatorWindow.hpp"
@@ -26,6 +27,7 @@ namespace SHG
 		Cartridge cartridge = Cartridge();
 		CPU processor = CPU(memoryMap);
 		PPU ppu = PPU(memoryMap);
+		APU apu;
 		Timer timer = Timer(memoryMap);
 		BasicMemory vram = BasicMemory(8 * KiB);
 		BasicMemory wram = BasicMemory(8 * KiB);

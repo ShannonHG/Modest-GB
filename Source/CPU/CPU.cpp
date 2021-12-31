@@ -97,7 +97,7 @@ namespace SHG
 		interruptMasterEnableFlag = false;
 	}
 
-	uint32_t CPU::Step()
+	uint32_t CPU::Tick()
 	{
 		currentInstructionCycles = 0;
 

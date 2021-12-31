@@ -25,7 +25,7 @@ namespace SHG
 		BackgroundPixelFetcher(Memory* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy);
 		void SetMode(BackgroundPixelFetcherMode mode);
 		BackgroundPixelFetcherMode GetCurrentMode();
-		void Step() override;
+		void Tick() override;
 		void Reset() override;
 
 	private:

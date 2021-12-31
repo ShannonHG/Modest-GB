@@ -48,6 +48,8 @@ namespace SHG
 		SetupMemoryMap();
 		memoryMap.Reset();
 
+		apu.Initialize();
+
 		isRunning = true;
 		double timeSinceLastFrame = 0;
 		double timeSinceLastCycleCount = 0;
@@ -68,13 +70,14 @@ namespace SHG
 
 			if (cartridge.IsROMLoaded() && (!isPaused || isStepRequested) && cyclesSinceLastFrame < GB_CYCLES_PER_FRAME)
 			{
-				uint32_t cycles = processor.Step();
+				uint32_t cycles = processor.Tick();
 
 				cyclesSinceLastFrame += cycles;
 				cyclesSinceLastCount += cycles;
 
-				timer.Step(cycles);
-				ppu.Step(cycles);
+				timer.Tick(cycles);
+				ppu.Tick(cycles);
+				apu.Tick(cycles);
 
 				if (window.shouldRenderTilesWindow)
 					ppu.DebugDrawTiles();
@@ -119,6 +122,7 @@ namespace SHG
 	void Emulator::SetupMemoryMap()
 	{
 		memoryMap.AttachPPU(&ppu);
+		memoryMap.AttachAPU(&apu);
 		memoryMap.AttachCartridge(&cartridge);
 		memoryMap.AttachEchoRAM(&echoRam);
 		memoryMap.AttachGenericIO(&ioRegisters);

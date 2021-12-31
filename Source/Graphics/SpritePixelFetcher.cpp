@@ -32,7 +32,7 @@ namespace SHG
 		queuedPixels = std::queue<Pixel>();
 	}
 
-	void SpritePixelFetcher::Step()
+	void SpritePixelFetcher::Tick()
 	{
 		switch (currentState)
 		{
@@ -63,13 +63,13 @@ namespace SHG
 				{
 					currentState = SpritePixelFetcherState::AdvancingBackgroundPixelFetcher;
 					// Begin executing the update cycle for the new state.
-					Step();
+					Tick();
 					return;
 				}
 
 				currentState = SpritePixelFetcherState::FetchingLowTileData;
 				// Begin executing the update cycle for the new state.
-				Step();
+				Tick();
 				return;
 			}
 		}
@@ -79,7 +79,7 @@ namespace SHG
 	{
 		if (backgroundPixelFetcher->GetPixelQueueSize() < TILE_WIDTH_IN_PIXELS)
 		{
-			backgroundPixelFetcher->Step();
+			backgroundPixelFetcher->Tick();
 
 			if (backgroundPixelFetcher->GetPixelQueueSize() >= TILE_WIDTH_IN_PIXELS)
 				currentState = SpritePixelFetcherState::FetchingLowTileData;
@@ -89,7 +89,7 @@ namespace SHG
 			currentState = SpritePixelFetcherState::FetchingLowTileData;
 			// If the background pixel fetcher already contained 8 or more pixels in its queue, 
 			// then instead of wasting this cycle, the sprite pixel fetcher can begin executing the next step.
-			Step();
+			Tick();
 		}
 	}
 

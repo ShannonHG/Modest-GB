@@ -38,7 +38,7 @@ namespace SHG
 		currentMode = BackgroundPixelFetcherMode::Background;
 	}
 
-	void BackgroundPixelFetcher::Step()
+	void BackgroundPixelFetcher::Tick()
 	{
 		currentStateElapsedCycles++;
 

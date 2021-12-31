@@ -68,4 +68,32 @@ namespace SHG
 
 	const uint16_t GB_INTERRUPT_FLAG_ADDRESS = 0xFF0F;
 	const uint16_t GB_INTERRUPT_ENABLE_ADDRESS = 0xFFFF;
+
+	const uint16_t GB_NR10_ADDRESS = 0xFF10;
+	const uint16_t GB_NR11_ADDRESS = 0xFF11;
+	const uint16_t GB_NR12_ADDRESS = 0xFF12;
+	const uint16_t GB_NR13_ADDRESS = 0xFF13;
+	const uint16_t GB_NR14_ADDRESS = 0xFF14;
+
+	const uint16_t GB_NR21_ADDRESS = 0xFF16;
+	const uint16_t GB_NR22_ADDRESS = 0xFF17;
+	const uint16_t GB_NR23_ADDRESS = 0xFF18;
+	const uint16_t GB_NR24_ADDRESS = 0xFF19;
+
+	const uint16_t GB_NR30_ADDRESS = 0xFF1A;
+	const uint16_t GB_NR31_ADDRESS = 0xFF1B;
+	const uint16_t GB_NR32_ADDRESS = 0xFF1C;
+	const uint16_t GB_NR33_ADDRESS = 0xFF1D;
+	const uint16_t GB_NR34_ADDRESS = 0xFF1E;
+	const uint16_t GB_WAVE_PATTERN_RAM_START_ADDRESS = 0xFF30;
+	const uint16_t GB_WAVE_PATTERN_RAM_END_ADDRESS = 0xFF3F;
+
+	const uint16_t GB_NR41_ADDRESS = 0xFF20;
+	const uint16_t GB_NR42_ADDRESS = 0xFF21;
+	const uint16_t GB_NR43_ADDRESS = 0xFF22;
+	const uint16_t GB_NR44_ADDRESS = 0xFF23;
+
+	const uint16_t GB_NR50_ADDRESS = 0xFF24;
+	const uint16_t GB_NR51_ADDRESS = 0xFF25;
+	const uint16_t GB_NR52_ADDRESS = 0xFF26;
 }

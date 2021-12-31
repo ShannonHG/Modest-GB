@@ -10,6 +10,7 @@
 #include "Memory/Memory.hpp"
 #include "Memory/Cartridge.hpp"
 #include "Graphics/PPU.hpp"
+#include "Audio/APU.hpp"
 #include "Input/Joypad.hpp"
 
 namespace SHG
@@ -25,6 +26,7 @@ namespace SHG
 
 		void AttachCartridge(Cartridge* cartridge);
 		void AttachPPU(PPU* ppu);
+		void AttachAPU(APU* ppu);
 		void AttachTimer(Timer* timer);
 		void AttachVRAM(BasicMemory* vram);
 		void AttachWRAM(BasicMemory* wram);
@@ -40,6 +42,7 @@ namespace SHG
 	private:
 		Cartridge* cartridge;
 		PPU* ppu;
+		APU* apu;
 		Timer* timer;
 		BasicMemory* vram;
 		BasicMemory* wram;

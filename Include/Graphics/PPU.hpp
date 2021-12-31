@@ -16,7 +16,7 @@ namespace SHG
 	{
 	public:
 		PPU(Memory& memoryMap);
-		void Step(uint32_t cycles);
+		void Tick(uint32_t cycles);
 		void Reset();
 		void InitializeFramebuffer(SDL_Window* window);
 		void DebugDrawBackgroundTileMap();

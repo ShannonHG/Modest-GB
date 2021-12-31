@@ -181,6 +181,11 @@ namespace SHG
 	{
 		this->ppu = ppu;
 	}
+	
+	void MemoryMap::AttachAPU(APU* apu)
+	{
+		this->apu = apu;
+	}
 
 	void MemoryMap::AttachTimer(Timer* timer)
 	{
@@ -271,6 +276,36 @@ namespace SHG
 			return ppu->GetWY().Read();
 		case GB_WX_ADDRESS:
 			return ppu->GetWX().Read();
+		case GB_NR10_ADDRESS:
+			return apu->GetChannel1()->ReadNRX0();
+		case GB_NR11_ADDRESS:
+			return apu->GetChannel1()->ReadNRX1();
+		case GB_NR12_ADDRESS:
+			return apu->GetChannel1()->ReadNRX2();
+		case GB_NR13_ADDRESS:
+			return apu->GetChannel1()->ReadNRX3();
+		case GB_NR14_ADDRESS:
+			return apu->GetChannel1()->ReadNRX4();
+		case GB_NR21_ADDRESS:
+			return apu->GetChannel2()->ReadNRX1();
+		case GB_NR22_ADDRESS:
+			return apu->GetChannel2()->ReadNRX2();
+		case GB_NR23_ADDRESS:
+			return apu->GetChannel2()->ReadNRX3();
+		case GB_NR24_ADDRESS:
+			return apu->GetChannel2()->ReadNRX4();
+		case GB_NR30_ADDRESS:
+			return apu->GetChannel3()->ReadNRX0();	
+		case GB_NR31_ADDRESS:
+			return apu->GetChannel3()->ReadNRX1();
+		case GB_NR32_ADDRESS:
+			return apu->GetChannel3()->ReadNRX2();
+		case GB_NR33_ADDRESS:
+			return apu->GetChannel3()->ReadNRX3();
+		case GB_NR34_ADDRESS:
+			return apu->GetChannel3()->ReadNRX4();
+		case GB_NR52_ADDRESS:
+			return apu->ReadNR52();
 		default:
 			return ioRegisters->Read(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS));
 		}
@@ -327,7 +362,63 @@ namespace SHG
 		case GB_WX_ADDRESS:
 			ppu->GetWX().Write(value);
 			break;
+		case GB_NR10_ADDRESS:
+			apu->GetChannel1()->WriteToNRX0(value);
+			break;
+		case GB_NR11_ADDRESS:
+			apu->GetChannel1()->WriteToNRX1(value);
+			break;
+		case GB_NR12_ADDRESS:
+			apu->GetChannel1()->WriteToNRX2(value);
+			break;
+		case GB_NR13_ADDRESS:
+			apu->GetChannel1()->WriteToNRX3(value);
+			break;
+		case GB_NR14_ADDRESS:
+			apu->GetChannel1()->WriteToNRX4(value);
+			break;		
+		case GB_NR21_ADDRESS:
+			apu->GetChannel2()->WriteToNRX1(value);
+			break;
+		case GB_NR22_ADDRESS:
+			apu->GetChannel2()->WriteToNRX2(value);
+			break;
+		case GB_NR23_ADDRESS:
+			apu->GetChannel2()->WriteToNRX3(value);
+			break;
+		case GB_NR24_ADDRESS:
+			apu->GetChannel2()->WriteToNRX4(value);
+			break;
+		case GB_NR30_ADDRESS:
+			apu->GetChannel3()->WriteToNRX0(value);
+			break;
+		case GB_NR31_ADDRESS:
+			apu->GetChannel3()->WriteToNRX1(value);
+			break;
+		case GB_NR32_ADDRESS:
+			apu->GetChannel3()->WriteToNRX2(value);
+			break;
+		case GB_NR33_ADDRESS:
+			apu->GetChannel3()->WriteToNRX3(value);
+			break;
+		case GB_NR34_ADDRESS:
+			apu->GetChannel3()->WriteToNRX4(value);
+			break;
+		case GB_NR41_ADDRESS:
+		case GB_NR42_ADDRESS:
+		case GB_NR43_ADDRESS:
+		case GB_NR44_ADDRESS:
+			//Logger::WriteInfo("Noise");
+			break;
+		case GB_NR52_ADDRESS:
+			apu->WriteToNR52(value);
+			break;
 		default:
+			if (address >= GB_WAVE_PATTERN_RAM_START_ADDRESS && address <= GB_WAVE_PATTERN_RAM_END_ADDRESS)
+			{
+				apu->GetChannel3()->WriteToWavePatternRAM(address, value);
+			}
+
 			ioRegisters->Write(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS), value);
 			break;
 		}

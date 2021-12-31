@@ -57,7 +57,7 @@ namespace SHG
 		tileDebugFramebuffer.UploadData();
 	}
 
-	void PPU::Step(uint32_t cycles)
+	void PPU::Tick(uint32_t cycles)
 	{
 		while (cycles > 0)
 		{
@@ -298,7 +298,7 @@ namespace SHG
 			if (lcdc.GetBit(LCDC_OBJ_ENABLE_BIT_INDEX))
 			{
 				spritePixelFetcher.SetX(currentScanlineX);
-				spritePixelFetcher.Step();
+				spritePixelFetcher.Tick();
 			}
 
 			if (spritePixelFetcher.GetState() != SpritePixelFetcherState::Idle)
@@ -309,7 +309,7 @@ namespace SHG
 
 			if (lcdc.GetBit(LCDC_BG_WINDOW_ENABLE_BIT_INDEX))
 			{
-				backgroundPixelFetcher.Step();
+				backgroundPixelFetcher.Tick();
 
 				// If the background is enabled, pixels will only be pushed to the framebuffer when the background pixel fetcher is not empty.
 				if (backgroundPixelFetcher.GetPixelQueueSize() > TILE_WIDTH_IN_PIXELS)

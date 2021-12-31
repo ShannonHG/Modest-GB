@@ -21,7 +21,7 @@ namespace SHG
 		SpritePixelFetcher(Memory* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher);
 		void SetSpritesOnScanline(const std::vector<Sprite>& sprites);
 		SpritePixelFetcherState GetState();
-		void Step() override;
+		void Tick() override;
 		void Reset() override;
 
 	private:

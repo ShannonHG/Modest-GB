@@ -29,7 +29,7 @@ namespace SHG
 
 	}
 
-	void Timer::Step(uint32_t cycles)
+	void Timer::Tick(uint32_t cycles)
 	{
 		// Incremented every cycle
 		SetInternalCounter(internalCounter + cycles);

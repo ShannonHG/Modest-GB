@@ -8,7 +8,7 @@ namespace SHG
 	class PixelFetcher
 	{
 	public:
-		virtual void Step() = 0;
+		virtual void Tick() = 0;
 		// Returns the first pixel in the fetcher's queue.
 		Pixel PopPixel();
 		uint8_t GetPixelQueueSize();
