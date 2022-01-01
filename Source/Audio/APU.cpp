@@ -6,21 +6,24 @@
 
 namespace SHG
 {
+	const uint8_t AUDIO_CHANNELS = 1;
+	const int SAMPLE_FREQUENCY = 44100;
+	const uint16_t AUDIO_BUFFER_SIZE = 4096;
 	const uint32_t FRAME_SEQUENCER_PERIOD = std::floor(GB_CLOCK_SPEED / 512.0f);
 
 	void APU::Initialize()
 	{
 		SDL_AudioSpec spec;
 		SDL_zero(spec);
-		spec.freq = 44100;
+		spec.freq = SAMPLE_FREQUENCY;
 		spec.format = AUDIO_F32;
-		spec.channels = 1;
-		spec.samples = 4096;
+		spec.channels = AUDIO_CHANNELS;
+		spec.samples = AUDIO_BUFFER_SIZE;
 
 		SDL_AudioSpec outputSpec;
 
 		// TODO: Revisit
-		const char* name = SDL_GetAudioDeviceName(1, SDL_FALSE);
+		const char* name = SDL_GetAudioDeviceName(0, SDL_FALSE);
 		Logger::WriteInfo(name);
 		audioDeviceID = SDL_OpenAudioDevice(name, SDL_FALSE, &spec, &outputSpec, 0);
 		SDL_PauseAudioDevice(audioDeviceID, 0);

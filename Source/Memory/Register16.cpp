@@ -51,9 +51,9 @@ namespace SHG
 			highRegister.ChangeBit(bitNumber - 8, enabled);
 	}
 
-	uint8_t Register16::GetBit(uint8_t bitNumber) const
+	uint8_t Register16::Read(uint8_t bitNumber) const
 	{
-		return bitNumber < 8 ? lowRegister.GetBit(bitNumber) : highRegister.GetBit(bitNumber);
+		return bitNumber < 8 ? lowRegister.Read(bitNumber) : highRegister.Read(bitNumber);
 	}
 
 	void Register16::Increment()
@@ -69,6 +69,12 @@ namespace SHG
 	void Register16::Increase(uint16_t amount)
 	{
 		Write(Read() + amount);
+	}
+
+	void Register16::Fill(bool value)
+	{
+		lowRegister.Fill(value);
+		highRegister.Fill(value);
 	}
 
 	void Register16::Decrease(uint16_t amount)

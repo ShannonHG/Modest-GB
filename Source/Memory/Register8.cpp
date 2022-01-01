@@ -13,14 +13,24 @@ namespace SHG
 		Arithmetic::ChangeBit(data, bitIndex, enable);
 	}
 
-	uint8_t Register8::GetBit(uint8_t bitIndex) const
+	uint8_t Register8::Read(uint8_t bitIndex) const
 	{
 		return Arithmetic::GetBit(data, bitIndex);
+	}
+
+	uint8_t Register8::Read(uint8_t start, uint8_t end) const
+	{
+		return Arithmetic::GetBits(data, start, end);
 	}
 
 	uint8_t Register8::Read() const
 	{
 		return data;
+	}
+
+	void Register8::Fill(bool value)
+	{
+		data = value * 255;
 	}
 
 	void Register8::Increment()

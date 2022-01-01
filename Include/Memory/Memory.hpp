@@ -7,7 +7,7 @@ namespace SHG
 	class Memory
 	{
 	public: 
-		bool GetBit(uint16_t address, uint8_t bitNum) const;
+		bool Read(uint16_t address, uint8_t bitNum) const;
 		void ChangeBit(uint16_t address, uint8_t bitNum, bool bitValue);
 		void SetBit(uint16_t address, uint8_t bitNum);
 		void ClearBit(uint16_t address, uint8_t bitNum);

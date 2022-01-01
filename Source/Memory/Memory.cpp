@@ -3,7 +3,7 @@
 
 namespace SHG
 {
-	bool Memory::GetBit(uint16_t address, uint8_t bitNum) const
+	bool Memory::Read(uint16_t address, uint8_t bitNum) const
 	{
 		uint8_t byte = Read(address);
 		return Arithmetic::GetBit(byte, bitNum);

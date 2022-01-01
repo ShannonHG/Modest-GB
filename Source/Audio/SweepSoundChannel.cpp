@@ -86,27 +86,24 @@ namespace SHG
 		shadowFrequency = newFrequency;
 
 		// Lower 8 bits of 11 bit frequency
-		nrx3 = shadowFrequency & 255;
+		nrx3.Write(shadowFrequency & 255);
 
 		// Upper 3 bits of 11 bit frequency
-		nrx4 = (nrx4 & 0b11111000) | ((shadowFrequency >> 8) & 0b111);
+		nrx4.Write(nrx4.Read(3, 7) | (shadowFrequency >> 8) & 0b111);
 	}
 
 	uint8_t SweepSoundChannel::GetSweepPeriod() const
 	{
-		// Bits 4 - 6 of NR10 determine the period of the sweep timer.
-		return (nrx0 >> 4) & 0b111;
+		return nrx0.Read(4, 6);
 	}
 
 	SoundChannel::ModifierDirection SweepSoundChannel::GetSweepDirection() const
 	{
-		// Bit 3 of NR10 determines the sweep direction.
-		return ((nrx0 >> 3) & 1) == 1 ? ModifierDirection::Decrease : ModifierDirection::Increase;
+		return nrx0.Read(3) ? ModifierDirection::Decrease : ModifierDirection::Increase;
 	}
 
 	uint8_t SweepSoundChannel::GetSweepShift() const
 	{
-		// Bits 0 - 2 of NR10 determine the sweep shift.
-		return nrx0 & 0b111;
+		return nrx0.Read(0, 2);
 	}
 }

@@ -26,13 +26,13 @@ namespace SHG
 
 	uint32_t NoiseSoundChannel::GetFrequencyTimerPeriod() const
 	{
-		uint8_t divisorCode = nrx3 & 0b111;
+		uint8_t divisorCode = nrx3.Read(0, 2);
 		return (divisorCode == 0 ? 8 : divisorCode * 16) << GetFrequencyShift();
 	}
 
 	void NoiseSoundChannel::OnFrequencyTimerReachedZero()
 	{
-		uint8_t xorResult = shiftRegister.GetBit(0) ^ shiftRegister.GetBit(1);
+		uint8_t xorResult = shiftRegister.Read(0) ^ shiftRegister.Read(1);
 		shiftRegister.Write(shiftRegister.Read() >> 1);
 		shiftRegister.SetBit(14, xorResult);
 
@@ -47,43 +47,43 @@ namespace SHG
 
 	uint32_t NoiseSoundChannel::GetLengthTimerPeriod() const
 	{
-		return nrx1 & 0b111111;
+		return nrx1.Read(0, 5);
 	}
 
 	SoundChannel::ModifierDirection NoiseSoundChannel::GetVolumeEnvelopeDirection() const
 	{
-		return ((nrx2 >> 3) & 1) == 0 ? ModifierDirection::Decrease : ModifierDirection::Increase;
+		return nrx2.Read(3) ?  ModifierDirection::Increase : ModifierDirection::Decrease;
 	}
 
 	uint8_t NoiseSoundChannel::GetInitialEnvelopeVolume() const
 	{
-		return (nrx2 >> 4) & 0b1111;
+		return nrx2.Read(4, 7);
 	}
 
 	uint32_t NoiseSoundChannel::GetVolumeEnvelopeTimerPeriod() const
 	{
-		return nrx2 & 0b111;
+		return nrx2.Read(0, 2);
 	}
 
 	bool NoiseSoundChannel::IsConstrainedByLength() const
 	{
-		return (nrx4 >> 6) & 1;
+		return nrx4.Read(6);
 	}
 
 	void NoiseSoundChannel::OnTrigger()
 	{
 		SoundChannel::OnTrigger();
 
-		shiftRegister.Write(0b1111111111111111);
+		shiftRegister.Fill(true);
 	}
 
 	uint8_t NoiseSoundChannel::GetShiftRegisterSize() const
 	{
-		return (nrx3 >> 3) & 1;
+		return nrx3.Read(3);
 	}
 
 	uint8_t NoiseSoundChannel::GetFrequencyShift() const
 	{
-		return ((nrx3 >> 4) & 0b1111) + 1;
+		return nrx3.Read(4, 7) + 1;
 	}
 }

@@ -151,7 +151,7 @@ namespace SHG
 		uint8_t scanline = y - currentSprite.y;
 
 		// Determine the sprite's height (8 or 16).
-		uint8_t spriteHeight = lcdc->GetBit(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
+		uint8_t spriteHeight = lcdc->Read(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
 
 		if (currentSprite.yFlip)
 			scanline = (spriteHeight - 1) - scanline;

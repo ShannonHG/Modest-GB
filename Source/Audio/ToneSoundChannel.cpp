@@ -41,13 +41,14 @@ namespace SHG
 
 	uint32_t ToneSoundChannel::GetFrequency() const
 	{
-		return (((nrx4 & 0b111) << 8) | nrx3);
+		// Bits 0 - 2 of NRX4 define the upper 3 bits of the 11 bit frequency, 
+		// and NRX3 defines the lower 8 bits.
+		return (nrx4.Read(0, 2) << 8) | nrx3.Read();
 	}
 
 	uint8_t ToneSoundChannel::GetWaveformIndex() const
 	{
-		// Bits 6 - 7 of NRX1 will determine which waveform to use.
-		return (nrx1 >> 6) & 0b11;
+		return nrx1.Read(6, 7);
 	}
 
 	void ToneSoundChannel::OnFrequencyTimerReachedZero()
@@ -65,17 +66,17 @@ namespace SHG
 
 	SoundChannel::ModifierDirection ToneSoundChannel::GetVolumeEnvelopeDirection() const
 	{
-		return ((nrx2 >> 3) & 1) == 0 ? ModifierDirection::Decrease : ModifierDirection::Increase;
+		return nrx2.Read(3) ? ModifierDirection::Increase : ModifierDirection::Decrease;
 	}
 
 	uint8_t ToneSoundChannel::GetInitialEnvelopeVolume() const
 	{
-		return (nrx2 >> 4) & 0b1111;
+		return nrx2.Read(4, 7);
 	}
 
 	bool ToneSoundChannel::IsConstrainedByLength() const
 	{
-		return (nrx4 >> 6) & 1;
+		return nrx4.Read(6);
 	}
 
 	uint32_t ToneSoundChannel::GetFrequencyTimerPeriod() const
@@ -85,13 +86,11 @@ namespace SHG
 
 	uint32_t ToneSoundChannel::GetVolumeEnvelopeTimerPeriod() const
 	{
-		// Bits 0 - 2 of NRX2 determine the volume envelope timer's period.
-		return nrx2 & 0b111;
+		return nrx2.Read(0, 2);
 	}
 
 	uint32_t ToneSoundChannel::GetLengthTimerPeriod() const
 	{
-		// Bits 0 - 5 of NRX1 determine the length timer's period.
-		return nrx1 & 0b111111;
+		return nrx1.Read(0, 5);
 	}
 }

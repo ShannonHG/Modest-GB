@@ -11,11 +11,12 @@ namespace SHG
 		uint16_t Read() const;
 		void Write(uint16_t data);
 		void SetBit(uint8_t bitNumber, bool enabled);
-		uint8_t GetBit(uint8_t bitNumber) const;
+		uint8_t Read(uint8_t bitNumber) const;
 		void Increment();
 		void Decrement();
 		void Increase(uint16_t amount);
 		void Decrease(uint16_t amount);
+		void Fill(bool value);
 		uint8_t GetHighByte() const;
 		uint8_t GetLowByte() const;
 		void SetHighByte(uint8_t data);

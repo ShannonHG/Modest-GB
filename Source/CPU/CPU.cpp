@@ -244,22 +244,22 @@ namespace SHG
 
 	uint8_t CPU::GetZeroFlag()
 	{
-		return regAF.GetLowRegister().GetBit(7);
+		return regAF.GetLowRegister().Read(7);
 	}
 
 	uint8_t CPU::GetSubtractionFlag()
 	{
-		return regAF.GetLowRegister().GetBit(6);
+		return regAF.GetLowRegister().Read(6);
 	}
 
 	uint8_t CPU::GetHalfCarryFlag()
 	{
-		return regAF.GetLowRegister().GetBit(5);
+		return regAF.GetLowRegister().Read(5);
 	}
 
 	uint8_t CPU::GetCarryFlag()
 	{
-		return regAF.GetLowRegister().GetBit(4);
+		return regAF.GetLowRegister().Read(4);
 	}
 
 	void CPU::ChangeZeroFlag(bool isSet)
@@ -936,9 +936,9 @@ namespace SHG
 
 	void CPU::RRC_R(Register8& reg)
 	{
-		ChangeCarryFlag(reg.GetBit(0));
+		ChangeCarryFlag(reg.Read(0));
 
-		uint8_t result = (reg.Read() >> 1) | (reg.GetBit(0) << 7);
+		uint8_t result = (reg.Read() >> 1) | (reg.Read(0) << 7);
 		reg.Write(result);
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
@@ -949,9 +949,9 @@ namespace SHG
 	{
 		Register8& reg = regAF.GetHighRegister();
 
-		ChangeCarryFlag(reg.GetBit(0));
+		ChangeCarryFlag(reg.Read(0));
 
-		uint8_t result = (reg.Read() >> 1) | (reg.GetBit(0) << 7);
+		uint8_t result = (reg.Read() >> 1) | (reg.Read(0) << 7);
 		reg.Write(result);
 		ChangeZeroFlag(false);
 		ChangeSubtractionFlag(false);
@@ -979,7 +979,7 @@ namespace SHG
 	void CPU::RL_R(Register8& reg)
 	{
 		uint8_t previousCarry = GetCarryFlag();
-		uint8_t currentCarry = reg.GetBit(7);
+		uint8_t currentCarry = reg.Read(7);
 
 		reg.Write((reg.Read() << 1) | previousCarry);
 
@@ -995,7 +995,7 @@ namespace SHG
 		uint8_t regData = reg.Read();
 
 		uint8_t previousCarry = GetCarryFlag();
-		uint8_t currentCarry = reg.GetBit(7);;
+		uint8_t currentCarry = reg.Read(7);;
 		reg.Write((regData << 1) | previousCarry);
 
 		ChangeZeroFlag(false);
@@ -1037,7 +1037,7 @@ namespace SHG
 	void CPU::RR_R(Register8& reg)
 	{
 		uint8_t previousCarry = GetCarryFlag();
-		uint8_t currentCarry = reg.GetBit(0);
+		uint8_t currentCarry = reg.Read(0);
 
 		reg.Write((reg.Read() >> 1) | (previousCarry << 7));
 
@@ -1052,7 +1052,7 @@ namespace SHG
 		Register8& reg = regAF.GetHighRegister();
 
 		uint8_t previousCarry = GetCarryFlag();
-		uint8_t currentCarry = reg.GetBit(0);
+		uint8_t currentCarry = reg.Read(0);
 
 		uint8_t regData = reg.Read();
 		reg.Write((regData >> 1) | (previousCarry << 7));
@@ -1643,7 +1643,7 @@ namespace SHG
 
 	void CPU::SRA_R(Register8& reg)
 	{
-		uint8_t carry = reg.GetBit(0);
+		uint8_t carry = reg.Read(0);
 		// Shift right while retaining the sign bit (most significant bit)
 		int result = (reg.Read() >> 1) | (reg.Read() & 0b10000000);
 		reg.Write(result);
@@ -1668,7 +1668,7 @@ namespace SHG
 
 	void CPU::SRL_R(Register8& reg)
 	{
-		uint8_t carry = reg.GetBit(0);
+		uint8_t carry = reg.Read(0);
 		uint8_t result = reg.Read() >> 1;
 		reg.Write(result);
 		ChangeZeroFlag(result == 0);

@@ -62,7 +62,7 @@ namespace SHG
 		while (cycles > 0)
 		{
 			// TODO: Confirm logic
-			if (!lcdc.GetBit(LCDC_PPU_ENABLE_BIT_INDEX))
+			if (!lcdc.Read(LCDC_PPU_ENABLE_BIT_INDEX))
 			{
 				SetCurrentMode(Mode::HBlank);
 				stat.ChangeBit(STAT_LYC_FLAG_INDEX, 0);
@@ -213,7 +213,7 @@ namespace SHG
 				uint8_t spriteIndex = cycle / 2;
 
 				Sprite sprite = GetSpriteAtIndex(spriteIndex);
-				uint8_t spriteSize = lcdc.GetBit(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
+				uint8_t spriteSize = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
 
 				// If the sprite is on the current scanline, then added it to the list.
 				if (ly.Read() >= sprite.y && ly.Read() < sprite.y + spriteSize)
@@ -246,7 +246,7 @@ namespace SHG
 			.y = static_cast<int16_t>(memoryMap.Read(attributeAddress) - MAX_SPRITE_HEIGHT_IN_PIXELS),
 
 			// In 8x16 mode, the least significant bit of the tile index should be ignored to ensure that it points to the first/top tile of the sprite.
-			.tileIndex = static_cast<uint8_t>(lcdc.GetBit(LCDC_OBJ_SIZE_BIT_INDEX) ? memoryMap.Read(attributeAddress + 2) & 0xFE : memoryMap.Read(attributeAddress + 2)),
+			.tileIndex = static_cast<uint8_t>(lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? memoryMap.Read(attributeAddress + 2) & 0xFE : memoryMap.Read(attributeAddress + 2)),
 
 			// Flags 
 			.xFlip = static_cast<bool>((flags >> 5) & 1),
@@ -287,7 +287,7 @@ namespace SHG
 			if (backgroundPixelFetcher.GetCurrentMode() != BackgroundPixelFetcherMode::Window &&
 				wasWXConditionTriggered &&
 				wasWYConditionTriggered &&
-				lcdc.GetBit(LCDC_WINDOW_ENABLE_BIT_INDEX))
+				lcdc.Read(LCDC_WINDOW_ENABLE_BIT_INDEX))
 			{
 				backgroundPixelFetcher.Reset();
 				backgroundPixelFetcher.SetY(windowLineCounter);
@@ -295,7 +295,7 @@ namespace SHG
 				windowLineCounter++;
 			}
 
-			if (lcdc.GetBit(LCDC_OBJ_ENABLE_BIT_INDEX))
+			if (lcdc.Read(LCDC_OBJ_ENABLE_BIT_INDEX))
 			{
 				spritePixelFetcher.SetX(currentScanlineX);
 				spritePixelFetcher.Tick();
@@ -305,9 +305,9 @@ namespace SHG
 				return;
 
 			Pixel selectedPixel;
-			bool isSpritePixelAvailable = spritePixelFetcher.GetPixelQueueSize() != 0 && lcdc.GetBit(LCDC_OBJ_ENABLE_BIT_INDEX);
+			bool isSpritePixelAvailable = spritePixelFetcher.GetPixelQueueSize() != 0 && lcdc.Read(LCDC_OBJ_ENABLE_BIT_INDEX);
 
-			if (lcdc.GetBit(LCDC_BG_WINDOW_ENABLE_BIT_INDEX))
+			if (lcdc.Read(LCDC_BG_WINDOW_ENABLE_BIT_INDEX))
 			{
 				backgroundPixelFetcher.Tick();
 
@@ -378,7 +378,7 @@ namespace SHG
 	void PPU::ChangeStatInterruptLineBit(uint8_t bitIndex, bool value)
 	{
 		// If the STAT interrupt source is not enabled, then the interrupt line should not be changed.
-		if (!stat.GetBit(bitIndex))
+		if (!stat.Read(bitIndex))
 			return;
 
 		// The STAT interrupt sources (LYC=LY, OAM Search, HBlank, VBlank), have their
@@ -501,7 +501,7 @@ namespace SHG
 	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType)
 	{
 		uint16_t tileIndex = GetTileIndexFromTileMaps(memoryMap, scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS), scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS), useAlternateTileMapAddress);
-		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.GetBit(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
+		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
 
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
@@ -556,12 +556,12 @@ namespace SHG
 
 	void PPU::DebugDrawBackgroundTileMap()
 	{
-		DebugDrawTileMap(backgroundDebugFramebuffer, debugBackgroundMapScanlineX, debugBackgroundMapScanlineY, lcdc.GetBit(LCDC_BG_TILE_MAP_AREA_BIT_INDEX), TileMapType::Background);
+		DebugDrawTileMap(backgroundDebugFramebuffer, debugBackgroundMapScanlineX, debugBackgroundMapScanlineY, lcdc.Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX), TileMapType::Background);
 	}
 
 	void PPU::DebugDrawWindowTileMap()
 	{
-		DebugDrawTileMap(windowDebugFramebuffer, debugWindowMapScanlineX, debugWindowMapScanlineY, lcdc.GetBit(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX), TileMapType::Window);
+		DebugDrawTileMap(windowDebugFramebuffer, debugWindowMapScanlineX, debugWindowMapScanlineY, lcdc.Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX), TileMapType::Window);
 	}
 
 	void PPU::DebugDrawSprites()
@@ -569,7 +569,7 @@ namespace SHG
 		Sprite sprite = GetSpriteAtIndex(debugCurrentSpriteIndex);
 
 		uint8_t palette = memoryMap.Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
-		uint8_t spriteSizeInTiles = lcdc.GetBit(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
+		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
 
 		uint8_t tileX = debugCurrentSpriteIndex % MAX_SPRITES_PER_SCANLINE;

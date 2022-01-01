@@ -27,7 +27,7 @@ namespace SHG
 
 	uint32_t WaveSoundChannel::GetLengthTimerPeriod() const
 	{
-		return nrx1;
+		return nrx1.Read();
 	}
 
 	float WaveSoundChannel::GenerateSample() const
@@ -37,12 +37,12 @@ namespace SHG
 
 	bool WaveSoundChannel::IsConstrainedByLength() const
 	{
-		return (nrx4 >> 6) & 1;
+		return nrx4.Read(6);
 	}
 
 	uint32_t WaveSoundChannel::GetFrequencyTimerPeriod() const
 	{
-		uint16_t frequency = (((nrx4 & 0b111) << 8) | nrx3);
+		uint16_t frequency = (nrx4.Read(0, 2) << 8) | nrx3.Read();
 		return (2048 - frequency) * 2;
 	}
 
@@ -53,8 +53,7 @@ namespace SHG
 
 	uint8_t WaveSoundChannel::GetVolumeControlShift() const
 	{
-		// Bits 5 and 6 of NR32.
-		uint8_t volumeControl = (nrx2 >> 5) & 0b11;
+		uint8_t volumeControl = nrx2.Read(5, 6);
 		return volumeControl == 0 ? 4 : volumeControl - 1;
 	}
 

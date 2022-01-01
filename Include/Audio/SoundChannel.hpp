@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include "Audio/AudioTimer.hpp"
+#include "Memory/Register8.hpp"
 
 namespace SHG
 {
@@ -42,11 +43,11 @@ namespace SHG
 
 		uint8_t volume = 0;
 
-		uint8_t nrx0 = 0;
-		uint8_t nrx1 = 0;
-		uint8_t nrx2 = 0;
-		uint8_t nrx3 = 0;
-		uint8_t nrx4 = 0;
+		Register8 nrx0;
+		Register8 nrx1;
+		Register8 nrx2;
+		Register8 nrx3;
+		Register8 nrx4;
 
 		void DisableVolumeEnvelope();
 		void ReloadLengthTimer();

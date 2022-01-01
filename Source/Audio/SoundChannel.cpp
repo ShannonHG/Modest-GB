@@ -54,36 +54,36 @@ namespace SHG
 
 	void SoundChannel::Reset()
 	{
-		nrx0 = 0;
-		nrx1 = 0;
-		nrx2 = 0;
-		nrx3 = 0;
-		nrx4 = 0;
+		nrx0.Write(0);
+		nrx1.Write(0);
+		nrx2.Write(0);
+		nrx3.Write(0);
+		nrx4.Write(0);
 	}
 
 	void SoundChannel::WriteToNRX0(uint8_t value)
 	{
-		nrx0 = value;
+		nrx0.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX1(uint8_t value)
 	{
-		nrx1 = value;
+		nrx1.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX2(uint8_t value)
 	{
-		nrx2 = value;
+		nrx2.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX3(uint8_t value)
 	{
-		nrx3 = value;
+		nrx3.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX4(uint8_t value)
 	{
-		nrx4 = value;
+		nrx4.Write(value);
 
 		if ((value >> 7) == 1)
 			OnTrigger();
@@ -91,27 +91,27 @@ namespace SHG
 
 	uint8_t SoundChannel::ReadNRX0() const
 	{
-		return nrx0;
+		return nrx0.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX1() const
 	{
-		return nrx1;
+		return nrx1.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX2() const
 	{
-		return nrx2;
+		return nrx2.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX3() const
 	{
-		return nrx3;
+		return nrx3.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX4() const
 	{
-		return nrx4;
+		return nrx4.Read();
 	}
 
 	void SoundChannel::OnTrigger()

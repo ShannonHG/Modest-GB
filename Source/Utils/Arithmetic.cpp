@@ -1,6 +1,7 @@
 #include <limits>
 #include <cstdint>
 #include <algorithm>
+#include <cmath>
 #include "Utils/Arithmetic.hpp"
 
 namespace SHG::Arithmetic
@@ -8,6 +9,11 @@ namespace SHG::Arithmetic
 	bool SHG::Arithmetic::GetBit(uint8_t data, uint8_t bitIndex)
 	{
 		return (data >> bitIndex) & 1;
+	}
+
+	uint32_t SHG::Arithmetic::GetBits(uint32_t data, uint8_t start, uint8_t end)
+	{
+		return (data >> start) & static_cast<uint32_t>(std::pow(2, (end - start) + 1) - 1);
 	}
 
 	bool SHG::Arithmetic::Is8BitOverflow(int num)

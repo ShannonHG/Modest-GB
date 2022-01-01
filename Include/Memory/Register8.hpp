@@ -10,7 +10,9 @@ namespace SHG
 		uint8_t Read() const;
 		void Write(uint8_t data);
 		void ChangeBit(uint8_t bitIndex, bool enable);
-		uint8_t GetBit(uint8_t bitIndex) const;
+		uint8_t Read(uint8_t bitIndex) const;
+		uint8_t Read(uint8_t start, uint8_t end) const;
+		void Fill(bool value);
 		void Increment();
 		void Decrement();
 		void Increase(uint8_t amount);
