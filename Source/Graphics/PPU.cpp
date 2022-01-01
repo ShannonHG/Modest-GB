@@ -331,7 +331,9 @@ namespace SHG
 						// If the sprite pixel is not transparent, and the background pixel uses color 0 or the sprite pixel does not allow 
 						// the background to be drawn on top, then the sprite pixel should be drawn. Otherwise, the background pixel should be rendered.
 						if (spritePixel.colorIndex != 0 && (selectedPixel.colorIndex == 0 || !spritePixel.backgroundOverSprite))
+						{
 							selectedPixel = spritePixel;
+						}
 					}
 
 					// Render the pixel and increase the X coordinate of the current scanline by 1.

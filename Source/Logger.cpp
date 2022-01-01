@@ -61,7 +61,7 @@ namespace SHG
 		std::stringstream formattedTime;
 
 		// Y-m-d H:M
-		formattedTime << currentTime.year << "-" << currentTime.month << "-" << currentTime.day << " " << currentTime.hour << ":" << currentTime.minutes;
+		formattedTime << currentTime.year << "-" << currentTime.month << "-" << currentTime.day << " " << currentTime.hour << ":" << std::setw(2) << std::setfill('0') << currentTime.minutes;
 
 		std::string formattedMessage = "[" + formattedTime.str() + "] " + heading + (customHeader.empty() ? customHeader : " " + customHeader) + ": " + message;
 

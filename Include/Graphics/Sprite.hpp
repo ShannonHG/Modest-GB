@@ -5,10 +5,10 @@ namespace SHG
 {
 	struct Sprite
 	{
-		// Horizontal position on the screen plus 8.
+		// Horizontal position on the screen.
 		int16_t x = 0;
 
-		// Vertical position on the screen plus 16
+		// Vertical position on the screen.
 		int16_t y = 0;
 
 		// In 8x8 mode, this is the index of this sprite's 8x8 tile (located in $8000-$8FFF).

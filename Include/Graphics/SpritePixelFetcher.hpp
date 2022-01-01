@@ -27,6 +27,7 @@ namespace SHG
 	private:
 		SpritePixelFetcherState currentState = SpritePixelFetcherState::Idle;
 		Sprite currentSprite;
+		int currentSpriteIndex = 0;
 		uint8_t currentLowTileData = 0;
 		Memory* memoryMap = nullptr;
 		Register8* lcdc = nullptr;

@@ -53,11 +53,11 @@ namespace SHG
 
 	void SpritePixelFetcher::UpdateIdleState()
 	{
-		for (Sprite& sprite : spritesOnCurrentScanline)
+		for (currentSpriteIndex = 0; currentSpriteIndex < spritesOnCurrentScanline.size(); currentSpriteIndex++)
 		{
-			if (sprite.x == x)
+			currentSprite = spritesOnCurrentScanline[currentSpriteIndex];
+			if (currentSprite.x == x || (x == 0 && currentSprite.x < 0))
 			{
-				currentSprite = sprite;
 				// Advance the background pixel fetcher until at least 8 pixels are in its queue.
 				if (backgroundPixelFetcher->GetPixelQueueSize() < TILE_WIDTH_IN_PIXELS)
 				{
@@ -109,6 +109,12 @@ namespace SHG
 
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
+			if (spritesOnCurrentScanline[currentSpriteIndex].x + (7 - px) < 0)
+			{
+				PopPixel();
+				continue;
+			}
+
 			Pixel newPixel =
 			{
 				.colorIndex = GetColorIndexFromTileData(currentSprite.xFlip ? 7 - px : px, currentLowTileData, highTileData),
@@ -126,10 +132,10 @@ namespace SHG
 				queuedPixels.push(existingPixel);
 				continue;
 			}
-			
+
 			// The sprite with the smaller X position has priority, but if the sprites have the same X position, 
 			// then the sprite that appears first in OAM has priority.
-			if (newPixel.spriteX < existingPixel.spriteX || 
+			if (newPixel.spriteX < existingPixel.spriteX ||
 				(newPixel.spriteX == existingPixel.spriteX && newPixel.spriteOAMIndex < existingPixel.spriteOAMIndex))
 			{
 				queuedPixels.push(newPixel);
@@ -140,6 +146,8 @@ namespace SHG
 			}
 		}
 
+		// Remove the current sprite to ensure that it's not processed again.
+		spritesOnCurrentScanline.erase(spritesOnCurrentScanline.begin() + currentSpriteIndex);
 		currentState = SpritePixelFetcherState::Idle;
 	}
 
