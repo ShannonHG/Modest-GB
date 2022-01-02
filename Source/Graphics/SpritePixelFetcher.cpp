@@ -56,7 +56,7 @@ namespace SHG
 		for (currentSpriteIndex = 0; currentSpriteIndex < spritesOnCurrentScanline.size(); currentSpriteIndex++)
 		{
 			currentSprite = spritesOnCurrentScanline[currentSpriteIndex];
-			if (currentSprite.x == x || (x == 0 && currentSprite.x < 0))
+			if (ShouldRenderSprite(currentSprite))
 			{
 				// Advance the background pixel fetcher until at least 8 pixels are in its queue.
 				if (backgroundPixelFetcher->GetPixelQueueSize() < TILE_WIDTH_IN_PIXELS)
@@ -109,6 +109,7 @@ namespace SHG
 
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
+			// Ignore any pixels that are off-screen.
 			if (spritesOnCurrentScanline[currentSpriteIndex].x + (7 - px) < 0)
 			{
 				PopPixel();
@@ -126,17 +127,11 @@ namespace SHG
 
 			Pixel existingPixel = PopPixel();
 
-			// If the new pixel is transparent, then add the existing pixel back to the queue instead.
-			if (newPixel.colorIndex == 0)
-			{
-				queuedPixels.push(existingPixel);
-				continue;
-			}
-
-			// The sprite with the smaller X position has priority, but if the sprites have the same X position, 
-			// then the sprite that appears first in OAM has priority.
-			if (newPixel.spriteX < existingPixel.spriteX ||
-				(newPixel.spriteX == existingPixel.spriteX && newPixel.spriteOAMIndex < existingPixel.spriteOAMIndex))
+			// If the new pixel is transparent, then the existing pixel has priority. Otherwise, the sprite with the smaller X position has priority, 
+			// but if the sprites have the same X position, then the sprite that appears first in OAM has priority.
+			if (newPixel.colorIndex != 0 && 
+				(newPixel.spriteX < existingPixel.spriteX ||
+				(newPixel.spriteX == existingPixel.spriteX && (newPixel.spriteOAMIndex < existingPixel.spriteOAMIndex))))
 			{
 				queuedPixels.push(newPixel);
 			}
@@ -151,7 +146,7 @@ namespace SHG
 		currentState = SpritePixelFetcherState::Idle;
 	}
 
-	uint16_t SpritePixelFetcher::GetCurrentSpriteTileAddress()
+	uint16_t SpritePixelFetcher::GetCurrentSpriteTileAddress() const
 	{
 		uint8_t tileIndex = currentSprite.tileIndex;
 
@@ -169,5 +164,15 @@ namespace SHG
 			tileIndex++;
 
 		return GetTileAddress(tileIndex, scanline % TILE_HEIGHT_IN_PIXELS, true);
+	}
+
+	bool SpritePixelFetcher::ShouldRenderSprite(const Sprite& sprite) const
+	{
+		return 
+			// A sprite should only be drawn if the fetcher's X position is less than 160 and equal to the sprite's X position,
+			// or the fetcher's x position is 0 and the sprite's X position is less than 0 (some off-screen pixels), 
+			// but greater than -8 (not completely hidden).
+			(x < GB_SCREEN_WIDTH && sprite.x == x) ||
+			(x == 0 && (sprite.x < 0 && sprite.x > -TILE_WIDTH_IN_PIXELS));
 	}
 }

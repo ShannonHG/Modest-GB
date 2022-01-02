@@ -39,6 +39,7 @@ namespace SHG
 		void UpdateLowTileDataFetchState();
 		void UpdatePixelPushState();
 
-		uint16_t GetCurrentSpriteTileAddress();
+		uint16_t GetCurrentSpriteTileAddress() const;
+		bool ShouldRenderSprite(const Sprite& sprite) const;
 	};
 }

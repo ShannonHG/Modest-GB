@@ -295,13 +295,14 @@ namespace SHG
 				windowLineCounter++;
 			}
 
+			SpritePixelFetcherState prevSpritePixelFetcherState = spritePixelFetcher.GetState();
 			if (lcdc.Read(LCDC_OBJ_ENABLE_BIT_INDEX))
 			{
 				spritePixelFetcher.SetX(currentScanlineX);
 				spritePixelFetcher.Tick();
 			}
 
-			if (spritePixelFetcher.GetState() != SpritePixelFetcherState::Idle)
+			if (!(prevSpritePixelFetcherState == SpritePixelFetcherState::Idle && spritePixelFetcher.GetState() == SpritePixelFetcherState::Idle))
 				return;
 
 			Pixel selectedPixel;
