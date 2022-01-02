@@ -172,7 +172,7 @@ namespace SHG
 			// A sprite should only be drawn if the fetcher's X position is less than 160 and equal to the sprite's X position,
 			// or the fetcher's x position is 0 and the sprite's X position is less than 0 (some off-screen pixels), 
 			// but greater than -8 (not completely hidden).
-			(x < GB_SCREEN_WIDTH && sprite.x == x) ||
+			(x < GB_SCREEN_WIDTH && x >= 0 && sprite.x == x) ||
 			(x == 0 && (sprite.x < 0 && sprite.x > -TILE_WIDTH_IN_PIXELS));
 	}
 }

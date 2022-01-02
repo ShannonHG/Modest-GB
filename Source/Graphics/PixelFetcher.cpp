@@ -20,12 +20,12 @@ namespace SHG
 		return queuedPixels.size();
 	}
 
-	void PixelFetcher::SetX(uint8_t x)
+	void PixelFetcher::SetX(int16_t x)
 	{
 		this->x = x;
 	}
 
-	void PixelFetcher::SetY(uint8_t y)
+	void PixelFetcher::SetY(int16_t y)
 	{
 		this->y = y;
 	}

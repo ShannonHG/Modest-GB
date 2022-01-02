@@ -59,7 +59,7 @@ namespace SHG
 
 		std::vector<Sprite> spritesOnCurrentScanline;
 		std::queue<Pixel> queuedSpritePixels;
-		uint8_t currentScanlineX = 0;
+		int16_t currentScanlineX = 0;
 		Memory& memoryMap;
 		Framebuffer primaryFramebuffer;
 		Framebuffer tileDebugFramebuffer;

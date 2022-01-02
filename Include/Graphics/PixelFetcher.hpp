@@ -12,13 +12,13 @@ namespace SHG
 		// Returns the first pixel in the fetcher's queue.
 		Pixel PopPixel();
 		uint8_t GetPixelQueueSize();
-		void SetX(uint8_t x);
-		void SetY(uint8_t y);
+		void SetX(int16_t x);
+		void SetY(int16_t y);
 		virtual void Reset();
 
 	protected:
-		uint8_t x = 0;
-		uint8_t y = 0;
+		int16_t x = 0;
+		int16_t y = 0;
 		std::queue<Pixel> queuedPixels;
 	};
 }

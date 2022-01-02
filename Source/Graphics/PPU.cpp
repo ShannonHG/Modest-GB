@@ -120,7 +120,7 @@ namespace SHG
 			currentScanlineElapsedCycles = 0;
 
 			ly.Increment();
-			currentScanlineX = 0;
+			currentScanlineX = -7;
 			ChangeStatInterruptLineBit(STAT_HBLANK_INTERRUPT_SOURCE_BIT_INDEX, false);
 
 			if (ly.Read() == GB_SCREEN_HEIGHT)
@@ -137,6 +137,7 @@ namespace SHG
 		*cycles = 0;
 	}
 
+
 	void PPU::EnterVBlankMode()
 	{
 		SetCurrentMode(Mode::VBlank);
@@ -147,6 +148,7 @@ namespace SHG
 		// Causes the window to render the most up to date version of the framebuffer.
 		primaryFramebuffer.UploadData();
 		primaryFramebuffer.Clear();
+
 	}
 
 	void PPU::UpdateVBlankMode(uint32_t* cycles)
@@ -169,6 +171,7 @@ namespace SHG
 				wasWYConditionTriggered = false;
 				wasWXConditionTriggered = false;
 				windowLineCounter = 0;
+
 				ChangeStatInterruptLineBit(STAT_VBLANK_INTERRUPT_SOURCE_BIT_INDEX, false);
 				EnterOAMSearchMode();
 			}
@@ -182,6 +185,7 @@ namespace SHG
 		*cycles = 0;
 	}
 
+
 	void PPU::EnterOAMSearchMode()
 	{
 		if (!wasWYConditionTriggered)
@@ -192,6 +196,7 @@ namespace SHG
 		spritesOnCurrentScanline.clear();
 		SetCurrentMode(Mode::SearchingOAM);
 		ChangeStatInterruptLineBit(STAT_OAM_INTERRUPT_SOURCE_BIT_INDEX, true);
+
 	}
 
 	void PPU::UpdateOAMSearchMode(uint32_t* cycles)
@@ -268,19 +273,14 @@ namespace SHG
 		spritePixelFetcher.Reset();
 		spritePixelFetcher.SetSpritesOnScanline(spritesOnCurrentScanline);
 		spritePixelFetcher.SetY(ly.Read());
-
 		SetCurrentMode(Mode::LCDTransfer);
 	}
 
 	void PPU::UpdateLCDTransferMode(uint32_t* cycles)
 	{
-		uint32_t targetCycles = *cycles;
-		for (uint32_t cycle = 0; cycle < targetCycles; cycle++)
+		while ((*cycles) > 0)
 		{
-			(*cycles)--;
-			currentScanlineElapsedCycles++;
-
-			wasWXConditionTriggered = (currentScanlineX + 7) == wx.Read();
+			wasWXConditionTriggered = currentScanlineX + 7 == wx.Read();
 
 			// If all of the conditions to render the window have been satisfied, then reset the background
 			// pixel fetcher, and set it to 'Window' mode.
@@ -295,6 +295,18 @@ namespace SHG
 				windowLineCounter++;
 			}
 
+			// The current scanline X position only needs to support negative positions so 
+			// that the "WX Trigger" condition can be passed when WX is between 0 and 6.
+			// However, the pixel fetchers should not be ticked until the scanline X position is 0 or greater.
+			if (currentScanlineX < 0)
+			{
+				currentScanlineX++;
+				continue;
+			}
+
+			(*cycles)--;
+			currentScanlineElapsedCycles++;
+
 			SpritePixelFetcherState prevSpritePixelFetcherState = spritePixelFetcher.GetState();
 			if (lcdc.Read(LCDC_OBJ_ENABLE_BIT_INDEX))
 			{
@@ -302,7 +314,8 @@ namespace SHG
 				spritePixelFetcher.Tick();
 			}
 
-			if (!(prevSpritePixelFetcherState == SpritePixelFetcherState::Idle && spritePixelFetcher.GetState() == SpritePixelFetcherState::Idle))
+			if (!(prevSpritePixelFetcherState == SpritePixelFetcherState::Idle &&
+				spritePixelFetcher.GetState() == SpritePixelFetcherState::Idle))
 				return;
 
 			Pixel selectedPixel;
