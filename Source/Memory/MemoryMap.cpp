@@ -116,7 +116,7 @@ namespace SHG
 
 	void MemoryMap::Reset()
 	{
-		ppu->GetLY().Write(0);
+		ppu->WriteLY(0);
 		joypad->Write(0xCF);
 		Write(0xFF01, 0x00);
 		Write(0xFF02, 0x7E);
@@ -259,59 +259,59 @@ namespace SHG
 		case GB_INTERRUPT_FLAG_ADDRESS:
 			return interruptFlagRegister->Read();
 		case GB_LCDC_ADDRESS:
-			return ppu->GetLCDC().Read();
+			return ppu->ReadLCDC();
 		case GB_LCD_STAT_ADDRESS:
-			return ppu->GetLCDStatusRegister().Read();
+			return ppu->ReadLCDSTAT();
 		case GB_SCY_ADDRESS:
-			return ppu->GetSCY().Read();
+			return ppu->ReadSCY();
 		case GB_SCX_ADDRESS:
-			return ppu->GetSCX().Read();
+			return ppu->ReadSCX();
 		case GB_LY_ADDRESS:
-			return ppu->GetLY().Read();
+			return ppu->ReadLY();
 		case GB_LYC_ADDRESS:
-			return ppu->GetLYC().Read();
+			return ppu->ReadLYC();
 		case GB_DMA_TRANSFER_REGISTER_ADDRESS:
-			return ppu->GetDMATransferRegister().Read();
+			return ppu->ReadDMA();
 		case GB_WY_ADDRESS:
-			return ppu->GetWY().Read();
+			return ppu->ReadWY();
 		case GB_WX_ADDRESS:
-			return ppu->GetWX().Read();
+			return ppu->ReadWX();
 		case GB_NR10_ADDRESS:
-			return apu->GetChannel1()->ReadNRX0();
+			return apu->ReadNR10();
 		case GB_NR11_ADDRESS:
-			return apu->GetChannel1()->ReadNRX1();
+			return apu->ReadNR11();
 		case GB_NR12_ADDRESS:
-			return apu->GetChannel1()->ReadNRX2();
+			return apu->ReadNR12();
 		case GB_NR13_ADDRESS:
-			return apu->GetChannel1()->ReadNRX3();
+			return apu->ReadNR13();
 		case GB_NR14_ADDRESS:
-			return apu->GetChannel1()->ReadNRX4();
+			return apu->ReadNR14();
 		case GB_NR21_ADDRESS:
-			return apu->GetChannel2()->ReadNRX1();
+			return apu->ReadNR21();
 		case GB_NR22_ADDRESS:
-			return apu->GetChannel2()->ReadNRX2();
+			return apu->ReadNR22();
 		case GB_NR23_ADDRESS:
-			return apu->GetChannel2()->ReadNRX3();
+			return apu->ReadNR23();
 		case GB_NR24_ADDRESS:
-			return apu->GetChannel2()->ReadNRX4();
+			return apu->ReadNR24();
 		case GB_NR30_ADDRESS:
-			return apu->GetChannel3()->ReadNRX0();	
+			return apu->ReadNR30();
 		case GB_NR31_ADDRESS:
-			return apu->GetChannel3()->ReadNRX1();
+			return apu->ReadNR31();
 		case GB_NR32_ADDRESS:
-			return apu->GetChannel3()->ReadNRX2();
+			return apu->ReadNR32();
 		case GB_NR33_ADDRESS:
-			return apu->GetChannel3()->ReadNRX3();
+			return apu->ReadNR33();
 		case GB_NR34_ADDRESS:
-			return apu->GetChannel3()->ReadNRX4();
+			return apu->ReadNR34();
 		case GB_NR41_ADDRESS:
-			return apu->GetChannel4()->ReadNRX1();
+			return apu->ReadNR41();
 		case GB_NR42_ADDRESS:
-			return apu->GetChannel4()->ReadNRX2();
+			return apu->ReadNR42();
 		case GB_NR43_ADDRESS:
-			return apu->GetChannel4()->ReadNRX3();
+			return apu->ReadNR43();
 		case GB_NR44_ADDRESS:
-			return apu->GetChannel4()->ReadNRX4();
+			return apu->ReadNR44();
 		case GB_NR52_ADDRESS:
 			return apu->ReadNR52();
 		default:
@@ -343,86 +343,86 @@ namespace SHG
 			interruptFlagRegister->Write(value);
 			break;
 		case GB_LCDC_ADDRESS:
-			ppu->GetLCDC().Write(value);
+			ppu->WriteLCDC(value);
 			break;
 		case GB_LCD_STAT_ADDRESS:
 			// Lower 3 bits are read only.
-			ppu->GetLCDStatusRegister().Write(WriteWithReadOnlyBits(ppu->GetLCDStatusRegister().Read(), value, 0b11111000));
+			ppu->WriteLCDSTAT(WriteWithReadOnlyBits(ppu->ReadLCDSTAT(), value, 0b11111000));
 			break;
 		case GB_SCY_ADDRESS:
-			ppu->GetSCY().Write(value);
+			ppu->WriteSCY(value);
 			break;
 		case GB_SCX_ADDRESS:
-			ppu->GetSCX().Write(value);
+			ppu->WriteSCX(value);
 			break;
 		case GB_LY_ADDRESS:
 			// LY is read-only.
 			break;
 		case GB_LYC_ADDRESS:
-			ppu->GetLYC().Write(value);
+			ppu->WriteLYC(value);
 			break;
 		case GB_DMA_TRANSFER_REGISTER_ADDRESS:
-			ppu->GetDMATransferRegister().Write(value);
+			ppu->WriteDMA(value);
 			break;
 		case GB_WY_ADDRESS:
-			ppu->GetWY().Write(value);
+			ppu->WriteWY(value);
 			break;
 		case GB_WX_ADDRESS:
-			ppu->GetWX().Write(value);
+			ppu->WriteWX(value);
 			break;
 		case GB_NR10_ADDRESS:
-			apu->GetChannel1()->WriteToNRX0(value);
+			apu->WriteToNR10(value);
 			break;
 		case GB_NR11_ADDRESS:
-			apu->GetChannel1()->WriteToNRX1(value);
+			apu->WriteToNR11(value);
 			break;
 		case GB_NR12_ADDRESS:
-			apu->GetChannel1()->WriteToNRX2(value);
+			apu->WriteToNR12(value);
 			break;
 		case GB_NR13_ADDRESS:
-			apu->GetChannel1()->WriteToNRX3(value);
+			apu->WriteToNR13(value);
 			break;
 		case GB_NR14_ADDRESS:
-			apu->GetChannel1()->WriteToNRX4(value);
+			apu->WriteToNR14(value);
 			break;		
 		case GB_NR21_ADDRESS:
-			apu->GetChannel2()->WriteToNRX1(value);
+			apu->WriteToNR21(value);
 			break;
 		case GB_NR22_ADDRESS:
-			apu->GetChannel2()->WriteToNRX2(value);
+			apu->WriteToNR22(value);
 			break;
 		case GB_NR23_ADDRESS:
-			apu->GetChannel2()->WriteToNRX3(value);
+			apu->WriteToNR23(value);
 			break;
 		case GB_NR24_ADDRESS:
-			apu->GetChannel2()->WriteToNRX4(value);
+			apu->WriteToNR24(value);
 			break;
 		case GB_NR30_ADDRESS:
-			apu->GetChannel3()->WriteToNRX0(value);
+			apu->WriteToNR30(value);
 			break;
 		case GB_NR31_ADDRESS:
-			apu->GetChannel3()->WriteToNRX1(value);
+			apu->WriteToNR31(value);
 			break;
 		case GB_NR32_ADDRESS:
-			apu->GetChannel3()->WriteToNRX2(value);
+			apu->WriteToNR32(value);
 			break;
 		case GB_NR33_ADDRESS:
-			apu->GetChannel3()->WriteToNRX3(value);
+			apu->WriteToNR33(value);
 			break;
 		case GB_NR34_ADDRESS:
-			apu->GetChannel3()->WriteToNRX4(value);
+			apu->WriteToNR34(value);
 			break;
 		case GB_NR41_ADDRESS:
-			apu->GetChannel4()->WriteToNRX1(value);
+			apu->WriteToNR41(value);
 			break;
 		case GB_NR42_ADDRESS:
-			apu->GetChannel4()->WriteToNRX2(value);
+			apu->WriteToNR42(value);
 			break;
 		case GB_NR43_ADDRESS:
-			apu->GetChannel4()->WriteToNRX3(value);
+			apu->WriteToNR43(value);
 			break;
 		case GB_NR44_ADDRESS:
-			apu->GetChannel4()->WriteToNRX4(value);
+			apu->WriteToNR44(value);
 			break;
 		case GB_NR52_ADDRESS:
 			apu->WriteToNR52(value);
@@ -430,10 +430,13 @@ namespace SHG
 		default:
 			if (address >= GB_WAVE_PATTERN_RAM_START_ADDRESS && address <= GB_WAVE_PATTERN_RAM_END_ADDRESS)
 			{
-				apu->GetChannel3()->WriteToWavePatternRAM(address, value);
+				apu->WriteToWavePatternRAM(address, value);
 			}
-
-			ioRegisters->Write(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS), value);
+			else
+			{
+				// Write to generic I/O memory.
+				ioRegisters->Write(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS), value);
+			}
 			break;
 		}
 	}

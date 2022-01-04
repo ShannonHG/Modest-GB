@@ -67,6 +67,95 @@ namespace SHG
 		tileDebugFramebuffer.UploadData();
 	}
 
+	void PPU::WriteLCDC(uint8_t value)
+	{
+		lcdc.Write(value);
+	}
+
+	void PPU::WriteLCDSTAT(uint8_t value)
+	{
+		stat.Write(value);
+	}
+
+	void PPU::WriteSCY(uint8_t value)
+	{
+		scy.Write(value);
+	}
+
+	void PPU::WriteSCX(uint8_t value)
+	{
+		scx.Write(value);
+	}
+
+	void PPU::WriteLY(uint8_t value)
+	{	
+		ly.Write(value);
+	}
+
+	void PPU::WriteLYC(uint8_t value)
+	{
+		lyc.Write(value);
+	}
+
+	void PPU::WriteWY(uint8_t value)
+	{
+		wy.Write(value);
+	}
+
+	void PPU::WriteWX(uint8_t value)
+	{
+		wx.Write(value);
+	}
+
+	void PPU::WriteDMA(uint8_t value)
+	{
+		dmaRegister.Write(value);
+	}
+
+	uint8_t PPU::ReadLCDC() const
+	{
+		return lcdc.Read();
+	}
+
+	uint8_t PPU::ReadLCDSTAT() const
+	{
+		return stat.Read();
+	}
+
+	uint8_t PPU::ReadSCY() const
+	{
+		return scy.Read();
+	}
+
+	uint8_t PPU::ReadSCX() const
+	{
+		return scx.Read();
+	}
+
+	uint8_t PPU::ReadLY() const
+	{
+		return ly.Read();
+	}
+
+	uint8_t PPU::ReadLYC() const
+	{
+		return lyc.Read();
+	}
+	uint8_t PPU::ReadWY() const
+	{
+		return wy.Read();
+	}
+
+	uint8_t PPU::ReadWX() const
+	{
+		return wx.Read();
+	}
+
+	uint8_t PPU::ReadDMA() const
+	{
+		return dmaRegister.Read();
+	}
+
 	void PPU::SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color)
 	{
 		if (paletteTints.find(paletteAddress) == paletteTints.end())
@@ -503,72 +592,27 @@ namespace SHG
 		}
 	}
 
-	Framebuffer& PPU::GetPrimaryFramebuffer()
+	const Framebuffer& PPU::GetPrimaryFramebuffer() const
 	{
 		return primaryFramebuffer;
 	}
 
-	Register8& PPU::GetLCDC()
-	{
-		return lcdc;
-	}
-
-	Register8& PPU::GetLCDStatusRegister()
-	{
-		return stat;
-	}
-
-	Register8& PPU::GetSCY()
-	{
-		return scy;
-	}
-
-	Register8& PPU::GetSCX()
-	{
-		return scx;
-	}
-
-	Register8& PPU::GetLY()
-	{
-		return ly;
-	}
-
-	Register8& PPU::GetLYC()
-	{
-		return lyc;
-	}
-
-	Register8& PPU::GetWY()
-	{
-		return wy;
-	}
-
-	Register8& PPU::GetWX()
-	{
-		return wx;
-	}
-
-	DMATransferRegister& PPU::GetDMATransferRegister()
-	{
-		return dmaRegister;
-	}
-
-	Framebuffer& PPU::GetTileDebugFramebuffer()
+	const Framebuffer& PPU::GetTileDebugFramebuffer() const
 	{
 		return tileDebugFramebuffer;
 	}
 
-	Framebuffer& PPU::GetSpriteDebugFramebuffer()
+	const Framebuffer& PPU::GetSpriteDebugFramebuffer() const
 	{
 		return spriteDebugFramebuffer;
 	}
 
-	Framebuffer& PPU::GetBackgroundMapDebugFramebuffer()
+	const Framebuffer& PPU::GetBackgroundMapDebugFramebuffer() const
 	{
 		return backgroundDebugFramebuffer;
 	}
 
-	Framebuffer& PPU::GetWindowMapDebugFramebuffer()
+	const Framebuffer& PPU::GetWindowMapDebugFramebuffer() const
 	{
 		return windowDebugFramebuffer;
 	}

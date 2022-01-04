@@ -111,7 +111,7 @@ namespace SHG
 		SDL_SetWindowPosition(sdlWindow, x, y);
 	}
 
-	void EmulatorWindow::Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, APU& apu, Joypad& joypad, Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
+	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
 	{
 		StartFrame();
 		ClearScreen();
@@ -282,7 +282,7 @@ namespace SHG
 	}
 
 	// TODO: Remove scrollbar
-	void EmulatorWindow::RenderGameView(PPU& ppu)
+	void EmulatorWindow::RenderGameView(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -291,7 +291,7 @@ namespace SHG
 		RenderWindowWithFramebuffer("Game", ppu.GetPrimaryFramebuffer());
 	}
 
-	void EmulatorWindow::RenderWindowWithFramebuffer(const std::string& title, Framebuffer& framebuffer, bool* isOpen)
+	void EmulatorWindow::RenderWindowWithFramebuffer(const std::string& title, const Framebuffer& framebuffer, bool* isOpen)
 	{
 		if (ImGui::Begin(title.c_str(), isOpen))
 		{
@@ -324,7 +324,7 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderCPUDebugWindow(CPU& processor, MemoryMap& memoryMap, uint32_t cyclesPerSecond)
+	void EmulatorWindow::RenderCPUDebugWindow(const CPU& processor, const MemoryMap& memoryMap, uint32_t cyclesPerSecond)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -404,57 +404,65 @@ namespace SHG
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::Checkbox("Channel 1", &apu.isChannel1Enabled);
+			bool isChannel1Connected = apu.IsChannel1Connected();
+			ImGui::Checkbox("Channel 1", &isChannel1Connected);
+			apu.SetChannel1ConnectionStatus(isChannel1Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR10: " + GetHexString8(apu.GetChannel1()->ReadNRX0())).c_str());
+			ImGui::Text(("NR10: " + GetHexString8(apu.ReadNR10())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR11: " + GetHexString8(apu.GetChannel1()->ReadNRX1())).c_str());
-			ImGui::Text(("NR12: " + GetHexString8(apu.GetChannel1()->ReadNRX2())).c_str());
+			ImGui::Text(("NR11: " + GetHexString8(apu.ReadNR11())).c_str());
+			ImGui::Text(("NR12: " + GetHexString8(apu.ReadNR12())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR13: " + GetHexString8(apu.GetChannel1()->ReadNRX3())).c_str());
+			ImGui::Text(("NR13: " + GetHexString8(apu.ReadNR13())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR14: " + GetHexString8(apu.GetChannel1()->ReadNRX4())).c_str());
+			ImGui::Text(("NR14: " + GetHexString8(apu.ReadNR14())).c_str());
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::Checkbox("Channel 2", &apu.isChannel2Enabled);
+			bool isChannel2Connected = apu.IsChannel2Connected();
+			ImGui::Checkbox("Channel 2", &isChannel2Connected);
+			apu.SetChannel2ConnectionStatus(isChannel2Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR21: " + GetHexString8(apu.GetChannel2()->ReadNRX1())).c_str());
+			ImGui::Text(("NR21: " + GetHexString8(apu.ReadNR21())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR22: " + GetHexString8(apu.GetChannel2()->ReadNRX2())).c_str());
-			ImGui::Text(("NR23: " + GetHexString8(apu.GetChannel2()->ReadNRX3())).c_str());
+			ImGui::Text(("NR22: " + GetHexString8(apu.ReadNR22())).c_str());
+			ImGui::Text(("NR23: " + GetHexString8(apu.ReadNR23())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR24: " + GetHexString8(apu.GetChannel2()->ReadNRX4())).c_str());
+			ImGui::Text(("NR24: " + GetHexString8(apu.ReadNR24())).c_str());
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::Checkbox("Channel 3", &apu.isChannel3Enabled);
+			bool isChannel3Connected = apu.IsChannel3Connected();
+			ImGui::Checkbox("Channel 3", &isChannel3Connected);
+			apu.SetChannel3ConnectionStatus(isChannel3Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR30: " + GetHexString8(apu.GetChannel3()->ReadNRX0())).c_str());
+			ImGui::Text(("NR30: " + GetHexString8(apu.ReadNR30())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR31: " + GetHexString8(apu.GetChannel3()->ReadNRX1())).c_str());
+			ImGui::Text(("NR31: " + GetHexString8(apu.ReadNR31())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR32: " + GetHexString8(apu.GetChannel3()->ReadNRX2())).c_str());
-			ImGui::Text(("NR33: " + GetHexString8(apu.GetChannel3()->ReadNRX3())).c_str());
+			ImGui::Text(("NR32: " + GetHexString8(apu.ReadNR32())).c_str());
+			ImGui::Text(("NR33: " + GetHexString8(apu.ReadNR33())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR34: " + GetHexString8(apu.GetChannel3()->ReadNRX4())).c_str());
+			ImGui::Text(("NR34: " + GetHexString8(apu.ReadNR34())).c_str());
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::Checkbox("Channel 4", &apu.isChannel4Enabled);
+			bool isChannel4Connected = apu.IsChannel4Connected();
+			ImGui::Checkbox("Channel 4", &isChannel4Connected);
+			apu.SetChannel4ConnectionStatus(isChannel4Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR41: " + GetHexString8(apu.GetChannel4()->ReadNRX1())).c_str());
+			ImGui::Text(("NR41: " + GetHexString8(apu.ReadNR41())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR42: " + GetHexString8(apu.GetChannel4()->ReadNRX2())).c_str());
-			ImGui::Text(("NR43: " + GetHexString8(apu.GetChannel4()->ReadNRX3())).c_str());
+			ImGui::Text(("NR42: " + GetHexString8(apu.ReadNR42())).c_str());
+			ImGui::Text(("NR43: " + GetHexString8(apu.ReadNR43())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("NR44: " + GetHexString8(apu.GetChannel4()->ReadNRX4())).c_str());
+			ImGui::Text(("NR44: " + GetHexString8(apu.ReadNR44())).c_str());
 		}
 
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderJoypadDebugWindow(Joypad& joypad)
+	void EmulatorWindow::RenderJoypadDebugWindow(const Joypad& joypad)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -481,7 +489,7 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderVideoRegistersDebugWindow(PPU& ppu)
+	void EmulatorWindow::RenderVideoRegistersDebugWindow(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -491,28 +499,28 @@ namespace SHG
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
-			ImGui::Text(("LCDC: " + GetHexString8(ppu.GetLCDC().Read())).c_str());
+			ImGui::Text(("LCDC: " + GetHexString8(ppu.ReadLCDC())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("STAT: " + GetHexString8(ppu.GetLCDStatusRegister().Read())).c_str());
+			ImGui::Text(("STAT: " + GetHexString8(ppu.ReadLCDSTAT())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("LY: " + GetHexString8(ppu.GetLY().Read())).c_str());
+			ImGui::Text(("LY: " + GetHexString8(ppu.ReadLY())).c_str());
 
-			ImGui::Text(("LYC: " + GetHexString8(ppu.GetLYC().Read())).c_str());
+			ImGui::Text(("LYC: " + GetHexString8(ppu.ReadLYC())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCY: " + GetHexString8(ppu.GetSCY().Read())).c_str());
+			ImGui::Text(("SCY: " + GetHexString8(ppu.ReadSCY())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("SCX: " + GetHexString8(ppu.GetSCX().Read())).c_str());
+			ImGui::Text(("SCX: " + GetHexString8(ppu.ReadSCX())).c_str());
 
-			ImGui::Text(("WY: " + GetHexString8(ppu.GetWY().Read())).c_str());
+			ImGui::Text(("WY: " + GetHexString8(ppu.ReadWY())).c_str());
 			//ImGui::SameLine();
-			ImGui::Text(("WX: " + GetHexString8(ppu.GetWX().Read())).c_str());
+			ImGui::Text(("WX: " + GetHexString8(ppu.ReadWX())).c_str());
 			ImGui::Separator();
 		}
 
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderTilesDebugWindow(PPU& ppu)
+	void EmulatorWindow::RenderTilesDebugWindow(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -521,7 +529,7 @@ namespace SHG
 		RenderWindowWithFramebuffer("Tiles", ppu.GetTileDebugFramebuffer(), &shouldRenderTilesDebugWindow);
 	}
 
-	void EmulatorWindow::RenderSpritesDebugWindow(PPU& ppu)
+	void EmulatorWindow::RenderSpritesDebugWindow(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -530,7 +538,7 @@ namespace SHG
 		RenderWindowWithFramebuffer("Sprites", ppu.GetSpriteDebugFramebuffer(), &shouldRenderSpritesDebugWindow);
 	}
 
-	void EmulatorWindow::RenderBackgroundTileMapDebugWindow(PPU& ppu)
+	void EmulatorWindow::RenderBackgroundTileMapDebugWindow(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -539,7 +547,7 @@ namespace SHG
 		RenderWindowWithFramebuffer("Background Tile Map", ppu.GetBackgroundMapDebugFramebuffer(), &shouldRenderBackgroundTileMapDebugWindow);
 	}
 
-	void EmulatorWindow::RenderWindowTileMapDebugWindow(PPU& ppu)
+	void EmulatorWindow::RenderWindowTileMapDebugWindow(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -548,7 +556,7 @@ namespace SHG
 		RenderWindowWithFramebuffer("Window Tile Map", ppu.GetWindowMapDebugFramebuffer(), &shouldRenderWindowTileMapDebugWindow);
 	}
 
-	void EmulatorWindow::RenderTimerDebugWindow(Timer& timer)
+	void EmulatorWindow::RenderTimerDebugWindow(const Timer& timer)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -561,7 +569,7 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderLogWindow(std::string& logEntries)
+	void EmulatorWindow::RenderLogWindow(const std::string& logEntries)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -706,7 +714,8 @@ namespace SHG
 		{
 			if (ImGui::Begin("Palette Editor", &isPaletteTintEditorOpen))
 			{
-				ImVec4 tint = ConvertColorToImVec4(ppu.GetPaletteTint(paletteAddress, colorIndex));
+				Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
+				ImVec4 tint = ConvertColorToImVec4(rawTint);
 				ImGui::ColorPicker3(selectedTintLabel.c_str(), &tint.x);
 				ppu.SetPaletteTint(paletteAddress, colorIndex, ConvertImVec4ToColor(tint));
 			}
@@ -731,9 +740,10 @@ namespace SHG
 		ImGui::EndGroup();
 	}
 	
-	void EmulatorWindow::RenderColorPaletteButton(const PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened)
+	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened)
 	{
-		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(ppu.GetPaletteTint(paletteAddress, colorIndex)), ImGuiColorEditFlags_PickerHueWheel))
+		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
+		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
 		{
 			*isColorPickerOpened = true;
 			*outPaletteAddress = paletteAddress;
@@ -775,7 +785,7 @@ namespace SHG
 		pauseButtonLabel = label;
 	}
 
-	ImVec4 EmulatorWindow::ConvertColorToImVec4(const Color& color) const
+	ImVec4 EmulatorWindow::ConvertColorToImVec4(Color& color) const
 	{
 		float r = color.r / 255.0f;
 		float g = color.g / 255.0f;
@@ -785,7 +795,7 @@ namespace SHG
 		return ImVec4(r, g, b, a);
 	}
 
-	Color EmulatorWindow::ConvertImVec4ToColor(const ImVec4 vec) const
+	Color EmulatorWindow::ConvertImVec4ToColor(ImVec4& vec) const
 	{
 		uint8_t r = vec.x * 255;
 		uint8_t g = vec.y * 255;

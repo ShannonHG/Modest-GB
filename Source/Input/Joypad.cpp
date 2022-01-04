@@ -88,32 +88,32 @@ namespace SHG
 		isDirectionButtonsSelected = false;
 	}
 
-	bool Joypad::IsActionButtonsSelected()
+	bool Joypad::IsActionButtonsSelected() const
 	{	
 		return isActionButtonsSelected;
 	}
 
-	bool Joypad::IsDirectionButtonsSelected()
+	bool Joypad::IsDirectionButtonsSelected() const
 	{
 		return isDirectionButtonsSelected;
 	}
 
-	bool Joypad::IsDownOrStartPressed()
+	bool Joypad::IsDownOrStartPressed() const
 	{
 		return buttonStates.at(GBButton::Down) || buttonStates.at(GBButton::Start);
 	}
 
-	bool Joypad::IsUpOrSelectPressed()
+	bool Joypad::IsUpOrSelectPressed() const
 	{
 		return buttonStates.at(GBButton::Up) || buttonStates.at(GBButton::Select);
 	}
 
-	bool Joypad::IsLeftOrBPressed()
+	bool Joypad::IsLeftOrBPressed() const
 	{
 		return buttonStates.at(GBButton::Left) || buttonStates.at(GBButton::B);
 	}
 
-	bool Joypad::IsRightOrAPressed()
+	bool Joypad::IsRightOrAPressed() const
 	{
 		return buttonStates.at(GBButton::Right) || buttonStates.at(GBButton::A);
 	}

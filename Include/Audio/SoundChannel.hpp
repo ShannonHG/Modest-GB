@@ -15,7 +15,7 @@ namespace SHG
 		void TickVolumeEnvelopeTimer();
 		void TickLengthControlTimer();
 
-		bool IsEnabled();
+		bool IsEnabled() const;
 
 		void EnableSoundController();
 		void DisableSoundController();

@@ -17,12 +17,12 @@ namespace SHG
 		void Write(uint8_t value);
 		void Reset();
 
-		bool IsActionButtonsSelected();
-		bool IsDirectionButtonsSelected();
-		bool IsDownOrStartPressed();
-		bool IsUpOrSelectPressed();
-		bool IsLeftOrBPressed();
-		bool IsRightOrAPressed();
+		bool IsActionButtonsSelected() const;
+		bool IsDirectionButtonsSelected() const;
+		bool IsDownOrStartPressed() const;
+		bool IsUpOrSelectPressed() const;
+		bool IsLeftOrBPressed() const;
+		bool IsRightOrAPressed() const;
 
 	private:
 		Memory& memoryMap;

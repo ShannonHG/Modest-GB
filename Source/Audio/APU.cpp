@@ -95,16 +95,16 @@ namespace SHG
 			{
 				float sample = 0;
 
-				if (isChannel1Enabled)
+				if (isChannel1Connected)
 					sample += channel1.GetSample();
 
-				if (isChannel2Enabled)
+				if (isChannel2Connected)
 					sample += channel2.GetSample();
 
-				if (isChannel3Enabled)
+				if (isChannel3Connected)
 					sample += channel3.GetSample();
 
-				if (isChannel4Enabled)
+				if (isChannel4Connected)
 					sample += channel4.GetSample();
 
 				samples.push_back(sample);
@@ -119,6 +119,106 @@ namespace SHG
 				samples.clear();
 			}
 		}
+	}
+
+	void APU::WriteToNR10(uint8_t value)
+	{
+		channel1.WriteToNRX0(value);
+	}
+
+	void APU::WriteToNR11(uint8_t value)
+	{
+		channel1.WriteToNRX1(value);
+	}
+
+	void APU::WriteToNR12(uint8_t value)
+	{
+		channel1.WriteToNRX2(value);
+	}
+
+	void APU::WriteToNR13(uint8_t value)
+	{
+		channel1.WriteToNRX3(value);
+	}
+
+	void APU::WriteToNR14(uint8_t value)
+	{
+		channel1.WriteToNRX4(value);
+	}
+
+	void APU::WriteToNR21(uint8_t value)
+	{
+		channel2.WriteToNRX1(value);
+	}
+
+	void APU::WriteToNR22(uint8_t value)
+	{
+		channel2.WriteToNRX2(value);
+	}
+
+	void APU::WriteToNR23(uint8_t value)
+	{
+		channel2.WriteToNRX3(value);
+	}
+
+	void APU::WriteToNR24(uint8_t value)
+	{
+		channel2.WriteToNRX4(value);
+	}
+
+	void APU::WriteToNR30(uint8_t value)
+	{
+		channel3.WriteToNRX0(value);
+	}
+
+	void APU::WriteToNR31(uint8_t value)
+	{
+		channel3.WriteToNRX1(value);
+	}
+
+	void APU::WriteToNR32(uint8_t value)
+	{
+		channel3.WriteToNRX2(value);
+	}
+
+	void APU::WriteToNR33(uint8_t value)
+	{
+		channel3.WriteToNRX3(value);
+	}
+
+	void APU::WriteToNR34(uint8_t value)
+	{
+		channel3.WriteToNRX4(value);
+	}
+
+	void APU::WriteToNR41(uint8_t value)
+	{
+		channel4.WriteToNRX1(value);
+	}
+
+	void APU::WriteToNR42(uint8_t value)
+	{
+		channel4.WriteToNRX2(value);
+	}
+
+	void APU::WriteToNR43(uint8_t value)
+	{
+		channel4.WriteToNRX3(value);
+	}
+
+	void APU::WriteToNR44(uint8_t value)
+	{
+		channel4.WriteToNRX4(value);
+	}
+
+	void APU::WriteToNR50(uint8_t value)
+	{
+		// TODO: Implement
+	}
+
+	void APU::WriteToNR51(uint8_t value)
+	{
+		// TODO: Implement
 	}
 
 	void APU::WriteToNR52(uint8_t value)
@@ -141,33 +241,160 @@ namespace SHG
 		}
 	}
 
-	uint8_t APU::ReadNR52()
+	void APU::WriteToWavePatternRAM(uint16_t address, uint8_t value)
 	{
-		return 
-			static_cast<int8_t>(channel1.IsEnabled()) | 
-			static_cast<int8_t>(channel2.IsEnabled() << 1) | 
-			static_cast<int8_t>(channel3.IsEnabled() << 2) | 
-			static_cast<int8_t>(channel3.IsEnabled() << 3) | 
+		channel3.WriteToWavePatternRAM(address, value);
+	}
+
+	uint8_t APU::ReadNR10() const
+	{
+		return channel1.ReadNRX0();
+	}
+
+	uint8_t APU::ReadNR11() const
+	{
+		return channel1.ReadNRX1();
+	}
+
+	uint8_t APU::ReadNR12() const
+	{
+		return channel1.ReadNRX2();
+	}
+
+	uint8_t APU::ReadNR13() const
+	{
+		return channel1.ReadNRX3();
+	}
+
+	uint8_t APU::ReadNR14() const
+	{
+		return channel1.ReadNRX4();
+	}
+
+	uint8_t APU::ReadNR21() const
+	{
+		return channel2.ReadNRX1();
+	}
+
+	uint8_t APU::ReadNR22() const
+	{
+		return channel2.ReadNRX2();
+	}
+
+	uint8_t APU::ReadNR23() const
+	{
+		return channel2.ReadNRX3();
+	}
+
+	uint8_t APU::ReadNR24() const
+	{
+		return channel2.ReadNRX4();
+	}
+
+	uint8_t APU::ReadNR30() const
+	{
+		return channel3.ReadNRX0();
+	}
+
+	uint8_t APU::ReadNR31() const
+	{
+		return channel3.ReadNRX1();
+	}
+
+	uint8_t APU::ReadNR32() const
+	{
+		return channel3.ReadNRX2();
+	}
+
+	uint8_t APU::ReadNR33() const
+	{
+		return channel3.ReadNRX3();
+	}
+
+	uint8_t APU::ReadNR34() const
+	{
+		return channel3.ReadNRX4();
+	}
+
+	uint8_t APU::ReadNR41() const
+	{
+		return channel4.ReadNRX1();
+	}
+
+	uint8_t APU::ReadNR42() const
+	{
+		return channel4.ReadNRX2();
+	}
+
+	uint8_t APU::ReadNR43() const
+	{
+		return channel4.ReadNRX3();
+	}
+
+	uint8_t APU::ReadNR44() const
+	{
+		return channel4.ReadNRX4();
+	}
+
+	uint8_t APU::ReadNR50() const
+	{
+		// TODO: Implement
+		return 0;
+	}
+
+	uint8_t APU::ReadNR51() const
+	{
+		// TODO: Implement
+		return 0;
+	}
+
+	uint8_t APU::ReadNR52() const
+	{
+		return
+			static_cast<int8_t>(channel1.IsEnabled()) |
+			static_cast<int8_t>(channel2.IsEnabled() << 1) |
+			static_cast<int8_t>(channel3.IsEnabled() << 2) |
+			static_cast<int8_t>(channel3.IsEnabled() << 3) |
 			static_cast<int8_t>(isSoundControllerEnabled << 7);
 	}
 
-	SweepSoundChannel* APU::GetChannel1()
+	void APU::SetChannel1ConnectionStatus(bool value)
 	{
-		return &channel1;
+		isChannel1Connected = value;
 	}
 
-	ToneSoundChannel* APU::GetChannel2()
+	void APU::SetChannel2ConnectionStatus(bool value)
 	{
-		return &channel2;
+		isChannel2Connected = value;
 	}
 
-	WaveSoundChannel* APU::GetChannel3()
+	void APU::SetChannel3ConnectionStatus(bool value)
 	{
-		return &channel3;
+		isChannel3Connected = value;
 	}
 
-	NoiseSoundChannel* APU::GetChannel4()
+	void APU::SetChannel4ConnectionStatus(bool value)
 	{
-		return &channel4;
+		isChannel4Connected = value;
+	}
+
+	bool APU::IsChannel1Connected() const
+	{
+		return isChannel1Connected;
+	}
+
+	bool APU::IsChannel2Connected() const
+	{
+		return isChannel2Connected;
+	}
+
+	bool APU::IsChannel3Connected() const
+	{
+		return isChannel3Connected;
+	}
+
+	bool APU::IsChannel4Connected() const
+	{
+		return isChannel4Connected;
 	}
 }

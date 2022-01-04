@@ -45,7 +45,7 @@ namespace SHG
 		SDL_DestroyTexture(texture);
 	}
 
-	SDL_Texture* Framebuffer::GetTexture()
+	const SDL_Texture* Framebuffer::GetTexture() const
 	{
 		return texture;
 	}
@@ -73,7 +73,7 @@ namespace SHG
 		return height;
 	}
 
-	float Framebuffer::GetAspectRatio()
+	float Framebuffer::GetAspectRatio() const
 	{
 		return aspectRatio;
 	}

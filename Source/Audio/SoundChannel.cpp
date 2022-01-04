@@ -50,7 +50,7 @@ namespace SHG
 			isEnabled = false;
 	}
 
-	bool SoundChannel::IsEnabled()
+	bool SoundChannel::IsEnabled() const
 	{
 		return isEnabled;
 	}

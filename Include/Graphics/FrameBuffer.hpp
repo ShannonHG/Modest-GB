@@ -15,11 +15,11 @@ namespace SHG
 		void SetPixel(uint16_t x, uint16_t y, const Color& color);
 		uint16_t GetWidth() const;
 		uint16_t GetHeight() const;
-		float GetAspectRatio();
+		float GetAspectRatio() const;
 		void UploadData();
 		void Clear(const Color& color = RGBA_WHITE);
 		void Destroy();
-		SDL_Texture* GetTexture();
+		const SDL_Texture* GetTexture() const;
 
 	private:
 		SDL_Texture* texture = nullptr;

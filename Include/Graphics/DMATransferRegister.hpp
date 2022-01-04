@@ -6,12 +6,12 @@ namespace SHG
 	class DMATransferRegister
 	{
 	public:
+		uint8_t Read() const;
+		void Write(uint8_t value);
 		bool IsTransferPending() const;
 		void ClearPendingTransfer();
 		uint16_t GetSourceStartAddress() const;
 		uint16_t GetSourceEndAddress() const;
-		uint8_t Read() const;
-		void Write(uint8_t value);
 		void Reset();
 
 	private:

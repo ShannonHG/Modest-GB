@@ -9,12 +9,12 @@ namespace SHG
 	{
 	public:
 		virtual void Tick() = 0;
+		virtual void Reset();
 		// Returns the first pixel in the fetcher's queue.
 		Pixel PopPixel();
 		uint8_t GetPixelQueueSize();
 		void SetX(int16_t x);
 		void SetY(int16_t y);
-		virtual void Reset();
 
 	protected:
 		int16_t x = 0;

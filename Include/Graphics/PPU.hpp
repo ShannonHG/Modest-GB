@@ -28,20 +28,32 @@ namespace SHG
 		void SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color);
 		Color GetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex) const;
 
-		Framebuffer& GetPrimaryFramebuffer();
-		Register8& GetLCDC();
-		Register8& GetLCDStatusRegister();
-		Register8& GetSCY();
-		Register8& GetSCX();
-		Register8& GetLY();
-		Register8& GetLYC();
-		Register8& GetWY();
-		Register8& GetWX();
-		DMATransferRegister& GetDMATransferRegister();
-		Framebuffer& GetTileDebugFramebuffer();
-		Framebuffer& GetSpriteDebugFramebuffer();
-		Framebuffer& GetBackgroundMapDebugFramebuffer();
-		Framebuffer& GetWindowMapDebugFramebuffer();
+		const Framebuffer& GetPrimaryFramebuffer() const;
+		const Framebuffer& GetTileDebugFramebuffer() const;
+		const Framebuffer& GetSpriteDebugFramebuffer() const;
+		const Framebuffer& GetBackgroundMapDebugFramebuffer() const;
+		const Framebuffer& GetWindowMapDebugFramebuffer() const;
+
+		void WriteLCDC(uint8_t value);
+		void WriteLCDSTAT(uint8_t value);
+		void WriteSCY(uint8_t value);
+		void WriteSCX(uint8_t value);
+		void WriteLY(uint8_t value);
+		void WriteLYC(uint8_t value);
+		void WriteWY(uint8_t value);
+		void WriteWX(uint8_t value);
+		void WriteDMA(uint8_t value);
+
+		uint8_t ReadLCDC() const;
+		uint8_t ReadLCDSTAT() const;
+		uint8_t ReadSCY() const;
+		uint8_t ReadSCX() const;
+		uint8_t ReadLY() const;
+		uint8_t ReadLYC() const;
+		uint8_t ReadWY() const;
+		uint8_t ReadWX() const;
+		uint8_t ReadDMA() const;
+
 	private:
 		enum class Mode
 		{
@@ -66,6 +78,16 @@ namespace SHG
 		std::queue<Pixel> queuedSpritePixels;
 		int16_t currentScanlineX = 0;
 		Memory& memoryMap;
+		Register8 lcdc;
+		Register8 stat;
+		Register8 scy;
+		Register8 scx;
+		Register8 ly;
+		Register8 lyc;
+		Register8 wy;
+		Register8 wx;
+		Register8 statInterruptLine;
+		DMATransferRegister dmaRegister;
 		Framebuffer primaryFramebuffer;
 		Framebuffer tileDebugFramebuffer;
 		Framebuffer spriteDebugFramebuffer;
@@ -73,16 +95,6 @@ namespace SHG
 		Framebuffer windowDebugFramebuffer;
 		BackgroundPixelFetcher backgroundPixelFetcher;
 		SpritePixelFetcher spritePixelFetcher;
-		Register8 lcdc = Register8();
-		Register8 stat = Register8();
-		Register8 scy = Register8();
-		Register8 scx = Register8();
-		Register8 ly = Register8();
-		Register8 lyc = Register8();
-		Register8 wy = Register8();
-		Register8 wx = Register8();
-		Register8 statInterruptLine = Register8();
-		DMATransferRegister dmaRegister = DMATransferRegister();
 		DMATransferState currentDMATransferState = DMATransferState::Idle;
 		uint32_t currentDMATransferElapsedTime = 0;
 		uint8_t numberOfPixelsToIgnore = 0;
