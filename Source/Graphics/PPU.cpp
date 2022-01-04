@@ -88,7 +88,7 @@ namespace SHG
 	}
 
 	void PPU::WriteLY(uint8_t value)
-	{	
+	{
 		ly.Write(value);
 	}
 
@@ -160,7 +160,7 @@ namespace SHG
 	{
 		if (paletteTints.find(paletteAddress) == paletteTints.end())
 		{
-			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress) , PPU_MESSAGE_HEADER);
+			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
 			return;
 		}
 
@@ -515,12 +515,9 @@ namespace SHG
 		float floatGreen = color.g / 255.0f;
 		float floatBlue = color.b / 255.0f;
 
-		color =
-		{
-			static_cast<uint8_t>(floatRed * paletteTints[pixel.paletteAddress][pixel.colorIndex].r),
-			static_cast<uint8_t>(floatGreen * paletteTints[pixel.paletteAddress][pixel.colorIndex].g),
-			static_cast<uint8_t>(floatBlue * paletteTints[pixel.paletteAddress][pixel.colorIndex].b)
-		};
+		color.r = static_cast<uint8_t>(floatRed * paletteTints[pixel.paletteAddress][pixel.colorIndex].r);
+		color.g = static_cast<uint8_t>(floatGreen * paletteTints[pixel.paletteAddress][pixel.colorIndex].g);
+		color.b = static_cast<uint8_t>(floatBlue * paletteTints[pixel.paletteAddress][pixel.colorIndex].b);
 
 		primaryFramebuffer.SetPixel(currentScanlineX, ly.Read(), color);
 		currentScanlineX++;
