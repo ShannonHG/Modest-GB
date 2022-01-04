@@ -6,9 +6,12 @@
 #include "Logger.hpp"
 #include "Utils/MemoryUtils.hpp"
 #include "Utils/Arithmetic.hpp"
+#include "Utils/DataConversions.hpp"
 
 namespace SHG
 {
+	const std::string PPU_MESSAGE_HEADER = "[PPU]";
+
 	const uint8_t SPRITE_DEBUG_FRAMEBUFFER_WIDTH = 89;
 	const uint8_t SPRITE_DEBUG_FRAMEBUFFER_HEIGHT = 71;
 
@@ -18,11 +21,18 @@ namespace SHG
 	const uint8_t TILE_DEBUG_FRAMEBUFFER_HEIGHT_IN_TILES = 16;
 	const Color SCROLL_BOX_DEBUG_COLOR = { 0, 100, 170, 255 };
 
+	const int16_t DEFAULT_SCANLINE_X = -7;
+
 	PPU::PPU(Memory& memoryMap) : memoryMap(memoryMap),
 		backgroundPixelFetcher(&memoryMap, &lcdc, &scx, &scy, &wx, &wy),
 		spritePixelFetcher(&memoryMap, &lcdc, &backgroundPixelFetcher)
 	{
-
+		paletteTints =
+		{
+			{ GB_BACKGROUND_PALETTE_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
+			{ GB_SPRITE_PALETTE_0_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
+			{ GB_SPRITE_PALETTE_1_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
+		};
 	}
 
 	void PPU::InitializeFramebuffer(SDL_Window* window)
@@ -37,7 +47,7 @@ namespace SHG
 	void PPU::Reset()
 	{
 		currentMode = Mode::SearchingOAM;
-		currentScanlineX = 0;
+		currentScanlineX = DEFAULT_SCANLINE_X;
 		currentScanlineElapsedCycles = 0;
 
 		spritesOnCurrentScanline.clear();
@@ -57,6 +67,40 @@ namespace SHG
 		tileDebugFramebuffer.UploadData();
 	}
 
+	void PPU::SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color)
+	{
+		if (paletteTints.find(paletteAddress) == paletteTints.end())
+		{
+			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress) , PPU_MESSAGE_HEADER);
+			return;
+		}
+
+		if (colorIndex > 3)
+		{
+			Logger::WriteError("Invalid color index: " + std::to_string(colorIndex), PPU_MESSAGE_HEADER);
+			return;
+		}
+
+		paletteTints[paletteAddress][colorIndex] = color;
+	}
+
+	Color PPU::GetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex) const
+	{
+		if (paletteTints.find(paletteAddress) == paletteTints.end())
+		{
+			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
+			return RGBA_WHITE;
+		}
+
+		if (colorIndex > 3)
+		{
+			Logger::WriteError("Invalid color index: " + std::to_string(colorIndex), PPU_MESSAGE_HEADER);
+			return RGBA_WHITE;
+		}
+
+		return paletteTints.at(paletteAddress)[colorIndex];
+	}
+
 	void PPU::Tick(uint32_t cycles)
 	{
 		while (cycles > 0)
@@ -70,7 +114,7 @@ namespace SHG
 
 				currentDMATransferState = DMATransferState::Idle;
 
-				currentScanlineX = 0;
+				currentScanlineX = DEFAULT_SCANLINE_X;
 				currentScanlineElapsedCycles = 0;
 
 				spritesOnCurrentScanline.clear();
@@ -120,7 +164,7 @@ namespace SHG
 			currentScanlineElapsedCycles = 0;
 
 			ly.Increment();
-			currentScanlineX = -7;
+			currentScanlineX = DEFAULT_SCANLINE_X;
 			ChangeStatInterruptLineBit(STAT_HBLANK_INTERRUPT_SOURCE_BIT_INDEX, false);
 
 			if (ly.Read() == GB_SCREEN_HEIGHT)
@@ -374,7 +418,22 @@ namespace SHG
 
 	void PPU::RenderPixel(const Pixel& pixel)
 	{
-		primaryFramebuffer.SetPixel(currentScanlineX, ly.Read(), GetColorFromColorIndex(pixel.colorIndex, memoryMap.Read(pixel.paletteAddress)));
+		Color color = GetColorFromColorIndex(pixel.colorIndex, memoryMap.Read(pixel.paletteAddress));
+
+		// Convert color components to the 0 - 1 range so they can be 
+		// multiplied with the palette tint's components to produce the final color.
+		float floatRed = color.r / 255.0f;
+		float floatGreen = color.g / 255.0f;
+		float floatBlue = color.b / 255.0f;
+
+		color =
+		{
+			static_cast<uint8_t>(floatRed * paletteTints[pixel.paletteAddress][pixel.colorIndex].r),
+			static_cast<uint8_t>(floatGreen * paletteTints[pixel.paletteAddress][pixel.colorIndex].g),
+			static_cast<uint8_t>(floatBlue * paletteTints[pixel.paletteAddress][pixel.colorIndex].b)
+		};
+
+		primaryFramebuffer.SetPixel(currentScanlineX, ly.Read(), color);
 		currentScanlineX++;
 	}
 

@@ -14,19 +14,22 @@ namespace SHG
 	class EmulatorWindow
 	{
 	public:
+		bool shouldRenderCPUDebugWindow = false;
+		bool shouldRenderSoundDebugWindow = false;
+		bool shouldRenderJoypadDebugWindow = false;
+		bool shouldRenderVideoRegistersDebugWindow = false;
+		bool shouldRenderTilesDebugWindow = false;
+		bool shouldRenderSpritesDebugWindow = false;
+		bool shouldRenderBackgroundTileMapDebugWindow = false;
+		bool shouldRenderWindowTileMapDebugWindow = false;
+		bool shouldRenderTimerDebugWindow = false;
+		bool shouldRenderLogWindow = false;
+		bool shouldRenderSettingsWindow = false;
+
 		bool Initialize();
 		SDL_Window* GetSDLWindow();
-		void Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, uint32_t cyclesPerSecond, std::string& logs);
+		void Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, APU& apu, Joypad& joypad, Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
 	
-		bool shouldRenderCPUWindow = false;
-		bool shouldRenderIOWindow = false;
-		bool shouldRenderLogWindow = false;
-		bool shouldRenderTilesWindow = false;
-		bool shouldRenderSpritesWindow = false;
-		bool shouldRenderBackgroundTileMapWindow = false;
-		bool shouldRenderWindowTileMapWindow = false;
-		bool shouldRenderVideoRegistersWindow = false;
-
 		void RegisterFileSelectionCallback(FileSelectionEvent callback);
 		void RegisterPauseButtonCallback(SimpleEvent callback);
 		void RegisterStepButtonCallback(SimpleEvent callback);
@@ -62,17 +65,29 @@ namespace SHG
 
 		void StartFrame();
 		void ClearScreen();
+		void EndFrame();
 		void RenderMainWindow();
 		void RenderGameView(PPU& ppu);
 		void RenderWindowWithFramebuffer(const std::string& title, Framebuffer& framebuffer, bool* isOpen = nullptr);
-		void RenderCPUWindow(CPU& processor, uint32_t cyclesPerSecond);
-		void RenderIOWindow(MemoryMap& memoryMap, CPU& processor);
-		void RenderTilesWindow(PPU& ppu);
-		void RenderSpritesWindow(PPU& ppu);
-		void RenderBackgroundTileMapWindow(PPU& ppu);
-		void RenderWindowTileMapWindow(PPU& ppu);
-		void RenderVideoRegistersWindow(PPU& ppu);
+		void RenderCPUDebugWindow(CPU& processor, MemoryMap& memoryMap, uint32_t cyclesPerSecond);
+		void RenderSoundDebugWindow(APU& apu);
+		void RenderJoypadDebugWindow(Joypad& joypad);
+		void RenderVideoRegistersDebugWindow(PPU& ppu);
+		void RenderTilesDebugWindow(PPU& ppu);
+		void RenderSpritesDebugWindow(PPU& ppu);
+		void RenderBackgroundTileMapDebugWindow(PPU& ppu);
+		void RenderWindowTileMapDebugWindow(PPU& ppu);
+		void RenderTimerDebugWindow(Timer& timer);
 		void RenderLogWindow(std::string& logEntries);
-		void EndFrame();
+		
+		void RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad);
+		void RenderVideoSettingsWindow(PPU& ppu);
+		void RenderAudioSettingsWindow(APU& apu);
+		void RenderControllerAndKeyboardSettingsWindow(Joypad& joypad);
+
+		void RenderColorPaletteButton(const PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened);
+
+		ImVec4 ConvertColorToImVec4(const Color& color) const;
+		Color ConvertImVec4ToColor(const ImVec4 vec) const;
 	};
 }

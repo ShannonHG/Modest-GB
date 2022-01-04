@@ -3,6 +3,7 @@
 #include "Audio/APU.hpp"
 #include "Logger.hpp"
 #include "Utils/GBSpecs.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG
 {
@@ -23,7 +24,7 @@ namespace SHG
 		SDL_AudioSpec outputSpec;
 
 		// TODO: Revisit
-		const char* name = SDL_GetAudioDeviceName(1, SDL_FALSE);
+		const char* name = SDL_GetAudioDeviceName(2, SDL_FALSE);
 		Logger::WriteInfo(name);
 		audioDeviceID = SDL_OpenAudioDevice(name, SDL_FALSE, &spec, &outputSpec, 0);
 		SDL_PauseAudioDevice(audioDeviceID, 0);
@@ -43,7 +44,7 @@ namespace SHG
 			{
 				switch (frameSequencerStep)
 				{
-				case 0: 
+				case 0:
 					channel1.TickLengthControlTimer();
 					channel2.TickLengthControlTimer();
 					channel3.TickLengthControlTimer();
@@ -81,7 +82,7 @@ namespace SHG
 					channel4.TickVolumeEnvelopeTimer();
 					break;
 				}
-				
+
 				frameSequencerStep = (frameSequencerStep + 1) % 8;
 			}
 
@@ -94,10 +95,17 @@ namespace SHG
 			{
 				float sample = 0;
 
-				sample += channel1.GetSample();
-				sample += channel2.GetSample();
-				sample += channel3.GetSample();
-				sample += channel4.GetSample();
+				if (isChannel1Enabled)
+					sample += channel1.GetSample();
+
+				if (isChannel2Enabled)
+					sample += channel2.GetSample();
+
+				if (isChannel3Enabled)
+					sample += channel3.GetSample();
+
+				if (isChannel4Enabled)
+					sample += channel4.GetSample();
 
 				samples.push_back(sample);
 			}
@@ -115,12 +123,32 @@ namespace SHG
 
 	void APU::WriteToNR52(uint8_t value)
 	{
-		
+		isSoundControllerEnabled = Arithmetic::GetBit(value, 7);
+
+		if (!isSoundControllerEnabled)
+		{
+			channel1.DisableSoundController();
+			channel2.DisableSoundController();
+			channel3.DisableSoundController();
+			channel4.DisableSoundController();
+		}
+		else
+		{
+			channel1.EnableSoundController();
+			channel2.EnableSoundController();
+			channel3.EnableSoundController();
+			channel4.EnableSoundController();
+		}
 	}
 
 	uint8_t APU::ReadNR52()
 	{
-		return static_cast<int8_t>(channel1.IsEnabled()) | static_cast<int8_t>(channel2.IsEnabled() << 1) | static_cast<int8_t>(channel3.IsEnabled() << 2);
+		return 
+			static_cast<int8_t>(channel1.IsEnabled()) | 
+			static_cast<int8_t>(channel2.IsEnabled() << 1) | 
+			static_cast<int8_t>(channel3.IsEnabled() << 2) | 
+			static_cast<int8_t>(channel3.IsEnabled() << 3) | 
+			static_cast<int8_t>(isSoundControllerEnabled << 7);
 	}
 
 	SweepSoundChannel* APU::GetChannel1()
@@ -131,13 +159,13 @@ namespace SHG
 	ToneSoundChannel* APU::GetChannel2()
 	{
 		return &channel2;
-	}	
-	
+	}
+
 	WaveSoundChannel* APU::GetChannel3()
 	{
 		return &channel3;
-	}	
-	
+	}
+
 	NoiseSoundChannel* APU::GetChannel4()
 	{
 		return &channel4;

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <map>
 #include "SDL.h"
 #include "Graphics/Framebuffer.hpp"
 #include "Memory/Memory.hpp"
@@ -23,6 +24,9 @@ namespace SHG
 		void DebugDrawWindowTileMap();
 		void DebugDrawSprites();
 		void DebugDrawTiles();
+
+		void SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color);
+		Color GetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex) const;
 
 		Framebuffer& GetPrimaryFramebuffer();
 		Register8& GetLCDC();
@@ -53,7 +57,8 @@ namespace SHG
 			InProgress
 		};
 
-		// TODO: Does the PPU actually start in this mode?
+		std::map<uint16_t, std::array<Color, 4>> paletteTints;
+
 		Mode currentMode = Mode::SearchingOAM;
 		uint32_t currentScanlineElapsedCycles = 0;
 

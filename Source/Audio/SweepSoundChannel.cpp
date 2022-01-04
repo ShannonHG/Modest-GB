@@ -9,11 +9,23 @@ namespace SHG
 
 	SweepSoundChannel::SweepSoundChannel() : ToneSoundChannel()
 	{
-		sweepTimer.Enable();
+		
+	}
+
+	void SweepSoundChannel::Reset()
+	{
+		ToneSoundChannel::Reset();
+
+		sweepTimer.Disable();
+		shadowFrequency = 0;
+		isSweepEnabled = false;
 	}
 
 	void SweepSoundChannel::TickSweepTimer()
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		if (sweepTimer.Tick())
 		{
 			if (isSweepEnabled && GetSweepPeriod() != 0)
@@ -54,11 +66,7 @@ namespace SHG
 		if (sweepShift != 0)
 		{
 			uint32_t newFrequency = CalculateShadowFrequency();
-
-			if (PerformOverflowCheck(newFrequency))
-			{
-			}
-				//UpdateFrequency(newFrequency);
+			PerformOverflowCheck(newFrequency);
 		}
 	}
 

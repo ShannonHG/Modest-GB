@@ -17,8 +17,11 @@ namespace SHG
 	const std::string WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME = "IsWindowMapWindowOpen";
 	const std::string SPRITES_WINDOW_CONFIG_ITEM_NAME = "IsSpritesWindowOpen";
 	const std::string LOG_WINDOW_CONFIG_ITEM_NAME = "IsLogWindowOpen";
-	const std::string VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME = "IsVideoRegisterWindowOpen";
-	const std::string IO_REGISTERS_WINDOW_CONFIG_ITEM_NAME = "IsIOWindowOpen";
+	const std::string SETTINGS_WINDOW_CONFIG_ITEM_NAME = "IsSettingsWindowOpen";
+	const std::string SOUND_WINDOW_CONFIG_ITEM_NAME = "IsSoundWindowOpen";
+	const std::string TIMER_WINDOW_CONFIG_ITEM_NAME = "IsTimerWindowOpen";
+	const std::string VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME = "IsVideoRegistersWindowOpen";
+	const std::string JOYPAD_WINDOW_CONFIG_ITEM_NAME = "IsJoypadWindowOpen";
 	const std::string WINDOW_WIDTH_CONFIG_ITEM_NAME = "Width";
 	const std::string WINDOW_HEIGHT_CONFIG_ITEM_NAME = "Height";
 	const std::string WINDOW_X_CONFIG_ITEM_NAME = "X";
@@ -79,16 +82,16 @@ namespace SHG
 				ppu.Tick(cycles);
 				apu.Tick(cycles);
 
-				if (window.shouldRenderTilesWindow)
+				if (window.shouldRenderTilesDebugWindow)
 					ppu.DebugDrawTiles();
 
-				if (window.shouldRenderSpritesWindow)
+				if (window.shouldRenderSpritesDebugWindow)
 					ppu.DebugDrawSprites();
 
-				if (window.shouldRenderBackgroundTileMapWindow)
+				if (window.shouldRenderBackgroundTileMapDebugWindow)
 					ppu.DebugDrawBackgroundTileMap();
 
-				if (window.shouldRenderWindowTileMapWindow)
+				if (window.shouldRenderWindowTileMapDebugWindow)
 					ppu.DebugDrawWindowTileMap();
 
 				if (cycles > 0)
@@ -110,7 +113,7 @@ namespace SHG
 			if (timeSinceLastFrame >= GB_DURATION_PER_FRAME)
 			{
 				inputManager.Update();
-				window.Render(memoryMap, ppu, processor, cyclesPerSecond, logEntries);
+				window.Render(memoryMap, ppu, processor, apu, joypad, timer, cyclesPerSecond, logEntries);
 				timeSinceLastFrame = 0;
 				cyclesSinceLastFrame = 0;
 			}
@@ -209,14 +212,18 @@ namespace SHG
 	{
 		auto fileStream = std::ofstream(std::filesystem::current_path().string() + "/" + CONFIG_FILE_NAME);
 
-		SaveBoolConfigurationItem(fileStream, CPU_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderCPUWindow);
-		SaveBoolConfigurationItem(fileStream, TILES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTilesWindow);
-		SaveBoolConfigurationItem(fileStream, BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderBackgroundTileMapWindow);
-		SaveBoolConfigurationItem(fileStream, WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderWindowTileMapWindow);
-		SaveBoolConfigurationItem(fileStream, SPRITES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSpritesWindow);
+		SaveBoolConfigurationItem(fileStream, CPU_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderCPUDebugWindow);
+		SaveBoolConfigurationItem(fileStream, TILES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTilesDebugWindow);
+		SaveBoolConfigurationItem(fileStream, BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderBackgroundTileMapDebugWindow);
+		SaveBoolConfigurationItem(fileStream, WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderWindowTileMapDebugWindow);
+		SaveBoolConfigurationItem(fileStream, SPRITES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSpritesDebugWindow);
 		SaveBoolConfigurationItem(fileStream, LOG_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderLogWindow);
-		SaveBoolConfigurationItem(fileStream, VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderVideoRegistersWindow);
-		SaveBoolConfigurationItem(fileStream, IO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderIOWindow);
+		SaveBoolConfigurationItem(fileStream, SETTINGS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSettingsWindow);
+		SaveBoolConfigurationItem(fileStream, TIMER_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTimerDebugWindow);
+		SaveBoolConfigurationItem(fileStream, SOUND_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSoundDebugWindow);
+		SaveBoolConfigurationItem(fileStream, SOUND_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSoundDebugWindow);
+		SaveBoolConfigurationItem(fileStream, VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderVideoRegistersDebugWindow);
+		SaveBoolConfigurationItem(fileStream, JOYPAD_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderJoypadDebugWindow);
 	/*	SaveIntConfigurationItem(fileStream, WINDOW_WIDTH_CONFIG_ITEM_NAME, window.GetWidth());
 		SaveIntConfigurationItem(fileStream, WINDOW_HEIGHT_CONFIG_ITEM_NAME, window.GetHeight());
 		SaveIntConfigurationItem(fileStream, WINDOW_X_CONFIG_ITEM_NAME, window.GetX());
@@ -232,14 +239,18 @@ namespace SHG
 		if (!fileStream.is_open())
 			return;
 
-		LoadConfigurationItemAsBool(fileStream, CPU_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderCPUWindow);
-		LoadConfigurationItemAsBool(fileStream, TILES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTilesWindow);
-		LoadConfigurationItemAsBool(fileStream, BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderBackgroundTileMapWindow);
-		LoadConfigurationItemAsBool(fileStream, WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderWindowTileMapWindow);
-		LoadConfigurationItemAsBool(fileStream, SPRITES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSpritesWindow);
+		LoadConfigurationItemAsBool(fileStream, CPU_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderCPUDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, TILES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTilesDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderBackgroundTileMapDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderWindowTileMapDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, SPRITES_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSpritesDebugWindow);
 		LoadConfigurationItemAsBool(fileStream, LOG_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderLogWindow);
-		LoadConfigurationItemAsBool(fileStream, VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderVideoRegistersWindow);
-		LoadConfigurationItemAsBool(fileStream, IO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderIOWindow);
+		LoadConfigurationItemAsBool(fileStream, VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderVideoRegistersDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, SETTINGS_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSettingsWindow);
+		LoadConfigurationItemAsBool(fileStream, TIMER_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderTimerDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, SOUND_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSoundDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, SOUND_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderSoundDebugWindow);
+		LoadConfigurationItemAsBool(fileStream, JOYPAD_WINDOW_CONFIG_ITEM_NAME, window.shouldRenderJoypadDebugWindow);
 
 	/*	int width = 0;
 		int height = 0;

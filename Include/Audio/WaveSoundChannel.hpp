@@ -8,6 +8,7 @@ namespace SHG
 	class WaveSoundChannel : public SoundChannel
 	{
 	public:
+		void Reset() override;
 		WaveSoundChannel();
 		void WriteToWavePatternRAM(uint16_t address, uint8_t value);
 

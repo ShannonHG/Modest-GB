@@ -11,6 +11,11 @@ namespace SHG
 	class APU
 	{
 	public:
+		bool isChannel1Enabled = true;
+		bool isChannel2Enabled = true;
+		bool isChannel3Enabled = true;
+		bool isChannel4Enabled = true;
+
 		void Initialize();
 		void Tick(uint32_t cycles);
 
@@ -23,6 +28,8 @@ namespace SHG
 		uint8_t ReadNR52();
 
 	private:
+		bool isSoundControllerEnabled = true;
+
 		AudioTimer frameSequencerTimer;
 		uint8_t frameSequencerStep = 0;
 		AudioTimer sampleCollectionTimer;

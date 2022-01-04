@@ -16,12 +16,18 @@ namespace SHG
 
 	void SoundChannel::TickFrequencyTimer()
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		if (frequencyTimer.Tick())
 			OnFrequencyTimerReachedZero();
 	}
 
 	void SoundChannel::TickVolumeEnvelopeTimer()
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		if (envelopeTimer.Tick())
 		{
 			// Decrement or increment the volume depending on the envelope direction.
@@ -35,6 +41,9 @@ namespace SHG
 
 	void SoundChannel::TickLengthControlTimer()
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		// If the length timer reaches 0, and the respective bit in NRX4 is set, 
 		// the this channel should be disabled.
 		if (lengthTimer.Tick() && IsConstrainedByLength())
@@ -49,7 +58,7 @@ namespace SHG
 	float SoundChannel::GetSample() const
 	{
 		// Outputs an amplitude between -1 and 1.
-		return isEnabled ? ((GenerateSample() /  MAX_UNSCALED_VOLUME) * 2) - 1 : 0;
+		return isEnabled && isSoundControllerEnabled ? ((GenerateSample() /  MAX_UNSCALED_VOLUME) * 2) - 1 : 0;
 	}
 
 	void SoundChannel::Reset()
@@ -59,30 +68,60 @@ namespace SHG
 		nrx2.Write(0);
 		nrx3.Write(0);
 		nrx4.Write(0);
+
+		envelopeTimer.Disable();
+		lengthTimer.Disable();
+		frequencyTimer.Disable();
+	}
+
+	void SoundChannel::EnableSoundController()
+	{
+		isSoundControllerEnabled = true;
+	}
+
+	void SoundChannel::DisableSoundController()
+	{
+		isSoundControllerEnabled = false;
+		Reset();
 	}
 
 	void SoundChannel::WriteToNRX0(uint8_t value)
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		nrx0.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX1(uint8_t value)
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		nrx1.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX2(uint8_t value)
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		nrx2.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX3(uint8_t value)
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		nrx3.Write(value);
 	}
 
 	void SoundChannel::WriteToNRX4(uint8_t value)
 	{
+		if (!isSoundControllerEnabled)
+			return;
+
 		nrx4.Write(value);
 
 		if ((value >> 7) == 1)
@@ -91,26 +130,41 @@ namespace SHG
 
 	uint8_t SoundChannel::ReadNRX0() const
 	{
+		if (!isSoundControllerEnabled)
+			return 0;
+
 		return nrx0.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX1() const
 	{
+		if (!isSoundControllerEnabled)
+			return 0;
+
 		return nrx1.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX2() const
 	{
+		if (!isSoundControllerEnabled)
+			return 0;
+
 		return nrx2.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX3() const
 	{
+		if (!isSoundControllerEnabled)
+			return 0;
+
 		return nrx3.Read();
 	}
 
 	uint8_t SoundChannel::ReadNRX4() const
 	{
+		if (!isSoundControllerEnabled)
+			return 0;
+
 		return nrx4.Read();
 	}
 

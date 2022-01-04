@@ -8,6 +8,13 @@ namespace SHG
 	{
 	}
 
+	void NoiseSoundChannel::Reset()
+	{
+		SoundChannel::Reset();
+
+		shiftRegister.Fill(false);
+	}
+
 	void NoiseSoundChannel::WriteToNRX1(uint8_t value)
 	{
 		SoundChannel::WriteToNRX1(value);

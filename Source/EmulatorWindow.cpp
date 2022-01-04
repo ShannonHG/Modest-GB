@@ -11,6 +11,25 @@ namespace SHG
 	const uint16_t DEFAULT_WINDOW_WIDTH = 1024;
 	const uint16_t DEFAULT_WINDOW_HEIGHT = 576;
 
+	const uint8_t SETTINGS_VIDEO_WINDOW_ID = 0;
+	const uint8_t SETTINGS_AUDIO_WINDOW_ID = 1;
+	const uint8_t SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID = 2;
+
+	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_0 = 0;
+	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_1 = 1;
+	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_2 = 2;
+	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_3 = 3;
+
+	const uint8_t SPRITE_1_PALETTE_TINT_ID_0 = 4;
+	const uint8_t SPRITE_1_PALETTE_TINT_ID_1 = 5;
+	const uint8_t SPRITE_1_PALETTE_TINT_ID_2 = 6;
+	const uint8_t SPRITE_1_PALETTE_TINT_ID_3 = 7;
+
+	const uint8_t SPRITE_2_PALETTE_TINT_ID_0 = 8;
+	const uint8_t SPRITE_2_PALETTE_TINT_ID_1 = 9;
+	const uint8_t SPRITE_2_PALETTE_TINT_ID_2 = 10;
+	const uint8_t SPRITE_2_PALETTE_TINT_ID_3 = 11;
+
 	const ImGuiWindowFlags MAIN_WINDOW_FLAGS = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
 		| ImGuiWindowFlags_NoSavedSettings;
@@ -24,7 +43,7 @@ namespace SHG
 		}
 
 		sdlWindow = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-		
+
 		if (sdlWindow == nullptr)
 		{
 			Logger::WriteError("Failed to create SDL window. Error: " + std::string(SDL_GetError()));
@@ -92,7 +111,7 @@ namespace SHG
 		SDL_SetWindowPosition(sdlWindow, x, y);
 	}
 
-	void EmulatorWindow::Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, uint32_t cyclesPerSecond, std::string& logs)
+	void EmulatorWindow::Render(MemoryMap& memoryMap, PPU& ppu, CPU& processor, APU& apu, Joypad& joypad, Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
 	{
 		StartFrame();
 		ClearScreen();
@@ -100,29 +119,38 @@ namespace SHG
 		RenderMainWindow();
 		RenderGameView(ppu);
 
-		if (shouldRenderCPUWindow)
-			RenderCPUWindow(processor, cyclesPerSecond);
+		if (shouldRenderCPUDebugWindow)
+			RenderCPUDebugWindow(processor, memoryMap, cyclesPerSecond);
 
-		if (shouldRenderIOWindow)
-			RenderIOWindow(memoryMap, processor);
+		if (shouldRenderSoundDebugWindow)
+			RenderSoundDebugWindow(apu);
+
+		if (shouldRenderJoypadDebugWindow)
+			RenderJoypadDebugWindow(joypad);
+
+		if (shouldRenderVideoRegistersDebugWindow)
+			RenderVideoRegistersDebugWindow(ppu);
+
+		if (shouldRenderTilesDebugWindow)
+			RenderTilesDebugWindow(ppu);
+
+		if (shouldRenderSpritesDebugWindow)
+			RenderSpritesDebugWindow(ppu);
+
+		if (shouldRenderBackgroundTileMapDebugWindow)
+			RenderBackgroundTileMapDebugWindow(ppu);
+
+		if (shouldRenderWindowTileMapDebugWindow)
+			RenderWindowTileMapDebugWindow(ppu);
+
+		if (shouldRenderTimerDebugWindow)
+			RenderTimerDebugWindow(timer);
 
 		if (shouldRenderLogWindow)
-			RenderLogWindow(logs);
+			RenderLogWindow(logEntries);
 
-		if (shouldRenderTilesWindow)
-			RenderTilesWindow(ppu);
-
-		if (shouldRenderSpritesWindow)
-			RenderSpritesWindow(ppu);
-
-		if (shouldRenderBackgroundTileMapWindow)
-			RenderBackgroundTileMapWindow(ppu);
-
-		if (shouldRenderWindowTileMapWindow)
-			RenderWindowTileMapWindow(ppu);
-
-		if (shouldRenderVideoRegistersWindow)
-			RenderVideoRegistersWindow(ppu);
+		if (shouldRenderSettingsWindow)
+			RenderSettingsWindow(ppu, apu, joypad);
 
 		EndFrame();
 	}
@@ -189,7 +217,7 @@ namespace SHG
 					{
 						// TODO: Opening the file dialog seems to cause a memory leak.
 						nfdchar_t* outPath = nullptr;
-						NFD_OpenDialog("gb,rom",  nullptr, &outPath);
+						NFD_OpenDialog("gb,rom", nullptr, &outPath);
 
 						if (outPath != nullptr)
 						{
@@ -198,36 +226,48 @@ namespace SHG
 						}
 					}
 
+					if (ImGui::MenuItem("Settings"))
+						shouldRenderSettingsWindow = true;
+
 					ImGui::EndMenu();
 				}
 
-
 				// Menu that enables the user to open debugging tools/windows.
-				if (ImGui::BeginMenu("Tools"))
+				if (ImGui::BeginMenu("Debug"))
 				{
-					if (ImGui::MenuItem("CPU Debugger"))
-						shouldRenderCPUWindow = true;
+					if (ImGui::BeginMenu("Video"))
+					{
+						if (ImGui::MenuItem("Registers"))
+							shouldRenderVideoRegistersDebugWindow = true;
 
-					if (ImGui::MenuItem("Log Window"))
+						if (ImGui::MenuItem("Tiles"))
+							shouldRenderTilesDebugWindow = true;
+
+						if (ImGui::MenuItem("Sprites"))
+							shouldRenderSpritesDebugWindow = true;
+
+						if (ImGui::MenuItem("Background Tile Map"))
+							shouldRenderBackgroundTileMapDebugWindow = true;
+
+						if (ImGui::MenuItem("Window Tile Map"))
+							shouldRenderWindowTileMapDebugWindow = true;
+
+						ImGui::EndMenu();
+					}
+
+					if (ImGui::MenuItem("CPU"))
+						shouldRenderCPUDebugWindow = true;
+
+					if (ImGui::MenuItem("Sound"))
+						shouldRenderSoundDebugWindow = true;
+
+					if (ImGui::MenuItem("Joypad"))
+						shouldRenderJoypadDebugWindow = true;
+
+					if (ImGui::MenuItem("Logs"))
 						shouldRenderLogWindow = true;
 
-					if (ImGui::MenuItem("IO Debugger"))
-						shouldRenderIOWindow = true;
 
-					if (ImGui::MenuItem("Tile Debugger"))
-						shouldRenderTilesWindow = true;
-
-					if (ImGui::MenuItem("Sprite Debugger"))
-						shouldRenderSpritesWindow = true;
-
-					if (ImGui::MenuItem("Background Tile Map"))
-						shouldRenderBackgroundTileMapWindow = true;
-
-					if (ImGui::MenuItem("Window Tile Map"))
-						shouldRenderWindowTileMapWindow = true;
-
-					if (ImGui::MenuItem("Video Registers"))
-						shouldRenderVideoRegistersWindow = true;
 
 					ImGui::EndMenu();
 				}
@@ -284,17 +324,27 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderCPUWindow(CPU& processor, uint32_t cyclesPerSecond)
+	void EmulatorWindow::RenderCPUDebugWindow(CPU& processor, MemoryMap& memoryMap, uint32_t cyclesPerSecond)
 	{
 		// By default, force the window to be docked.
-		//ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing CPU related information (clock speed, registers, etc.).
-		if (ImGui::Begin("CPU", &shouldRenderCPUWindow))
+		if (ImGui::Begin("CPU", &shouldRenderCPUDebugWindow))
 		{
 			ImGui::Text("Performance");
 			ImGui::Separator();
 			ImGui::Text(("Clock speed: " + std::to_string(cyclesPerSecond / 1000000.0) + " MHz").c_str());
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			if (ImGui::Button(pauseButtonLabel.c_str()))
+				pauseButtonPressedCallback();
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Step"))
+				stepButtonPressedCallback();
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -306,11 +356,11 @@ namespace SHG
 			ImGui::Text(("A: " + GetHexString8(processor.GetRegisterA().Read())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("F: " + GetHexString8(processor.GetRegisterF().Read())).c_str());
-			//ImGui::SameLine();
+
 			ImGui::Text(("B: " + GetHexString8(processor.GetRegisterB().Read())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("C: " + GetHexString8(processor.GetRegisterC().Read())).c_str());
-			//ImGui::SameLine();
+
 			ImGui::Text(("D: " + GetHexString8(processor.GetRegisterD().Read())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("E: " + GetHexString8(processor.GetRegisterE().Read())).c_str());
@@ -318,117 +368,127 @@ namespace SHG
 			ImGui::Text(("H: " + GetHexString8(processor.GetRegisterH().Read())).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("L: " + GetHexString8(processor.GetRegisterL().Read())).c_str());
-			//ImGui::SameLine();
+
 			ImGui::Text(("PC: " + GetHexString16(processor.GetProgramCounter().Read())).c_str());
-			//ImGui::SameLine();
+
 			ImGui::Text(("SP: " + GetHexString16(processor.GetStackPointer().Read())).c_str());
 
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::Text("Last Instruction");
-			ImGui::Separator();
-			if (processor.IsPreviousInstructionValid())
-				ImGui::Text(processor.GetCurrentInstruction().mnemonic);
-
-			ImGui::Separator();
-			if (ImGui::Button(pauseButtonLabel.c_str()))
-				pauseButtonPressedCallback();
-
-			ImGui::SameLine();
-			ImGui::Button("Step");
-
-			// If the step button is held down, then keep invoking the callback.
-			if (ImGui::IsItemActive())
-				stepButtonPressedCallback();
-		}
-
-		ImGui::End();
-	}
-
-	void EmulatorWindow::RenderIOWindow(MemoryMap& memoryMap, CPU& processor)
-	{
-		// By default, force the window to be docked.
-		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-
-		// Window showing information about IO registers.
-		if (ImGui::Begin("IO", &shouldRenderIOWindow))
-		{
 			ImGui::Text("Interrupts");
+			ImGui::Separator();
+
 			ImGui::Text(("IF: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS))).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("IE: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_ENABLE_ADDRESS))).c_str());
 			ImGui::SameLine();
 			ImGui::Text(("IME: " + std::to_string(processor.GetInterruptMasterEnableFlag())).c_str());
-
-			ImGui::Separator();
-			ImGui::Text("Timer");
-			ImGui::Text(("DIV: " + GetHexString8(memoryMap.Read(GB_DIV_ADDRESS))).c_str());
-			ImGui::SameLine();
-			ImGui::Text(("TIMA: " + GetHexString8(memoryMap.Read(GB_TIMA_ADDRESS))).c_str());
-			ImGui::SameLine();
-			ImGui::Text(("TMA: " + GetHexString8(memoryMap.Read(GB_TMA_ADDRESS))).c_str());
-			ImGui::SameLine();
-			ImGui::Text(("TAC: " + GetHexString8(memoryMap.Read(GB_TAC_ADDRESS))).c_str());
-
-			ImGui::Separator();
-			ImGui::Text("Serial");
-			ImGui::Text(("SB: " + GetHexString8(memoryMap.Read(GB_SERIAL_TRANSFER_DATA_ADDRESS))).c_str());
-			ImGui::SameLine();
-			ImGui::Text(("SC: " + GetHexString8(memoryMap.Read(GB_SERIAL_TRANSFER_CONTROL_ADDRESS))).c_str());
-
-			// TODO: Print sound registers
-			ImGui::Separator();
-			ImGui::Text("Misc");
-			ImGui::Text(("JOYP: " + GetHexString8(memoryMap.Read(GB_JOYP_ADDRESS))).c_str());
 		}
 
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderTilesWindow(PPU& ppu)
+	void EmulatorWindow::RenderSoundDebugWindow(APU& apu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
-		// Window showing all of the tiles currently in VRAM;
-		RenderWindowWithFramebuffer("Tiles", ppu.GetTileDebugFramebuffer(), &shouldRenderTilesWindow);
+		if (ImGui::Begin("Sound", &shouldRenderSoundDebugWindow))
+		{
+			ImGui::Text("Sound Control Registers");
+			ImGui::Separator();
+			// TODO: Revisit when NR50 and NR51 are implemented.
+			ImGui::Text(("NR50: " + GetHexString16(0)).c_str());
+			ImGui::Text(("NR51: " + GetHexString16(0)).c_str());
+			ImGui::Text(("NR52: " + GetHexString16(apu.ReadNR52())).c_str());
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Checkbox("Channel 1", &apu.isChannel1Enabled);
+			ImGui::Separator();
+			ImGui::Text(("NR10: " + GetHexString8(apu.GetChannel1()->ReadNRX0())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR11: " + GetHexString8(apu.GetChannel1()->ReadNRX1())).c_str());
+			ImGui::Text(("NR12: " + GetHexString8(apu.GetChannel1()->ReadNRX2())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR13: " + GetHexString8(apu.GetChannel1()->ReadNRX3())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR14: " + GetHexString8(apu.GetChannel1()->ReadNRX4())).c_str());
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Checkbox("Channel 2", &apu.isChannel2Enabled);
+			ImGui::Separator();
+			ImGui::Text(("NR21: " + GetHexString8(apu.GetChannel2()->ReadNRX1())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR22: " + GetHexString8(apu.GetChannel2()->ReadNRX2())).c_str());
+			ImGui::Text(("NR23: " + GetHexString8(apu.GetChannel2()->ReadNRX3())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR24: " + GetHexString8(apu.GetChannel2()->ReadNRX4())).c_str());
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Checkbox("Channel 3", &apu.isChannel3Enabled);
+			ImGui::Separator();
+			ImGui::Text(("NR30: " + GetHexString8(apu.GetChannel3()->ReadNRX0())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR31: " + GetHexString8(apu.GetChannel3()->ReadNRX1())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR32: " + GetHexString8(apu.GetChannel3()->ReadNRX2())).c_str());
+			ImGui::Text(("NR33: " + GetHexString8(apu.GetChannel3()->ReadNRX3())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR34: " + GetHexString8(apu.GetChannel3()->ReadNRX4())).c_str());
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Checkbox("Channel 4", &apu.isChannel4Enabled);
+			ImGui::Separator();
+			ImGui::Text(("NR41: " + GetHexString8(apu.GetChannel4()->ReadNRX1())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR42: " + GetHexString8(apu.GetChannel4()->ReadNRX2())).c_str());
+			ImGui::Text(("NR43: " + GetHexString8(apu.GetChannel4()->ReadNRX3())).c_str());
+			ImGui::SameLine();
+			ImGui::Text(("NR44: " + GetHexString8(apu.GetChannel4()->ReadNRX4())).c_str());
+		}
+
+		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderSpritesWindow(PPU& ppu)
+	void EmulatorWindow::RenderJoypadDebugWindow(Joypad& joypad)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
-		// Window showing all of the sprites currently in VRAM.
-		RenderWindowWithFramebuffer("Sprites", ppu.GetSpriteDebugFramebuffer(), &shouldRenderSpritesWindow);
+		if (ImGui::Begin("Joypad", &shouldRenderJoypadDebugWindow))
+		{
+			ImGui::Text(("JOYP: " + GetHexString8(joypad.Read())).c_str());
+			ImGui::Separator();
+			ImGui::BeginDisabled();
+
+			bool isDownOrStartPressed = joypad.IsDownOrStartPressed();
+			bool isUpOrSelectPressed = joypad.IsUpOrSelectPressed();
+			bool isLeftOrBPressed = joypad.IsLeftOrBPressed();
+			bool isRightOrAPressed = joypad.IsRightOrAPressed();
+
+			ImGui::Checkbox(" Down/Start Pressed", &isDownOrStartPressed);
+			ImGui::Checkbox(" Up/Select Pressed", &isUpOrSelectPressed);
+			ImGui::Checkbox(" Left/B Pressed", &isLeftOrBPressed);
+			ImGui::Checkbox(" Right/A Pressed", &isRightOrAPressed);
+
+			ImGui::EndDisabled();
+		}
+
+		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderBackgroundTileMapWindow(PPU& ppu)
-	{
-		// By default, force the window to be docked.
-		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-
-		// Window showing the background tile map.
-		RenderWindowWithFramebuffer("Background Tile Map", ppu.GetBackgroundMapDebugFramebuffer(), &shouldRenderBackgroundTileMapWindow);
-	}
-
-	void EmulatorWindow::RenderWindowTileMapWindow(PPU& ppu)
-	{
-		// By default, force the window to be docked.
-		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-
-		// Window showing the window tile map.
-		RenderWindowWithFramebuffer("Window Tile Map", ppu.GetWindowMapDebugFramebuffer(), &shouldRenderWindowTileMapWindow);
-	}
-
-	void EmulatorWindow::RenderVideoRegistersWindow(PPU& ppu)
+	void EmulatorWindow::RenderVideoRegistersDebugWindow(PPU& ppu)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing information about the video-related registers.
-		if (ImGui::Begin("Video", &shouldRenderVideoRegistersWindow))
+		if (ImGui::Begin("Video", &shouldRenderVideoRegistersDebugWindow))
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
@@ -453,7 +513,56 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderLogWindow(std::string& logs)
+	void EmulatorWindow::RenderTilesDebugWindow(PPU& ppu)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		// Window showing all of the tiles currently in VRAM;
+		RenderWindowWithFramebuffer("Tiles", ppu.GetTileDebugFramebuffer(), &shouldRenderTilesDebugWindow);
+	}
+
+	void EmulatorWindow::RenderSpritesDebugWindow(PPU& ppu)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		// Window showing all of the sprites currently in VRAM.
+		RenderWindowWithFramebuffer("Sprites", ppu.GetSpriteDebugFramebuffer(), &shouldRenderSpritesDebugWindow);
+	}
+
+	void EmulatorWindow::RenderBackgroundTileMapDebugWindow(PPU& ppu)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		// Window showing the background tile map.
+		RenderWindowWithFramebuffer("Background Tile Map", ppu.GetBackgroundMapDebugFramebuffer(), &shouldRenderBackgroundTileMapDebugWindow);
+	}
+
+	void EmulatorWindow::RenderWindowTileMapDebugWindow(PPU& ppu)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		// Window showing the window tile map.
+		RenderWindowWithFramebuffer("Window Tile Map", ppu.GetWindowMapDebugFramebuffer(), &shouldRenderWindowTileMapDebugWindow);
+	}
+
+	void EmulatorWindow::RenderTimerDebugWindow(Timer& timer)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		if (ImGui::Begin("Timer", &shouldRenderTimerDebugWindow))
+		{
+
+		}
+
+		ImGui::End();
+	}
+
+	void EmulatorWindow::RenderLogWindow(std::string& logEntries)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -461,8 +570,12 @@ namespace SHG
 		// Window containing log entries.
 		if (ImGui::Begin("Logs", &shouldRenderLogWindow, ImGuiWindowFlags_NoScrollbar))
 		{
-			if (ImGui::RadioButton("Trace", isTraceEnabled))
-				isTraceEnabled = !isTraceEnabled;
+			ImGui::Checkbox("Trace", &isTraceEnabled);
+
+			static bool isLogWindowScrollLockedToBottom = false;
+
+			ImGui::SameLine();
+			ImGui::Checkbox("Auto Scroll To Bottom", &isLogWindowScrollLockedToBottom);
 
 			ImGui::Separator();
 
@@ -473,9 +586,9 @@ namespace SHG
 			{
 				// TextUnformatted() is used here since the other text rendering functions
 				// seem to have a limit on the string's size.
-				ImGui::TextUnformatted(logs.c_str());
+				ImGui::TextUnformatted(logEntries.c_str());
 
-				if (isTraceEnabled)
+				if (isLogWindowScrollLockedToBottom)
 					ImGui::SetScrollHereY(0.999f);
 			}
 			ImGui::EndChild();
@@ -486,6 +599,163 @@ namespace SHG
 		}
 
 		ImGui::End();
+	}
+
+	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad)
+	{
+		// By default, force the window to be docked.
+		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+
+		if (ImGui::Begin("Settings", &shouldRenderSettingsWindow))
+		{
+			static int selectedWindow = SETTINGS_VIDEO_WINDOW_ID;
+
+			if (ImGui::BeginChild("Left", ImVec2(175, 0), true))
+			{
+				if (ImGui::Selectable("Video", selectedWindow == 0))
+					selectedWindow = SETTINGS_VIDEO_WINDOW_ID;
+
+				if (ImGui::Selectable("Audio", selectedWindow == 1))
+					selectedWindow = SETTINGS_AUDIO_WINDOW_ID;
+
+				if (ImGui::Selectable("Controller/Keyboard", selectedWindow == 2))
+					selectedWindow = SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID;
+			}
+
+			ImGui::Separator();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+			if (ImGui::BeginChild("Right"))
+			{
+				switch (selectedWindow)
+				{
+				case SETTINGS_VIDEO_WINDOW_ID:
+					RenderVideoSettingsWindow(ppu);
+					break;
+				case SETTINGS_AUDIO_WINDOW_ID:
+					RenderAudioSettingsWindow(apu);
+					break;
+				case SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID:
+					RenderControllerAndKeyboardSettingsWindow(joypad);
+					break;
+				}
+			}
+
+			ImGui::EndChild();
+		}
+
+		ImGui::End();
+	}
+
+	void EmulatorWindow::RenderVideoSettingsWindow(PPU& ppu)
+	{
+		static bool isPaletteTintEditorOpen = false;
+		static uint8_t selectedPaletteTintID = BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_0;
+
+		static uint16_t paletteAddress = 0;
+		static uint8_t colorIndex = 0;
+		static std::string selectedTintLabel = "";
+
+		ImGui::BeginGroup();
+
+		if (ImGui::BeginChild("Video Settings"))
+		{
+			ImGui::Text("Video");
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Palette Tints");
+			ImGui::Separator();
+
+			ImGui::Text("Background And Window (BGP)");
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "BGP 0", GB_BACKGROUND_PALETTE_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "BGP 1", GB_BACKGROUND_PALETTE_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "BGP 2", GB_BACKGROUND_PALETTE_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "BGP 3", GB_BACKGROUND_PALETTE_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+
+			ImGui::Text("Sprite 0 (OBP0)");
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP0 0", GB_SPRITE_PALETTE_0_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP0 1", GB_SPRITE_PALETTE_0_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP0 2", GB_SPRITE_PALETTE_0_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP0 3", GB_SPRITE_PALETTE_0_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+
+			ImGui::Text("Sprite 1 (OBP1)");
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP1 0", GB_SPRITE_PALETTE_1_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP1 1", GB_SPRITE_PALETTE_1_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP1 2", GB_SPRITE_PALETTE_1_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			ImGui::SameLine();
+			RenderColorPaletteButton(ppu, "OBP1 3", GB_SPRITE_PALETTE_1_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+		}
+
+		ImGui::EndChild();
+		ImGui::EndGroup();
+
+		if (isPaletteTintEditorOpen)
+		{
+			if (ImGui::Begin("Palette Editor", &isPaletteTintEditorOpen))
+			{
+				ImVec4 tint = ConvertColorToImVec4(ppu.GetPaletteTint(paletteAddress, colorIndex));
+				ImGui::ColorPicker3(selectedTintLabel.c_str(), &tint.x);
+				ppu.SetPaletteTint(paletteAddress, colorIndex, ConvertImVec4ToColor(tint));
+			}
+
+			ImGui::End();
+		}
+	}
+
+	void EmulatorWindow::RenderAudioSettingsWindow(APU& apu)
+	{
+		ImGui::BeginGroup();
+
+		if (ImGui::BeginChild("Audio Settings"))
+		{
+			ImGui::Text("Audio");
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::Spacing();
+		}
+
+		ImGui::EndChild();
+		ImGui::EndGroup();
+	}
+	
+	void EmulatorWindow::RenderColorPaletteButton(const PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened)
+	{
+		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(ppu.GetPaletteTint(paletteAddress, colorIndex)), ImGuiColorEditFlags_PickerHueWheel))
+		{
+			*isColorPickerOpened = true;
+			*outPaletteAddress = paletteAddress;
+			*outColorIndex = colorIndex;
+		}
+	}
+
+	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad)
+	{
+		ImGui::BeginGroup();
+
+		if (ImGui::BeginChild("Controller/Keyboard Settings"))
+		{
+			ImGui::Text("Controller/Keyboard");
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::Spacing();
+		}
+
+		ImGui::EndChild();
+		ImGui::EndGroup();
 	}
 
 	void EmulatorWindow::EndFrame()
@@ -504,5 +774,25 @@ namespace SHG
 	void EmulatorWindow::SetPauseButtonLabel(const std::string& label)
 	{
 		pauseButtonLabel = label;
+	}
+
+	ImVec4 EmulatorWindow::ConvertColorToImVec4(const Color& color) const
+	{
+		float r = color.r / 255.0f;
+		float g = color.g / 255.0f;
+		float b = color.b / 255.0f;
+		float a = color.a / 255.0f;
+
+		return ImVec4(r, g, b, a);
+	}
+
+	Color EmulatorWindow::ConvertImVec4ToColor(const ImVec4 vec) const
+	{
+		uint8_t r = vec.x * 255;
+		uint8_t g = vec.y * 255;
+		uint8_t b = vec.z * 255;
+		uint8_t a = vec.w * 255;
+
+		return { r, g, b, a };
 	}
 }

@@ -13,6 +13,14 @@ namespace SHG
 		samples = std::vector<uint8_t>(NUMBER_OF_SAMPLES);
 	}
 
+	void WaveSoundChannel::Reset()
+	{
+		SoundChannel::Reset();
+
+		sampleIndex = 0;
+		std::fill(samples.begin(), samples.end(), 0);
+	}
+
 	void WaveSoundChannel::WriteToWavePatternRAM(uint16_t address, uint8_t value)
 	{
 		if (address < WAVE_PATTERN_RAM_START_ADDRESS || address > WAVE_PATTERN_RAM_END_ADDRESS)

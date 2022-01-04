@@ -17,8 +17,11 @@ namespace SHG
 
 		bool IsEnabled();
 
-		void Reset();
+		void EnableSoundController();
+		void DisableSoundController();
 		float GetSample() const;
+
+		virtual void Reset();
 
 		virtual void WriteToNRX0(uint8_t value);
 		virtual void WriteToNRX1(uint8_t value);
@@ -40,6 +43,7 @@ namespace SHG
 		};
 
 		bool isEnabled = false;
+		bool isSoundControllerEnabled = true;
 
 		uint8_t volume = 0;
 

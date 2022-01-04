@@ -18,6 +18,13 @@ namespace SHG
 
 	}
 
+	void ToneSoundChannel::Reset()
+	{
+		SoundChannel::Reset();
+
+		waveformPosition = 0;
+	}
+
 	void ToneSoundChannel::WriteToNRX1(uint8_t value)
 	{
 		SoundChannel::WriteToNRX1(value);

@@ -8,6 +8,7 @@ namespace SHG
 	public:
 		SweepSoundChannel();
 		void TickSweepTimer();
+		void Reset() override;
 
 	protected:
 		void OnTrigger() override;

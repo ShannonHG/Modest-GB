@@ -28,7 +28,7 @@ namespace SHG
 		void ChangeCarryFlag(bool isSet);
 
 		void ChangeInterruptMasterEnableFlag(bool isSet);
-		bool GetInterruptMasterEnableFlag();
+		bool GetInterruptMasterEnableFlag()const;
 
 		Register8& GetRegisterA();
 		Register8& GetRegisterF();
@@ -47,13 +47,13 @@ namespace SHG
 		Register16& GetProgramCounter();
 		Register16& GetStackPointer();
 
-		CPUInstruction GetCurrentInstruction();
+		CPUInstruction GetCurrentInstruction() const;
 
 		void HandleInterrupts();
 		void PrintRegisterInfo();
 		void Reset();
 
-		bool IsPreviousInstructionValid();
+		bool IsPreviousInstructionValid() const;
 
 	private:
 		Memory& memoryManagementUnit;
@@ -78,7 +78,7 @@ namespace SHG
 		CPUInstruction* Decode(uint8_t opcode);
 
 		void Set16BitDataInMemory(uint16_t address, uint16_t data);
-		uint16_t Get16BitDataFromMemory(uint16_t address);
+		uint16_t Get16BitDataFromMemory(uint16_t address) const;
 		
 		void NOP();
 		void LD_RR_U16(Register16& reg);

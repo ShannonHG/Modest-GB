@@ -19,6 +19,6 @@ namespace SHG
 		void Decrease(uint8_t amount);
 
 	private:
-		uint8_t data;
+		uint8_t data = 0;
 	};
 }

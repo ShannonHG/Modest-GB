@@ -23,6 +23,8 @@ namespace SHG
 	void AudioTimer::Disable()
 	{
 		isEnabled = false;
+		counter = 0;
+		period = 0;
 	}
 
 	void AudioTimer::Enable()

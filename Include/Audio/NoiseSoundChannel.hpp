@@ -9,6 +9,7 @@ namespace SHG
 	public:
 		NoiseSoundChannel();
 
+		void Reset() override;
 		void WriteToNRX1(uint8_t value) override;
 		void WriteToNRX2(uint8_t value) override;
 

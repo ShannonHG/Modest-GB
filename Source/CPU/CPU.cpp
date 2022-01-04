@@ -288,7 +288,7 @@ namespace SHG
 		memoryManagementUnit.Write(address + 1, data >> 8);
 	}
 
-	uint16_t CPU::Get16BitDataFromMemory(uint16_t address)
+	uint16_t CPU::Get16BitDataFromMemory(uint16_t address) const
 	{
 		uint8_t lower = memoryManagementUnit.Read(address);
 		uint8_t upper = memoryManagementUnit.Read(address + 1);
@@ -296,17 +296,17 @@ namespace SHG
 		return (upper << 8) | lower;
 	}
 
-	CPUInstruction CPU::GetCurrentInstruction()
+	CPUInstruction CPU::GetCurrentInstruction() const
 	{
 		return *currentInstruction;
 	}
 
-	bool CPU::IsPreviousInstructionValid()
+	bool CPU::IsPreviousInstructionValid() const
 	{
 		return currentInstruction != nullptr;
 	}
 
-	bool CPU::GetInterruptMasterEnableFlag()
+	bool CPU::GetInterruptMasterEnableFlag() const
 	{
 		return interruptMasterEnableFlag;
 	}

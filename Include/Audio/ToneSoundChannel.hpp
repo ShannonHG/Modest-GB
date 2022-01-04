@@ -8,6 +8,7 @@ namespace SHG
 	public:
 		ToneSoundChannel();
 
+		void Reset() override;
 		virtual void WriteToNRX1(uint8_t value) override;
 		virtual void WriteToNRX2(uint8_t value) override;
 

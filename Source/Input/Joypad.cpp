@@ -84,8 +84,38 @@ namespace SHG
 	void Joypad::Reset()
 	{
 		ResetButtonStates();
-		isDirectionButtonsSelected = false;
 		isActionButtonsSelected = false;
+		isDirectionButtonsSelected = false;
+	}
+
+	bool Joypad::IsActionButtonsSelected()
+	{	
+		return isActionButtonsSelected;
+	}
+
+	bool Joypad::IsDirectionButtonsSelected()
+	{
+		return isDirectionButtonsSelected;
+	}
+
+	bool Joypad::IsDownOrStartPressed()
+	{
+		return buttonStates.at(GBButton::Down) || buttonStates.at(GBButton::Start);
+	}
+
+	bool Joypad::IsUpOrSelectPressed()
+	{
+		return buttonStates.at(GBButton::Up) || buttonStates.at(GBButton::Select);
+	}
+
+	bool Joypad::IsLeftOrBPressed()
+	{
+		return buttonStates.at(GBButton::Left) || buttonStates.at(GBButton::B);
+	}
+
+	bool Joypad::IsRightOrAPressed()
+	{
+		return buttonStates.at(GBButton::Right) || buttonStates.at(GBButton::A);
 	}
 
 	void Joypad::ResetButtonStates()
