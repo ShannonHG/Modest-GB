@@ -10,7 +10,7 @@ namespace SHG
 	const uint8_t AUDIO_CHANNELS = 1;
 	const int SAMPLE_FREQUENCY = 44100;
 	const uint16_t AUDIO_BUFFER_SIZE = 4096;
-	const uint32_t FRAME_SEQUENCER_PERIOD = std::floor(GB_CLOCK_SPEED / 512.0f);
+	const uint32_t FRAME_SEQUENCER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 512.0f));
 
 	void APU::Initialize()
 	{
@@ -32,7 +32,7 @@ namespace SHG
 		frameSequencerTimer.SetPeriod(FRAME_SEQUENCER_PERIOD);
 		frameSequencerTimer.Restart();
 
-		sampleCollectionTimer.SetPeriod(std::floor(GB_CLOCK_SPEED / 44100.0f));
+		sampleCollectionTimer.SetPeriod(static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 44100.0f)));
 		sampleCollectionTimer.Restart();
 	}
 
@@ -113,7 +113,7 @@ namespace SHG
 			// TODO: Revisit
 			if (samples.size() >= 4096)
 			{
-				if (SDL_QueueAudio(audioDeviceID, samples.data(), samples.size() * sizeof(float)) < 0)
+				if (SDL_QueueAudio(audioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
 					Logger::WriteError("SDL failed to play audio. Error: " + std::string(SDL_GetError()));
 
 				samples.clear();

@@ -315,8 +315,8 @@ namespace SHG
 
 			// Position the game view in the center of the window.
 			ImGui::SetCursorPos(ImVec2(
-				(contentRegionSize.x - imageSize.x) * 0.5,
-				(contentRegionSize.y - imageSize.y) * 0.5 + 25));
+				(contentRegionSize.x - imageSize.x) * 0.5f,
+				(contentRegionSize.y - imageSize.y) * 0.5f + 25));
 
 			ImGui::Image((void*)framebuffer.GetTexture(), imageSize);
 		}
@@ -797,10 +797,10 @@ namespace SHG
 
 	Color EmulatorWindow::ConvertImVec4ToColor(ImVec4& vec) const
 	{
-		uint8_t r = vec.x * 255;
-		uint8_t g = vec.y * 255;
-		uint8_t b = vec.z * 255;
-		uint8_t a = vec.w * 255;
+		uint8_t r = static_cast<uint8_t>(vec.x * 255);
+		uint8_t g = static_cast<uint8_t>(vec.y * 255);
+		uint8_t b = static_cast<uint8_t>(vec.z * 255);
+		uint8_t a = static_cast<uint8_t>(vec.w * 255);
 
 		return { r, g, b, a };
 	}

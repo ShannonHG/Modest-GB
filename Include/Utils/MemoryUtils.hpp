@@ -4,8 +4,8 @@
 namespace SHG
 {
 	const uint16_t KiB = 1024;
-	const uint32_t MiB = pow(1024, 2);
-	const uint64_t GiB = pow(1024, 3);
+	const uint32_t MiB = static_cast<uint32_t>(pow(1024, 2));
+	const uint64_t GiB = static_cast<uint32_t>(pow(1024, 3));
 
 	const uint16_t GB_ROM_BANK_00_START_ADDRESS = 0x0000;
 	const uint16_t GB_ROM_BANK_00_END_ADDRESS = 0x3FFF;

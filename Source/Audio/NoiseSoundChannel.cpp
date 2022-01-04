@@ -49,7 +49,7 @@ namespace SHG
 
 	float NoiseSoundChannel::GenerateSample() const
 	{
-		return ((~shiftRegister.Read()) & 1) * volume;
+		return static_cast<float>(((~shiftRegister.Read()) & 1) * volume);
 	}
 
 	uint32_t NoiseSoundChannel::GetLengthTimerPeriod() const

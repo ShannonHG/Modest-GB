@@ -123,8 +123,8 @@ namespace SHG
 
 	void Timer::PrintStatus() const
 	{
-		Logger::WriteSystemEvent("(DIV) " + GetHexString8(std::floor(GetDividerRegister())) +
-			" (TIMA) " + GetHexString8(std::floor(timerCounter)) +
+		Logger::WriteSystemEvent("(DIV) " + GetHexString8(static_cast<uint8_t>(std::floor(GetDividerRegister()))) +
+			" (TIMA) " + GetHexString8(static_cast<uint8_t>(std::floor(timerCounter))) +
 			" (TMA) " + GetHexString8(timerModulo) +
 			" (TAC) " + GetHexString8(GetTimerControlRegister()), TIMER_MESSAGE_HEADER);
 	}

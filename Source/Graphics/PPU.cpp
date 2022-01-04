@@ -619,7 +619,7 @@ namespace SHG
 
 	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType)
 	{
-		uint16_t tileIndex = GetTileIndexFromTileMaps(memoryMap, scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS), scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS), useAlternateTileMapAddress);
+		uint16_t tileIndex = GetTileIndexFromTileMaps(memoryMap, static_cast<uint8_t>(scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS)), static_cast<uint8_t>(scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS)), useAlternateTileMapAddress);
 		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
 
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
@@ -691,12 +691,12 @@ namespace SHG
 		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
 
-		uint8_t tileX = debugCurrentSpriteIndex % MAX_SPRITES_PER_SCANLINE;
-		uint8_t tileY = std::floor(debugCurrentSpriteIndex / static_cast<float>(MAX_SPRITES_PER_SCANLINE));
+		uint8_t tileX = static_cast<uint8_t>(debugCurrentSpriteIndex % MAX_SPRITES_PER_SCANLINE);
+		uint8_t tileY = static_cast<uint8_t>(std::floor(debugCurrentSpriteIndex / static_cast<float>(MAX_SPRITES_PER_SCANLINE)));
 		uint8_t xSpacing = TILE_WIDTH_IN_PIXELS + 1;
 		uint8_t ySpacing = TILE_HEIGHT_IN_PIXELS * spriteSizeInTiles + 1;
 
-		uint8_t tile = std::floor(debugSpriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
+		uint8_t tile = static_cast<uint8_t>(std::floor(debugSpriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 		uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - debugSpriteScanline : debugSpriteScanline) % TILE_HEIGHT_IN_PIXELS;
 
 		uint8_t lowTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
@@ -731,7 +731,7 @@ namespace SHG
 	{
 		uint8_t palette = memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS);
 		uint8_t tileX = debugTileIndex % TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES;
-		uint8_t tileY = std::floor(debugTileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES));
+		uint8_t tileY = static_cast<uint8_t>(std::floor(debugTileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES)));
 		uint8_t spacing = TILE_WIDTH_IN_PIXELS + 1;
 
 		uint8_t lowTileData = memoryMap.Read(GetTileAddress(debugTileIndex, debugTileScanline, true));

@@ -74,15 +74,15 @@ namespace SHG
 		{
 		case BackgroundPixelFetcherMode::Background:
 			tileX = static_cast<uint8_t>(std::floor((scx->Read() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
-			tileY = std::floor((GetAdjustedY() & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
+			tileY = static_cast<uint8_t>(std::floor((GetAdjustedY() & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 
-			currentTileIndex = GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX));
+			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX)));
 			break;
 		case BackgroundPixelFetcherMode::Window:
-			tileX = std::floor(x / static_cast<float>(TILE_WIDTH_IN_PIXELS));
-			tileY = std::floor(y / static_cast<float>(TILE_HEIGHT_IN_PIXELS));
+			tileX = static_cast<uint8_t>(std::floor(x / static_cast<float>(TILE_WIDTH_IN_PIXELS)));
+			tileY = static_cast<uint8_t>(std::floor(y / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 
-			currentTileIndex = GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX));
+			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX)));
 			break;
 		}
 
