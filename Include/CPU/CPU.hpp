@@ -30,33 +30,24 @@ namespace SHG
 		void ChangeInterruptMasterEnableFlag(bool isSet);
 		bool GetInterruptMasterEnableFlag()const;
 
-		Register8& GetRegisterA();
-		Register8& GetRegisterF();
-		Register8& GetRegisterB();
-		Register8& GetRegisterC();
-		Register8& GetRegisterD();
-		Register8& GetRegisterE();
-		Register8& GetRegisterH();
-		Register8& GetRegisterL();
-
-		Register16& GetRegisterAF();
-		Register16& GetRegisterBC();
-		Register16& GetRegisterDE();
-		Register16& GetRegisterHL();
-
-		Register16& GetProgramCounter();
-		Register16& GetStackPointer();
-
-		CPUInstruction GetCurrentInstruction() const;
-
 		void HandleInterrupts();
 		void PrintRegisterInfo();
 		void Reset();
 
-		bool IsPreviousInstructionValid() const;
+		uint8_t ReadRegisterA() const;
+		uint8_t ReadRegisterF() const;
+		uint8_t ReadRegisterB() const;
+		uint8_t ReadRegisterC() const;
+		uint8_t ReadRegisterH() const;
+		uint8_t ReadRegisterL() const;
+		uint8_t ReadRegisterD() const;
+		uint8_t ReadRegisterE() const;
+
+		uint16_t ReadStackPointer() const;
+		uint16_t ReadProgramCounter() const;
 
 	private:
-		Memory& memoryManagementUnit;
+		Memory* memoryManagementUnit;
 
 		Register16 regAF;
 		Register16 regBC;
@@ -66,9 +57,10 @@ namespace SHG
 		Register16 stackPointer;
 
 		uint32_t currentInstructionCycles = 0;
+		CPUInstruction* currentInstruction = nullptr;
+
 		bool isHalted = false;
 		bool interruptMasterEnableFlag = false;
-		CPUInstruction* currentInstruction = nullptr;
 
 		static std::map<uint8_t, CPUInstruction> BasicInstructionSet;
 		static std::map<uint8_t, CPUInstruction> CBPrefixedInstructionSet;
@@ -80,6 +72,18 @@ namespace SHG
 		void Set16BitDataInMemory(uint16_t address, uint16_t data);
 		uint16_t Get16BitDataFromMemory(uint16_t address) const;
 		
+		Register8& GetRegisterA();
+		Register8& GetRegisterF();
+		Register8& GetRegisterB();
+		Register8& GetRegisterC();
+		Register8& GetRegisterD();
+		Register8& GetRegisterE();
+		Register8& GetRegisterH();
+		Register8& GetRegisterL();
+
+		Register16& GetProgramCounter();
+		Register16& GetStackPointer();
+
 		void NOP();
 		void LD_RR_U16(Register16& reg);
 		void LD_ADDR_RR_R(Register16& addressReg, Register8& sourceReg);

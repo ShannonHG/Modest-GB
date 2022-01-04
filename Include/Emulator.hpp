@@ -21,10 +21,10 @@ namespace SHG
 		bool Run();
 
 	private:
-		EmulatorWindow window = EmulatorWindow();
-		InputManager inputManager = InputManager();
-		MemoryMap memoryMap = MemoryMap();
-		Cartridge cartridge = Cartridge();
+		EmulatorWindow window;
+		InputManager inputManager;
+		MemoryMap memoryMap;
+		Cartridge cartridge;
 		CPU processor = CPU(memoryMap);
 		PPU ppu = PPU(memoryMap);
 		APU apu;

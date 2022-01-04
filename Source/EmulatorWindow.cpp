@@ -353,25 +353,24 @@ namespace SHG
 			ImGui::Separator();
 
 			// Print register values 
-			ImGui::Text(("A: " + GetHexString8(processor.GetRegisterA().Read())).c_str());
+			ImGui::Text(("A: " + GetHexString8(processor.ReadRegisterA())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("F: " + GetHexString8(processor.GetRegisterF().Read())).c_str());
+			ImGui::Text(("F: " + GetHexString8(processor.ReadRegisterF())).c_str());
 
-			ImGui::Text(("B: " + GetHexString8(processor.GetRegisterB().Read())).c_str());
+			ImGui::Text(("B: " + GetHexString8(processor.ReadRegisterB())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("C: " + GetHexString8(processor.GetRegisterC().Read())).c_str());
+			ImGui::Text(("C: " + GetHexString8(processor.ReadRegisterC())).c_str());
 
-			ImGui::Text(("D: " + GetHexString8(processor.GetRegisterD().Read())).c_str());
+			ImGui::Text(("D: " + GetHexString8(processor.ReadRegisterD())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("E: " + GetHexString8(processor.GetRegisterE().Read())).c_str());
+			ImGui::Text(("E: " + GetHexString8(processor.ReadRegisterE())).c_str());
 
-			ImGui::Text(("H: " + GetHexString8(processor.GetRegisterH().Read())).c_str());
+			ImGui::Text(("H: " + GetHexString8(processor.ReadRegisterH())).c_str());
 			ImGui::SameLine();
-			ImGui::Text(("L: " + GetHexString8(processor.GetRegisterL().Read())).c_str());
+			ImGui::Text(("L: " + GetHexString8(processor.ReadRegisterL())).c_str());
 
-			ImGui::Text(("PC: " + GetHexString16(processor.GetProgramCounter().Read())).c_str());
-
-			ImGui::Text(("SP: " + GetHexString16(processor.GetStackPointer().Read())).c_str());
+			ImGui::Text(("PC: " + GetHexString16(processor.ReadProgramCounter())).c_str());
+			ImGui::Text(("SP: " + GetHexString16(processor.ReadStackPointer())).c_str());
 
 			ImGui::Spacing();
 			ImGui::Spacing();

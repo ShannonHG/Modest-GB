@@ -20,9 +20,8 @@ namespace SHG
 
 	const uint8_t HALT_CYCLE_COUNT = 4;
 
-	CPU::CPU(Memory& memoryManagementUnit) : memoryManagementUnit(memoryManagementUnit)
+	CPU::CPU(Memory& memoryManagementUnit) : memoryManagementUnit(&memoryManagementUnit)
 	{
-		this->memoryManagementUnit = memoryManagementUnit;
 	}
 
 	void CPU::PrintRegisterInfo()
@@ -48,8 +47,8 @@ namespace SHG
 
 	void CPU::HandleInterrupts()
 	{
-		uint8_t interruptFlag = memoryManagementUnit.Read(INTERRUPT_FLAG_ADDRESS);
-		uint8_t interruptEnable = memoryManagementUnit.Read(INTERRUPT_ENABLE_ADDRESS);
+		uint8_t interruptFlag = memoryManagementUnit->Read(INTERRUPT_FLAG_ADDRESS);
+		uint8_t interruptEnable = memoryManagementUnit->Read(INTERRUPT_ENABLE_ADDRESS);
 
 		if (Logger::IsSystemEventLoggingEnabled)
 		{
@@ -73,7 +72,7 @@ namespace SHG
 				{
 					CALL(interruptAddress);
 					interruptMasterEnableFlag = false;
-					memoryManagementUnit.ClearBit(INTERRUPT_FLAG_ADDRESS, i);
+					memoryManagementUnit->ClearBit(INTERRUPT_FLAG_ADDRESS, i);
 				}
 
 				isHalted = false;
@@ -97,6 +96,56 @@ namespace SHG
 		interruptMasterEnableFlag = false;
 	}
 
+	uint8_t CPU::ReadRegisterA() const
+	{
+		return regAF.GetHighByte();
+	}
+
+	uint8_t CPU::ReadRegisterF() const
+	{
+		return regAF.GetLowByte();
+	}
+
+	uint8_t CPU::ReadRegisterB() const
+	{
+		return regBC.GetHighByte();
+	}
+
+	uint8_t CPU::ReadRegisterC() const
+	{
+		return regBC.GetLowByte();
+	}
+
+	uint8_t CPU::ReadRegisterH() const
+	{
+		return regHL.GetHighByte();
+	}
+
+	uint8_t CPU::ReadRegisterL() const
+	{
+		return regHL.GetLowByte();
+	}
+
+	uint8_t CPU::ReadRegisterD() const
+	{
+		return regDE.GetHighByte();
+	}
+
+	uint8_t CPU::ReadRegisterE() const
+	{
+		return regDE.GetLowByte();
+	}
+
+	uint16_t CPU::ReadStackPointer() const
+	{
+		return stackPointer.Read();
+	}
+
+	uint16_t CPU::ReadProgramCounter() const
+	{
+		return programCounter.Read();
+	}
+
 	uint32_t CPU::Tick()
 	{
 		currentInstructionCycles = 0;
@@ -116,8 +165,6 @@ namespace SHG
 		if (currentInstruction == nullptr)
 		{
 			Logger::WriteError("Invalid opcode encountered at " + GetHexString16(programCounter.Read()) + ": " + GetHexString8(opcode), CPU_MESSAGE_HEADER);
-
-			// TODO: Return something more useful
 			return 0;
 		}
 
@@ -138,7 +185,7 @@ namespace SHG
 		uint16_t address = programCounter.Read();
 		programCounter.Increment();
 
-		uint8_t result = memoryManagementUnit.Read(address);
+		uint8_t result = memoryManagementUnit->Read(address);
 
 		if (Logger::IsSystemEventLoggingEnabled)
 			Logger::WriteSystemEvent("(fetch) " + ConvertToHexString(result, 2), CPU_MESSAGE_HEADER);
@@ -212,26 +259,6 @@ namespace SHG
 		return regHL.GetLowRegister();
 	}
 
-	Register16& CPU::GetRegisterAF()
-	{
-		return regAF;
-	}
-
-	Register16& CPU::GetRegisterBC()
-	{
-		return regBC;
-	}
-
-	Register16& CPU::GetRegisterDE()
-	{
-		return regDE;
-	}
-
-	Register16& CPU::GetRegisterHL()
-	{
-		return regHL;
-	}
-
 	Register16& CPU::GetProgramCounter()
 	{
 		return programCounter;
@@ -284,26 +311,16 @@ namespace SHG
 
 	void CPU::Set16BitDataInMemory(uint16_t address, uint16_t data)
 	{
-		memoryManagementUnit.Write(address, data & 0x00FF);
-		memoryManagementUnit.Write(address + 1, data >> 8);
+		memoryManagementUnit->Write(address, data & 0x00FF);
+		memoryManagementUnit->Write(address + 1, data >> 8);
 	}
 
 	uint16_t CPU::Get16BitDataFromMemory(uint16_t address) const
 	{
-		uint8_t lower = memoryManagementUnit.Read(address);
-		uint8_t upper = memoryManagementUnit.Read(address + 1);
+		uint8_t lower = memoryManagementUnit->Read(address);
+		uint8_t upper = memoryManagementUnit->Read(address + 1);
 
 		return (upper << 8) | lower;
-	}
-
-	CPUInstruction CPU::GetCurrentInstruction() const
-	{
-		return *currentInstruction;
-	}
-
-	bool CPU::IsPreviousInstructionValid() const
-	{
-		return currentInstruction != nullptr;
 	}
 
 	bool CPU::GetInterruptMasterEnableFlag() const
@@ -838,7 +855,7 @@ namespace SHG
 
 	void CPU::LD_ADDR_RR_R(Register16& addressReg, Register8& sourceReg)
 	{
-		memoryManagementUnit.Write(addressReg.Read(), sourceReg.Read());
+		memoryManagementUnit->Write(addressReg.Read(), sourceReg.Read());
 	}
 
 	void CPU::LD_R_U8(Register8& reg)
@@ -903,11 +920,11 @@ namespace SHG
 	void CPU::RLC_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t byteAtAddress = memoryManagementUnit.Read(address);
+		uint8_t byteAtAddress = memoryManagementUnit->Read(address);
 		uint8_t carry = byteAtAddress >> 7;
 		uint8_t result = (byteAtAddress << 1) | carry;
 
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -926,7 +943,7 @@ namespace SHG
 
 	void CPU::LD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(memoryManagementUnit->Read(addressReg.Read()));
 	}
 
 	void CPU::DEC_RR(Register16& reg)
@@ -961,10 +978,10 @@ namespace SHG
 	void CPU::RRC_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
+		uint8_t value = memoryManagementUnit->Read(address);
 
 		uint8_t result = (value >> 1) | (value << 7);
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -973,7 +990,7 @@ namespace SHG
 
 	void CPU::STOP()
 	{
-		// TODO: Implement
+		// Do nothing
 	}
 
 	void CPU::RL_R(Register8& reg)
@@ -1007,13 +1024,13 @@ namespace SHG
 	void CPU::RL_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
+		uint8_t value = memoryManagementUnit->Read(address);
 
 		uint8_t previousCarry = GetCarryFlag();
 		uint8_t currentCarry = value >> 7;
 
 		uint8_t result = (value << 1) | previousCarry;
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
@@ -1066,13 +1083,13 @@ namespace SHG
 	void CPU::RR_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
+		uint8_t value = memoryManagementUnit->Read(address);
 
 		uint8_t previousCarry = GetCarryFlag();
 		uint8_t currentCarry = value & 1;
 
 		uint8_t result = (value >> 1) | (previousCarry << 7);
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
@@ -1082,7 +1099,7 @@ namespace SHG
 
 	void CPU::LD_ADDR_RR_INC_R(Register16& addressReg, Register8& sourceReg)
 	{
-		memoryManagementUnit.Write(addressReg.Read(), sourceReg.Read());
+		memoryManagementUnit->Write(addressReg.Read(), sourceReg.Read());
 		addressReg.Increment();
 	}
 
@@ -1118,7 +1135,7 @@ namespace SHG
 
 	void CPU::LD_R_ADDR_RR_INC(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(memoryManagementUnit->Read(addressReg.Read()));
 		addressReg.Increment();
 	}
 
@@ -1131,17 +1148,17 @@ namespace SHG
 
 	void CPU::LD_ADDR_RR_DEC_R(Register16& addressReg, Register8& sourceReg)
 	{
-		memoryManagementUnit.Write(addressReg.Read(), sourceReg.Read());
+		memoryManagementUnit->Write(addressReg.Read(), sourceReg.Read());
 		addressReg.Decrement();
 	}
 
 	void CPU::INC_ADDR_RR(Register16& reg)
 	{
-		uint8_t operand = memoryManagementUnit.Read(reg.Read());
+		uint8_t operand = memoryManagementUnit->Read(reg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ operand, 1 }));
 
 		operand++;
-		memoryManagementUnit.Write(reg.Read(), operand);
+		memoryManagementUnit->Write(reg.Read(), operand);
 
 		ChangeZeroFlag(operand == 0);
 		ChangeSubtractionFlag(false);
@@ -1149,11 +1166,11 @@ namespace SHG
 
 	void CPU::DEC_ADDR_RR(Register16& reg)
 	{
-		uint8_t operand = memoryManagementUnit.Read(reg.Read());
+		uint8_t operand = memoryManagementUnit->Read(reg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ operand, 1 }, true));
 
 		operand--;
-		memoryManagementUnit.Write(reg.Read(), operand);
+		memoryManagementUnit->Write(reg.Read(), operand);
 
 		ChangeZeroFlag(operand == 0);
 		ChangeSubtractionFlag(true);
@@ -1161,7 +1178,7 @@ namespace SHG
 
 	void CPU::LD_ADDR_RR_U8(Register16& addressReg)
 	{
-		memoryManagementUnit.Write(addressReg.Read(), Fetch8());
+		memoryManagementUnit->Write(addressReg.Read(), Fetch8());
 	}
 
 	void CPU::SCF()
@@ -1173,7 +1190,7 @@ namespace SHG
 
 	void CPU::LD_R_ADDR_RR_DEC(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(memoryManagementUnit->Read(addressReg.Read()));
 		addressReg.Decrement();
 	}
 
@@ -1209,7 +1226,7 @@ namespace SHG
 
 	void CPU::ADD_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		uint8_t byteAtAddress = memoryManagementUnit.Read(addressReg.Read());
+		uint8_t byteAtAddress = memoryManagementUnit->Read(addressReg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ destinationReg.Read(), byteAtAddress }));
 
 		int result = destinationReg.Read() + byteAtAddress;
@@ -1234,7 +1251,7 @@ namespace SHG
 
 	void CPU::ADC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		uint8_t byteAtAddress = memoryManagementUnit.Read(addressReg.Read());
+		uint8_t byteAtAddress = memoryManagementUnit->Read(addressReg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ destinationReg.Read(), byteAtAddress, GetCarryFlag() }));
 
 		int result = destinationReg.Read() + byteAtAddress + GetCarryFlag();
@@ -1259,7 +1276,7 @@ namespace SHG
 
 	void CPU::SUB_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		uint8_t byteAtAddress = memoryManagementUnit.Read(addressReg.Read());
+		uint8_t byteAtAddress = memoryManagementUnit->Read(addressReg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ destinationReg.Read(), byteAtAddress }, true));
 
 		int result = destinationReg.Read() - byteAtAddress;
@@ -1284,7 +1301,7 @@ namespace SHG
 
 	void CPU::SBC_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		uint8_t byteAtAddress = memoryManagementUnit.Read(addressReg.Read());
+		uint8_t byteAtAddress = memoryManagementUnit->Read(addressReg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ destinationReg.Read(), byteAtAddress, GetCarryFlag() }, true));
 
 		int result = destinationReg.Read() - byteAtAddress - GetCarryFlag();
@@ -1306,7 +1323,7 @@ namespace SHG
 
 	void CPU::AND_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(destinationReg.Read() & memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(destinationReg.Read() & memoryManagementUnit->Read(addressReg.Read()));
 		ChangeZeroFlag(destinationReg.Read() == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(true);
@@ -1324,7 +1341,7 @@ namespace SHG
 
 	void CPU::XOR_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(destinationReg.Read() ^ memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(destinationReg.Read() ^ memoryManagementUnit->Read(addressReg.Read()));
 		ChangeZeroFlag(destinationReg.Read() == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1342,7 +1359,7 @@ namespace SHG
 
 	void CPU::OR_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		destinationReg.Write(destinationReg.Read() | memoryManagementUnit.Read(addressReg.Read()));
+		destinationReg.Write(destinationReg.Read() | memoryManagementUnit->Read(addressReg.Read()));
 		ChangeZeroFlag(destinationReg.Read() == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1361,7 +1378,7 @@ namespace SHG
 
 	void CPU::CP_R_ADDR_RR(Register8& destinationReg, Register16& addressReg)
 	{
-		uint8_t byteAtAddress = memoryManagementUnit.Read(addressReg.Read());
+		uint8_t byteAtAddress = memoryManagementUnit->Read(addressReg.Read());
 		ChangeHalfCarryFlag(Arithmetic::Is8BitHalfCarryRequired({ destinationReg.Read(), byteAtAddress }, true));
 
 		int result = destinationReg.Read() - byteAtAddress;
@@ -1499,12 +1516,12 @@ namespace SHG
 
 	void CPU::LD_ADDR_FF00_U8_R(Register8& reg)
 	{
-		memoryManagementUnit.Write(0xFF00 + Fetch8(), reg.Read());
+		memoryManagementUnit->Write(0xFF00 + Fetch8(), reg.Read());
 	}
 
 	void CPU::LD_ADDR_FF00_R_R(Register8& addressReg, Register8& sourceReg)
 	{
-		memoryManagementUnit.Write(0xFF00 + addressReg.Read(), sourceReg.Read());
+		memoryManagementUnit->Write(0xFF00 + addressReg.Read(), sourceReg.Read());
 	}
 
 	void CPU::AND_R_U8(Register8& reg)
@@ -1543,7 +1560,7 @@ namespace SHG
 
 	void CPU::LD_ADDR_U16_R(Register8& reg)
 	{
-		memoryManagementUnit.Write(Fetch16(), reg.Read());
+		memoryManagementUnit->Write(Fetch16(), reg.Read());
 	}
 
 	void CPU::XOR_R_U8(Register8& reg)
@@ -1558,12 +1575,12 @@ namespace SHG
 
 	void CPU::LD_R_ADDR_FF00_U8(Register8& reg)
 	{
-		reg.Write(memoryManagementUnit.Read(0xFF00 + Fetch8()));
+		reg.Write(memoryManagementUnit->Read(0xFF00 + Fetch8()));
 	}
 
 	void CPU::LD_R_ADDR_FF00_R(Register8& destinationReg, Register8& addressReg)
 	{
-		destinationReg.Write(memoryManagementUnit.Read(0xFF00 + addressReg.Read()));
+		destinationReg.Write(memoryManagementUnit->Read(0xFF00 + addressReg.Read()));
 	}
 
 	void CPU::DI()
@@ -1601,7 +1618,7 @@ namespace SHG
 
 	void CPU::LD_R_ADDR_U16(Register8& destinationReg)
 	{
-		destinationReg.Write(memoryManagementUnit.Read(Fetch16()));
+		destinationReg.Write(memoryManagementUnit->Read(Fetch16()));
 	}
 
 	void CPU::EI()
@@ -1633,8 +1650,8 @@ namespace SHG
 	void CPU::SLA_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		int result = memoryManagementUnit.Read(address) << 1;
-		memoryManagementUnit.Write(address, result);
+		int result = memoryManagementUnit->Read(address) << 1;
+		memoryManagementUnit->Write(address, result);
 		ChangeZeroFlag(((uint8_t)result) == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1656,10 +1673,10 @@ namespace SHG
 	void CPU::SRA_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
+		uint8_t value = memoryManagementUnit->Read(address);
 		// Shift right while retaining the sign bit (most significant bit)
 		int result = (value >> 1) | (value & 0b10000000);
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 		ChangeZeroFlag(((uint8_t)result) == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1680,10 +1697,10 @@ namespace SHG
 	void CPU::SRL_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t operand = memoryManagementUnit.Read(address);
+		uint8_t operand = memoryManagementUnit->Read(address);
 		uint8_t carry = operand & 1;
 		operand >>= 1;
-		memoryManagementUnit.Write(address, operand);
+		memoryManagementUnit->Write(address, operand);
 		ChangeZeroFlag(operand == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1703,10 +1720,10 @@ namespace SHG
 	void CPU::SWAP_ADDR_RR(Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t byteAtAddress = memoryManagementUnit.Read(address);
+		uint8_t byteAtAddress = memoryManagementUnit->Read(address);
 		uint8_t result = ((byteAtAddress & 0x0F) << 4) | ((byteAtAddress & 0xF0) >> 4);
 		// Swap the low and high nibbles
-		memoryManagementUnit.Write(address, result);
+		memoryManagementUnit->Write(address, result);
 		ChangeZeroFlag(result == 0);
 		ChangeSubtractionFlag(false);
 		ChangeHalfCarryFlag(false);
@@ -1724,7 +1741,7 @@ namespace SHG
 	void CPU::BIT_N_ADDR_RR(uint8_t bitNum, Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
+		uint8_t value = memoryManagementUnit->Read(address);
 		// Clear the zero flag if the bit at 'bitNum' is set, or set the zero flag if the bit at 'bitNum' is not set.
 		ChangeZeroFlag((~value >> bitNum) & 1);
 		ChangeSubtractionFlag(false);
@@ -1739,8 +1756,8 @@ namespace SHG
 	void CPU::RES_N_ADDR_RR(uint8_t bitNum, Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
-		memoryManagementUnit.Write(address, (value) & ~(1 << bitNum));
+		uint8_t value = memoryManagementUnit->Read(address);
+		memoryManagementUnit->Write(address, (value) & ~(1 << bitNum));
 	}
 
 	void CPU::SET_N_R(uint8_t bitNum, Register8& reg)
@@ -1751,56 +1768,56 @@ namespace SHG
 	void CPU::SET_N_ADDR_RR(uint8_t bitNum, Register16& addressReg)
 	{
 		uint16_t address = addressReg.Read();
-		uint8_t value = memoryManagementUnit.Read(address);
-		memoryManagementUnit.Write(address, (value) | (1 << bitNum));
+		uint8_t value = memoryManagementUnit->Read(address);
+		memoryManagementUnit->Write(address, (value) | (1 << bitNum));
 	}
 
 	void CPU::Execute00() { NOP(); }
-	void CPU::Execute01() { LD_RR_U16(GetRegisterBC()); }
-	void CPU::Execute02() { LD_ADDR_RR_R(GetRegisterBC(), GetRegisterA()); }
-	void CPU::Execute03() { INC_RR(GetRegisterBC()); }
+	void CPU::Execute01() { LD_RR_U16(regBC); }
+	void CPU::Execute02() { LD_ADDR_RR_R(regBC, GetRegisterA()); }
+	void CPU::Execute03() { INC_RR(regBC); }
 	void CPU::Execute04() { INC_R(GetRegisterB()); }
 	void CPU::Execute05() { DEC_R(GetRegisterB()); }
 	void CPU::Execute06() { LD_R_U8(GetRegisterB()); }
 	void CPU::Execute07() { RLCA(); }
 	void CPU::Execute08() { LD_ADDR_U16_RR(stackPointer); }
-	void CPU::Execute09() { ADD_RR_RR(GetRegisterHL(), GetRegisterBC()); }
-	void CPU::Execute0A() { LD_R_ADDR_RR(GetRegisterA(), GetRegisterBC()); }
-	void CPU::Execute0B() { DEC_RR(GetRegisterBC()); }
+	void CPU::Execute09() { ADD_RR_RR(regHL, regBC); }
+	void CPU::Execute0A() { LD_R_ADDR_RR(GetRegisterA(), regBC); }
+	void CPU::Execute0B() { DEC_RR(regBC); }
 	void CPU::Execute0C() { INC_R(GetRegisterC()); }
 	void CPU::Execute0D() { DEC_R(GetRegisterC()); }
 	void CPU::Execute0E() { LD_R_U8(GetRegisterC()); }
 	void CPU::Execute0F() { RRCA(); }
 
 	void CPU::Execute10() { STOP(); }
-	void CPU::Execute11() { LD_RR_U16(GetRegisterDE()); }
-	void CPU::Execute12() { LD_ADDR_RR_R(GetRegisterDE(), GetRegisterA()); }
-	void CPU::Execute13() { INC_RR(GetRegisterDE()); }
+	void CPU::Execute11() { LD_RR_U16(regDE); }
+	void CPU::Execute12() { LD_ADDR_RR_R(regDE, GetRegisterA()); }
+	void CPU::Execute13() { INC_RR(regDE); }
 	void CPU::Execute14() { INC_R(GetRegisterD()); }
 	void CPU::Execute15() { DEC_R(GetRegisterD()); }
 	void CPU::Execute16() { LD_R_U8(GetRegisterD()); }
 	void CPU::Execute17() { RLA(); }
 	void CPU::Execute18() { JR_I8(); }
-	void CPU::Execute19() { ADD_RR_RR(GetRegisterHL(), GetRegisterDE()); }
-	void CPU::Execute1A() { LD_R_ADDR_RR(GetRegisterA(), GetRegisterDE()); }
-	void CPU::Execute1B() { DEC_RR(GetRegisterDE()); }
+	void CPU::Execute19() { ADD_RR_RR(regHL, regDE); }
+	void CPU::Execute1A() { LD_R_ADDR_RR(GetRegisterA(), regDE); }
+	void CPU::Execute1B() { DEC_RR(regDE); }
 	void CPU::Execute1C() { INC_R(GetRegisterE()); }
 	void CPU::Execute1D() { DEC_R(GetRegisterE()); }
 	void CPU::Execute1E() { LD_R_U8(GetRegisterE()); }
 	void CPU::Execute1F() { RRA(); }
 
 	void CPU::Execute20() { JR_I8(!GetZeroFlag()); }
-	void CPU::Execute21() { LD_RR_U16(GetRegisterHL()); }
-	void CPU::Execute22() { LD_ADDR_RR_INC_R(GetRegisterHL(), GetRegisterA()); }
-	void CPU::Execute23() { INC_RR(GetRegisterHL()); }
+	void CPU::Execute21() { LD_RR_U16(regHL); }
+	void CPU::Execute22() { LD_ADDR_RR_INC_R(regHL, GetRegisterA()); }
+	void CPU::Execute23() { INC_RR(regHL); }
 	void CPU::Execute24() { INC_R(GetRegisterH()); }
 	void CPU::Execute25() { DEC_R(GetRegisterH()); }
 	void CPU::Execute26() { LD_R_U8(GetRegisterH()); }
 	void CPU::Execute27() { DAA(); }
 	void CPU::Execute28() { JR_I8(GetZeroFlag()); }
-	void CPU::Execute29() { ADD_RR_RR(GetRegisterHL(), GetRegisterHL()); }
-	void CPU::Execute2A() { LD_R_ADDR_RR_INC(GetRegisterA(), GetRegisterHL()); }
-	void CPU::Execute2B() { DEC_RR(GetRegisterHL()); }
+	void CPU::Execute29() { ADD_RR_RR(regHL, regHL); }
+	void CPU::Execute2A() { LD_R_ADDR_RR_INC(GetRegisterA(), regHL); }
+	void CPU::Execute2B() { DEC_RR(regHL); }
 	void CPU::Execute2C() { INC_R(GetRegisterL()); }
 	void CPU::Execute2D() { DEC_R(GetRegisterL()); }
 	void CPU::Execute2E() { LD_R_U8(GetRegisterL()); }
@@ -1808,15 +1825,15 @@ namespace SHG
 
 	void CPU::Execute30() { JR_I8(!GetCarryFlag()); }
 	void CPU::Execute31() { LD_RR_U16(stackPointer); }
-	void CPU::Execute32() { LD_ADDR_RR_DEC_R(GetRegisterHL(), GetRegisterA()); }
+	void CPU::Execute32() { LD_ADDR_RR_DEC_R(regHL, GetRegisterA()); }
 	void CPU::Execute33() { INC_RR(stackPointer); }
-	void CPU::Execute34() { INC_ADDR_RR(GetRegisterHL()); }
-	void CPU::Execute35() { DEC_ADDR_RR(GetRegisterHL()); }
-	void CPU::Execute36() { LD_ADDR_RR_U8(GetRegisterHL()); }
+	void CPU::Execute34() { INC_ADDR_RR(regHL); }
+	void CPU::Execute35() { DEC_ADDR_RR(regHL); }
+	void CPU::Execute36() { LD_ADDR_RR_U8(regHL); }
 	void CPU::Execute37() { SCF(); }
 	void CPU::Execute38() { JR_I8(GetCarryFlag()); }
-	void CPU::Execute39() { ADD_RR_RR(GetRegisterHL(), stackPointer); }
-	void CPU::Execute3A() { LD_R_ADDR_RR_DEC(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute39() { ADD_RR_RR(regHL, stackPointer); }
+	void CPU::Execute3A() { LD_R_ADDR_RR_DEC(GetRegisterA(), regHL); }
 	void CPU::Execute3B() { DEC_RR(stackPointer); }
 	void CPU::Execute3C() { INC_R(GetRegisterA()); }
 	void CPU::Execute3D() { DEC_R(GetRegisterA()); }
@@ -1829,7 +1846,7 @@ namespace SHG
 	void CPU::Execute43() { LD_R_R(GetRegisterB(), GetRegisterE()); }
 	void CPU::Execute44() { LD_R_R(GetRegisterB(), GetRegisterH()); }
 	void CPU::Execute45() { LD_R_R(GetRegisterB(), GetRegisterL()); }
-	void CPU::Execute46() { LD_R_ADDR_RR(GetRegisterB(), GetRegisterHL()); }
+	void CPU::Execute46() { LD_R_ADDR_RR(GetRegisterB(), regHL); }
 	void CPU::Execute47() { LD_R_R(GetRegisterB(), GetRegisterA()); }
 	void CPU::Execute48() { LD_R_R(GetRegisterC(), GetRegisterB()); }
 	void CPU::Execute49() { LD_R_R(GetRegisterC(), GetRegisterC()); }
@@ -1837,7 +1854,7 @@ namespace SHG
 	void CPU::Execute4B() { LD_R_R(GetRegisterC(), GetRegisterE()); }
 	void CPU::Execute4C() { LD_R_R(GetRegisterC(), GetRegisterH()); }
 	void CPU::Execute4D() { LD_R_R(GetRegisterC(), GetRegisterL()); }
-	void CPU::Execute4E() { LD_R_ADDR_RR(GetRegisterC(), GetRegisterHL()); }
+	void CPU::Execute4E() { LD_R_ADDR_RR(GetRegisterC(), regHL); }
 	void CPU::Execute4F() { LD_R_R(GetRegisterC(), GetRegisterA()); }
 
 	void CPU::Execute50() { LD_R_R(GetRegisterD(), GetRegisterB()); }
@@ -1846,7 +1863,7 @@ namespace SHG
 	void CPU::Execute53() { LD_R_R(GetRegisterD(), GetRegisterE()); }
 	void CPU::Execute54() { LD_R_R(GetRegisterD(), GetRegisterH()); }
 	void CPU::Execute55() { LD_R_R(GetRegisterD(), GetRegisterL()); }
-	void CPU::Execute56() { LD_R_ADDR_RR(GetRegisterD(), GetRegisterHL()); }
+	void CPU::Execute56() { LD_R_ADDR_RR(GetRegisterD(), regHL); }
 	void CPU::Execute57() { LD_R_R(GetRegisterD(), GetRegisterA()); }
 	void CPU::Execute58() { LD_R_R(GetRegisterE(), GetRegisterB()); }
 	void CPU::Execute59() { LD_R_R(GetRegisterE(), GetRegisterC()); }
@@ -1854,7 +1871,7 @@ namespace SHG
 	void CPU::Execute5B() { LD_R_R(GetRegisterE(), GetRegisterE()); }
 	void CPU::Execute5C() { LD_R_R(GetRegisterE(), GetRegisterH()); }
 	void CPU::Execute5D() { LD_R_R(GetRegisterE(), GetRegisterL()); }
-	void CPU::Execute5E() { LD_R_ADDR_RR(GetRegisterE(), GetRegisterHL()); }
+	void CPU::Execute5E() { LD_R_ADDR_RR(GetRegisterE(), regHL); }
 	void CPU::Execute5F() { LD_R_R(GetRegisterE(), GetRegisterA()); }
 
 	void CPU::Execute60() { LD_R_R(GetRegisterH(), GetRegisterB()); }
@@ -1863,7 +1880,7 @@ namespace SHG
 	void CPU::Execute63() { LD_R_R(GetRegisterH(), GetRegisterE()); }
 	void CPU::Execute64() { LD_R_R(GetRegisterH(), GetRegisterH()); }
 	void CPU::Execute65() { LD_R_R(GetRegisterH(), GetRegisterL()); }
-	void CPU::Execute66() { LD_R_ADDR_RR(GetRegisterH(), GetRegisterHL()); }
+	void CPU::Execute66() { LD_R_ADDR_RR(GetRegisterH(), regHL); }
 	void CPU::Execute67() { LD_R_R(GetRegisterH(), GetRegisterA()); }
 	void CPU::Execute68() { LD_R_R(GetRegisterL(), GetRegisterB()); }
 	void CPU::Execute69() { LD_R_R(GetRegisterL(), GetRegisterC()); }
@@ -1871,24 +1888,24 @@ namespace SHG
 	void CPU::Execute6B() { LD_R_R(GetRegisterL(), GetRegisterE()); }
 	void CPU::Execute6C() { LD_R_R(GetRegisterL(), GetRegisterH()); }
 	void CPU::Execute6D() { LD_R_R(GetRegisterL(), GetRegisterL()); }
-	void CPU::Execute6E() { LD_R_ADDR_RR(GetRegisterL(), GetRegisterHL()); }
+	void CPU::Execute6E() { LD_R_ADDR_RR(GetRegisterL(), regHL); }
 	void CPU::Execute6F() { LD_R_R(GetRegisterL(), GetRegisterA()); }
 
-	void CPU::Execute70() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterB()); }
-	void CPU::Execute71() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterC()); }
-	void CPU::Execute72() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterD()); }
-	void CPU::Execute73() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterE()); }
-	void CPU::Execute74() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterH()); }
-	void CPU::Execute75() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterL()); }
+	void CPU::Execute70() { LD_ADDR_RR_R(regHL, GetRegisterB()); }
+	void CPU::Execute71() { LD_ADDR_RR_R(regHL, GetRegisterC()); }
+	void CPU::Execute72() { LD_ADDR_RR_R(regHL, GetRegisterD()); }
+	void CPU::Execute73() { LD_ADDR_RR_R(regHL, GetRegisterE()); }
+	void CPU::Execute74() { LD_ADDR_RR_R(regHL, GetRegisterH()); }
+	void CPU::Execute75() { LD_ADDR_RR_R(regHL, GetRegisterL()); }
 	void CPU::Execute76() { HALT(); }
-	void CPU::Execute77() { LD_ADDR_RR_R(GetRegisterHL(), GetRegisterA()); }
+	void CPU::Execute77() { LD_ADDR_RR_R(regHL, GetRegisterA()); }
 	void CPU::Execute78() { LD_R_R(GetRegisterA(), GetRegisterB()); }
 	void CPU::Execute79() { LD_R_R(GetRegisterA(), GetRegisterC()); }
 	void CPU::Execute7A() { LD_R_R(GetRegisterA(), GetRegisterD()); }
 	void CPU::Execute7B() { LD_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::Execute7C() { LD_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::Execute7D() { LD_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::Execute7E() { LD_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute7E() { LD_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::Execute7F() { LD_R_R(GetRegisterA(), GetRegisterA()); }
 
 	void CPU::Execute80() { ADD_R_R(GetRegisterA(), GetRegisterB()); }
@@ -1897,7 +1914,7 @@ namespace SHG
 	void CPU::Execute83() { ADD_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::Execute84() { ADD_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::Execute85() { ADD_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::Execute86() { ADD_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute86() { ADD_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::Execute87() { ADD_R_R(GetRegisterA(), GetRegisterA()); }
 	void CPU::Execute88() { ADC_R_R(GetRegisterA(), GetRegisterB()); }
 	void CPU::Execute89() { ADC_R_R(GetRegisterA(), GetRegisterC()); }
@@ -1905,7 +1922,7 @@ namespace SHG
 	void CPU::Execute8B() { ADC_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::Execute8C() { ADC_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::Execute8D() { ADC_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::Execute8E() { ADC_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute8E() { ADC_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::Execute8F() { ADC_R_R(GetRegisterA(), GetRegisterA()); }
 
 	void CPU::Execute90() { SUB_R_R(GetRegisterA(), GetRegisterB()); }
@@ -1914,7 +1931,7 @@ namespace SHG
 	void CPU::Execute93() { SUB_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::Execute94() { SUB_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::Execute95() { SUB_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::Execute96() { SUB_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute96() { SUB_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::Execute97() { SUB_R_R(GetRegisterA(), GetRegisterA()); }
 	void CPU::Execute98() { SBC_R_R(GetRegisterA(), GetRegisterB()); }
 	void CPU::Execute99() { SBC_R_R(GetRegisterA(), GetRegisterC()); }
@@ -1922,7 +1939,7 @@ namespace SHG
 	void CPU::Execute9B() { SBC_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::Execute9C() { SBC_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::Execute9D() { SBC_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::Execute9E() { SBC_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::Execute9E() { SBC_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::Execute9F() { SBC_R_R(GetRegisterA(), GetRegisterA()); }
 
 	void CPU::ExecuteA0() { AND_R_R(GetRegisterA(), GetRegisterB()); }
@@ -1931,7 +1948,7 @@ namespace SHG
 	void CPU::ExecuteA3() { AND_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::ExecuteA4() { AND_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::ExecuteA5() { AND_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::ExecuteA6() { AND_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::ExecuteA6() { AND_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::ExecuteA7() { AND_R_R(GetRegisterA(), GetRegisterA()); }
 	void CPU::ExecuteA8() { XOR_R_R(GetRegisterA(), GetRegisterB()); }
 	void CPU::ExecuteA9() { XOR_R_R(GetRegisterA(), GetRegisterC()); }
@@ -1939,7 +1956,7 @@ namespace SHG
 	void CPU::ExecuteAB() { XOR_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::ExecuteAC() { XOR_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::ExecuteAD() { XOR_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::ExecuteAE() { XOR_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::ExecuteAE() { XOR_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::ExecuteAF() { XOR_R_R(GetRegisterA(), GetRegisterA()); }
 
 	void CPU::ExecuteB0() { OR_R_R(GetRegisterA(), GetRegisterB()); }
@@ -1948,7 +1965,7 @@ namespace SHG
 	void CPU::ExecuteB3() { OR_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::ExecuteB4() { OR_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::ExecuteB5() { OR_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::ExecuteB6() { OR_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::ExecuteB6() { OR_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::ExecuteB7() { OR_R_R(GetRegisterA(), GetRegisterA()); }
 	void CPU::ExecuteB8() { CP_R_R(GetRegisterA(), GetRegisterB()); }
 	void CPU::ExecuteB9() { CP_R_R(GetRegisterA(), GetRegisterC()); }
@@ -1956,15 +1973,15 @@ namespace SHG
 	void CPU::ExecuteBB() { CP_R_R(GetRegisterA(), GetRegisterE()); }
 	void CPU::ExecuteBC() { CP_R_R(GetRegisterA(), GetRegisterH()); }
 	void CPU::ExecuteBD() { CP_R_R(GetRegisterA(), GetRegisterL()); }
-	void CPU::ExecuteBE() { CP_R_ADDR_RR(GetRegisterA(), GetRegisterHL()); }
+	void CPU::ExecuteBE() { CP_R_ADDR_RR(GetRegisterA(), regHL); }
 	void CPU::ExecuteBF() { CP_R_R(GetRegisterA(), GetRegisterA()); }
 
 	void CPU::ExecuteC0() { RET(!GetZeroFlag()); }
-	void CPU::ExecuteC1() { POP_RR(GetRegisterBC()); }
+	void CPU::ExecuteC1() { POP_RR(regBC); }
 	void CPU::ExecuteC2() { JP_U16(!GetZeroFlag()); }
 	void CPU::ExecuteC3() { JP_U16(); }
 	void CPU::ExecuteC4() { CALL_U16(!GetZeroFlag()); }
-	void CPU::ExecuteC5() { PUSH_RR(GetRegisterBC()); }
+	void CPU::ExecuteC5() { PUSH_RR(regBC); }
 	void CPU::ExecuteC6() { ADD_R_U8(GetRegisterA()); }
 	void CPU::ExecuteC7() { RST(0x00); }
 	void CPU::ExecuteC8() { RET(GetZeroFlag()); }
@@ -1976,10 +1993,10 @@ namespace SHG
 	void CPU::ExecuteCF() { RST(0x08); }
 
 	void CPU::ExecuteD0() { RET(!GetCarryFlag()); }
-	void CPU::ExecuteD1() { POP_RR(GetRegisterDE()); }
+	void CPU::ExecuteD1() { POP_RR(regDE); }
 	void CPU::ExecuteD2() { JP_U16(!GetCarryFlag()); }
 	void CPU::ExecuteD4() { CALL_U16(!GetCarryFlag()); }
-	void CPU::ExecuteD5() { PUSH_RR(GetRegisterDE()); }
+	void CPU::ExecuteD5() { PUSH_RR(regDE); }
 	void CPU::ExecuteD6() { SUB_R_U8(GetRegisterA()); }
 	void CPU::ExecuteD7() { RST(0x10); }
 	void CPU::ExecuteD8() { RET(GetCarryFlag()); }
@@ -1990,13 +2007,13 @@ namespace SHG
 	void CPU::ExecuteDF() { RST(0x18); }
 
 	void CPU::ExecuteE0() { LD_ADDR_FF00_U8_R(GetRegisterA()); }
-	void CPU::ExecuteE1() { POP_RR(GetRegisterHL()); }
+	void CPU::ExecuteE1() { POP_RR(regHL); }
 	void CPU::ExecuteE2() { LD_ADDR_FF00_R_R(GetRegisterC(), GetRegisterA()); }
-	void CPU::ExecuteE5() { PUSH_RR(GetRegisterHL()); }
+	void CPU::ExecuteE5() { PUSH_RR(regHL); }
 	void CPU::ExecuteE6() { AND_R_U8(GetRegisterA()); }
 	void CPU::ExecuteE7() { RST(0x20); }
 	void CPU::ExecuteE8() { ADD_RR_I8(stackPointer); }
-	void CPU::ExecuteE9() { JP_RR(GetRegisterHL()); }
+	void CPU::ExecuteE9() { JP_RR(regHL); }
 	void CPU::ExecuteEA() { LD_ADDR_U16_R(GetRegisterA()); }
 	void CPU::ExecuteEE() { XOR_R_U8(GetRegisterA()); }
 	void CPU::ExecuteEF() { RST(0x28); }
@@ -2005,11 +2022,11 @@ namespace SHG
 	void CPU::ExecuteF1() { POP_AF(); }
 	void CPU::ExecuteF2() { LD_R_ADDR_FF00_R(GetRegisterA(), GetRegisterC()); }
 	void CPU::ExecuteF3() { DI(); }
-	void CPU::ExecuteF5() { PUSH_RR(GetRegisterAF()); }
+	void CPU::ExecuteF5() { PUSH_RR(regAF); }
 	void CPU::ExecuteF6() { OR_R_U8(GetRegisterA()); }
 	void CPU::ExecuteF7() { RST(0x30); }
-	void CPU::ExecuteF8() { LD_RR_RR_I8(GetRegisterHL(), stackPointer); }
-	void CPU::ExecuteF9() { LD_RR_RR(stackPointer, GetRegisterHL()); }
+	void CPU::ExecuteF8() { LD_RR_RR_I8(regHL, stackPointer); }
+	void CPU::ExecuteF9() { LD_RR_RR(stackPointer, regHL); }
 	void CPU::ExecuteFA() { LD_R_ADDR_U16(GetRegisterA()); }
 	void CPU::ExecuteFB() { EI(); }
 	void CPU::ExecuteFE() { CP_R_U8(GetRegisterA()); }
@@ -2021,7 +2038,7 @@ namespace SHG
 	void CPU::ExecuteCB03() { RLC_R(GetRegisterE()); }
 	void CPU::ExecuteCB04() { RLC_R(GetRegisterH()); }
 	void CPU::ExecuteCB05() { RLC_R(GetRegisterL()); }
-	void CPU::ExecuteCB06() { RLC_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB06() { RLC_ADDR_RR(regHL); }
 	void CPU::ExecuteCB07() { RLC_R(GetRegisterA()); }
 	void CPU::ExecuteCB08() { RRC_R(GetRegisterB()); }
 	void CPU::ExecuteCB09() { RRC_R(GetRegisterC()); }
@@ -2029,7 +2046,7 @@ namespace SHG
 	void CPU::ExecuteCB0B() { RRC_R(GetRegisterE()); }
 	void CPU::ExecuteCB0C() { RRC_R(GetRegisterH()); }
 	void CPU::ExecuteCB0D() { RRC_R(GetRegisterL()); }
-	void CPU::ExecuteCB0E() { RRC_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB0E() { RRC_ADDR_RR(regHL); }
 	void CPU::ExecuteCB0F() { RRC_R(GetRegisterA()); }
 
 	void CPU::ExecuteCB10() { RL_R(GetRegisterB()); }
@@ -2038,7 +2055,7 @@ namespace SHG
 	void CPU::ExecuteCB13() { RL_R(GetRegisterE()); }
 	void CPU::ExecuteCB14() { RL_R(GetRegisterH()); }
 	void CPU::ExecuteCB15() { RL_R(GetRegisterL()); }
-	void CPU::ExecuteCB16() { RL_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB16() { RL_ADDR_RR(regHL); }
 	void CPU::ExecuteCB17() { RL_R(GetRegisterA()); }
 	void CPU::ExecuteCB18() { RR_R(GetRegisterB()); }
 	void CPU::ExecuteCB19() { RR_R(GetRegisterC()); }
@@ -2046,7 +2063,7 @@ namespace SHG
 	void CPU::ExecuteCB1B() { RR_R(GetRegisterE()); }
 	void CPU::ExecuteCB1C() { RR_R(GetRegisterH()); }
 	void CPU::ExecuteCB1D() { RR_R(GetRegisterL()); }
-	void CPU::ExecuteCB1E() { RR_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB1E() { RR_ADDR_RR(regHL); }
 	void CPU::ExecuteCB1F() { RR_R(GetRegisterA()); }
 
 	void CPU::ExecuteCB20() { SLA_R(GetRegisterB()); }
@@ -2055,7 +2072,7 @@ namespace SHG
 	void CPU::ExecuteCB23() { SLA_R(GetRegisterE()); }
 	void CPU::ExecuteCB24() { SLA_R(GetRegisterH()); }
 	void CPU::ExecuteCB25() { SLA_R(GetRegisterL()); }
-	void CPU::ExecuteCB26() { SLA_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB26() { SLA_ADDR_RR(regHL); }
 	void CPU::ExecuteCB27() { SLA_R(GetRegisterA()); }
 	void CPU::ExecuteCB28() { SRA_R(GetRegisterB()); }
 	void CPU::ExecuteCB29() { SRA_R(GetRegisterC()); }
@@ -2063,7 +2080,7 @@ namespace SHG
 	void CPU::ExecuteCB2B() { SRA_R(GetRegisterE()); }
 	void CPU::ExecuteCB2C() { SRA_R(GetRegisterH()); }
 	void CPU::ExecuteCB2D() { SRA_R(GetRegisterL()); }
-	void CPU::ExecuteCB2E() { SRA_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB2E() { SRA_ADDR_RR(regHL); }
 	void CPU::ExecuteCB2F() { SRA_R(GetRegisterA()); }
 
 	void CPU::ExecuteCB30() { SWAP_R(GetRegisterB()); }
@@ -2072,7 +2089,7 @@ namespace SHG
 	void CPU::ExecuteCB33() { SWAP_R(GetRegisterE()); }
 	void CPU::ExecuteCB34() { SWAP_R(GetRegisterH()); }
 	void CPU::ExecuteCB35() { SWAP_R(GetRegisterL()); }
-	void CPU::ExecuteCB36() { SWAP_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB36() { SWAP_ADDR_RR(regHL); }
 	void CPU::ExecuteCB37() { SWAP_R(GetRegisterA()); }
 	void CPU::ExecuteCB38() { SRL_R(GetRegisterB()); }
 	void CPU::ExecuteCB39() { SRL_R(GetRegisterC()); }
@@ -2080,7 +2097,7 @@ namespace SHG
 	void CPU::ExecuteCB3B() { SRL_R(GetRegisterE()); }
 	void CPU::ExecuteCB3C() { SRL_R(GetRegisterH()); }
 	void CPU::ExecuteCB3D() { SRL_R(GetRegisterL()); }
-	void CPU::ExecuteCB3E() { SRL_ADDR_RR(GetRegisterHL()); }
+	void CPU::ExecuteCB3E() { SRL_ADDR_RR(regHL); }
 	void CPU::ExecuteCB3F() { SRL_R(GetRegisterA()); }
 
 	void CPU::ExecuteCB40() { BIT_N_R(0, GetRegisterB()); }
@@ -2089,7 +2106,7 @@ namespace SHG
 	void CPU::ExecuteCB43() { BIT_N_R(0, GetRegisterE()); }
 	void CPU::ExecuteCB44() { BIT_N_R(0, GetRegisterH()); }
 	void CPU::ExecuteCB45() { BIT_N_R(0, GetRegisterL()); }
-	void CPU::ExecuteCB46() { BIT_N_ADDR_RR(0, GetRegisterHL()); }
+	void CPU::ExecuteCB46() { BIT_N_ADDR_RR(0, regHL); }
 	void CPU::ExecuteCB47() { BIT_N_R(0, GetRegisterA()); }
 	void CPU::ExecuteCB48() { BIT_N_R(1, GetRegisterB()); }
 	void CPU::ExecuteCB49() { BIT_N_R(1, GetRegisterC()); }
@@ -2097,7 +2114,7 @@ namespace SHG
 	void CPU::ExecuteCB4B() { BIT_N_R(1, GetRegisterE()); }
 	void CPU::ExecuteCB4C() { BIT_N_R(1, GetRegisterH()); }
 	void CPU::ExecuteCB4D() { BIT_N_R(1, GetRegisterL()); }
-	void CPU::ExecuteCB4E() { BIT_N_ADDR_RR(1, GetRegisterHL()); }
+	void CPU::ExecuteCB4E() { BIT_N_ADDR_RR(1, regHL); }
 	void CPU::ExecuteCB4F() { BIT_N_R(1, GetRegisterA()); }
 
 	void CPU::ExecuteCB50() { BIT_N_R(2, GetRegisterB()); }
@@ -2106,7 +2123,7 @@ namespace SHG
 	void CPU::ExecuteCB53() { BIT_N_R(2, GetRegisterE()); }
 	void CPU::ExecuteCB54() { BIT_N_R(2, GetRegisterH()); }
 	void CPU::ExecuteCB55() { BIT_N_R(2, GetRegisterL()); }
-	void CPU::ExecuteCB56() { BIT_N_ADDR_RR(2, GetRegisterHL()); }
+	void CPU::ExecuteCB56() { BIT_N_ADDR_RR(2, regHL); }
 	void CPU::ExecuteCB57() { BIT_N_R(2, GetRegisterA()); }
 	void CPU::ExecuteCB58() { BIT_N_R(3, GetRegisterB()); }
 	void CPU::ExecuteCB59() { BIT_N_R(3, GetRegisterC()); }
@@ -2114,7 +2131,7 @@ namespace SHG
 	void CPU::ExecuteCB5B() { BIT_N_R(3, GetRegisterE()); }
 	void CPU::ExecuteCB5C() { BIT_N_R(3, GetRegisterH()); }
 	void CPU::ExecuteCB5D() { BIT_N_R(3, GetRegisterL()); }
-	void CPU::ExecuteCB5E() { BIT_N_ADDR_RR(3, GetRegisterHL()); }
+	void CPU::ExecuteCB5E() { BIT_N_ADDR_RR(3, regHL); }
 	void CPU::ExecuteCB5F() { BIT_N_R(3, GetRegisterA()); }
 
 	void CPU::ExecuteCB60() { BIT_N_R(4, GetRegisterB()); }
@@ -2123,7 +2140,7 @@ namespace SHG
 	void CPU::ExecuteCB63() { BIT_N_R(4, GetRegisterE()); }
 	void CPU::ExecuteCB64() { BIT_N_R(4, GetRegisterH()); }
 	void CPU::ExecuteCB65() { BIT_N_R(4, GetRegisterL()); }
-	void CPU::ExecuteCB66() { BIT_N_ADDR_RR(4, GetRegisterHL()); }
+	void CPU::ExecuteCB66() { BIT_N_ADDR_RR(4, regHL); }
 	void CPU::ExecuteCB67() { BIT_N_R(4, GetRegisterA()); }
 	void CPU::ExecuteCB68() { BIT_N_R(5, GetRegisterB()); }
 	void CPU::ExecuteCB69() { BIT_N_R(5, GetRegisterC()); }
@@ -2131,7 +2148,7 @@ namespace SHG
 	void CPU::ExecuteCB6B() { BIT_N_R(5, GetRegisterE()); }
 	void CPU::ExecuteCB6C() { BIT_N_R(5, GetRegisterH()); }
 	void CPU::ExecuteCB6D() { BIT_N_R(5, GetRegisterL()); }
-	void CPU::ExecuteCB6E() { BIT_N_ADDR_RR(5, GetRegisterHL()); }
+	void CPU::ExecuteCB6E() { BIT_N_ADDR_RR(5, regHL); }
 	void CPU::ExecuteCB6F() { BIT_N_R(5, GetRegisterA()); }
 
 	void CPU::ExecuteCB70() { BIT_N_R(6, GetRegisterB()); }
@@ -2140,7 +2157,7 @@ namespace SHG
 	void CPU::ExecuteCB73() { BIT_N_R(6, GetRegisterE()); }
 	void CPU::ExecuteCB74() { BIT_N_R(6, GetRegisterH()); }
 	void CPU::ExecuteCB75() { BIT_N_R(6, GetRegisterL()); }
-	void CPU::ExecuteCB76() { BIT_N_ADDR_RR(6, GetRegisterHL()); }
+	void CPU::ExecuteCB76() { BIT_N_ADDR_RR(6, regHL); }
 	void CPU::ExecuteCB77() { BIT_N_R(6, GetRegisterA()); }
 	void CPU::ExecuteCB78() { BIT_N_R(7, GetRegisterB()); }
 	void CPU::ExecuteCB79() { BIT_N_R(7, GetRegisterC()); }
@@ -2148,7 +2165,7 @@ namespace SHG
 	void CPU::ExecuteCB7B() { BIT_N_R(7, GetRegisterE()); }
 	void CPU::ExecuteCB7C() { BIT_N_R(7, GetRegisterH()); }
 	void CPU::ExecuteCB7D() { BIT_N_R(7, GetRegisterL()); }
-	void CPU::ExecuteCB7E() { BIT_N_ADDR_RR(7, GetRegisterHL()); }
+	void CPU::ExecuteCB7E() { BIT_N_ADDR_RR(7, regHL); }
 	void CPU::ExecuteCB7F() { BIT_N_R(7, GetRegisterA()); }
 
 	void CPU::ExecuteCB80() { RES_N_R(0, GetRegisterB()); }
@@ -2157,7 +2174,7 @@ namespace SHG
 	void CPU::ExecuteCB83() { RES_N_R(0, GetRegisterE()); }
 	void CPU::ExecuteCB84() { RES_N_R(0, GetRegisterH()); }
 	void CPU::ExecuteCB85() { RES_N_R(0, GetRegisterL()); }
-	void CPU::ExecuteCB86() { RES_N_ADDR_RR(0, GetRegisterHL()); }
+	void CPU::ExecuteCB86() { RES_N_ADDR_RR(0, regHL); }
 	void CPU::ExecuteCB87() { RES_N_R(0, GetRegisterA()); }
 	void CPU::ExecuteCB88() { RES_N_R(1, GetRegisterB()); }
 	void CPU::ExecuteCB89() { RES_N_R(1, GetRegisterC()); }
@@ -2165,7 +2182,7 @@ namespace SHG
 	void CPU::ExecuteCB8B() { RES_N_R(1, GetRegisterE()); }
 	void CPU::ExecuteCB8C() { RES_N_R(1, GetRegisterH()); }
 	void CPU::ExecuteCB8D() { RES_N_R(1, GetRegisterL()); }
-	void CPU::ExecuteCB8E() { RES_N_ADDR_RR(1, GetRegisterHL()); }
+	void CPU::ExecuteCB8E() { RES_N_ADDR_RR(1, regHL); }
 	void CPU::ExecuteCB8F() { RES_N_R(1, GetRegisterA()); }
 
 	void CPU::ExecuteCB90() { RES_N_R(2, GetRegisterB()); }
@@ -2174,7 +2191,7 @@ namespace SHG
 	void CPU::ExecuteCB93() { RES_N_R(2, GetRegisterE()); }
 	void CPU::ExecuteCB94() { RES_N_R(2, GetRegisterH()); }
 	void CPU::ExecuteCB95() { RES_N_R(2, GetRegisterL()); }
-	void CPU::ExecuteCB96() { RES_N_ADDR_RR(2, GetRegisterHL()); }
+	void CPU::ExecuteCB96() { RES_N_ADDR_RR(2, regHL); }
 	void CPU::ExecuteCB97() { RES_N_R(2, GetRegisterA()); }
 	void CPU::ExecuteCB98() { RES_N_R(3, GetRegisterB()); }
 	void CPU::ExecuteCB99() { RES_N_R(3, GetRegisterC()); }
@@ -2182,7 +2199,7 @@ namespace SHG
 	void CPU::ExecuteCB9B() { RES_N_R(3, GetRegisterE()); }
 	void CPU::ExecuteCB9C() { RES_N_R(3, GetRegisterH()); }
 	void CPU::ExecuteCB9D() { RES_N_R(3, GetRegisterL()); }
-	void CPU::ExecuteCB9E() { RES_N_ADDR_RR(3, GetRegisterHL()); }
+	void CPU::ExecuteCB9E() { RES_N_ADDR_RR(3, regHL); }
 	void CPU::ExecuteCB9F() { RES_N_R(3, GetRegisterA()); }
 
 	void CPU::ExecuteCBA0() { RES_N_R(4, GetRegisterB()); }
@@ -2191,7 +2208,7 @@ namespace SHG
 	void CPU::ExecuteCBA3() { RES_N_R(4, GetRegisterE()); }
 	void CPU::ExecuteCBA4() { RES_N_R(4, GetRegisterH()); }
 	void CPU::ExecuteCBA5() { RES_N_R(4, GetRegisterL()); }
-	void CPU::ExecuteCBA6() { RES_N_ADDR_RR(4, GetRegisterHL()); }
+	void CPU::ExecuteCBA6() { RES_N_ADDR_RR(4, regHL); }
 	void CPU::ExecuteCBA7() { RES_N_R(4, GetRegisterA()); }
 	void CPU::ExecuteCBA8() { RES_N_R(5, GetRegisterB()); }
 	void CPU::ExecuteCBA9() { RES_N_R(5, GetRegisterC()); }
@@ -2199,7 +2216,7 @@ namespace SHG
 	void CPU::ExecuteCBAB() { RES_N_R(5, GetRegisterE()); }
 	void CPU::ExecuteCBAC() { RES_N_R(5, GetRegisterH()); }
 	void CPU::ExecuteCBAD() { RES_N_R(5, GetRegisterL()); }
-	void CPU::ExecuteCBAE() { RES_N_ADDR_RR(5, GetRegisterHL()); }
+	void CPU::ExecuteCBAE() { RES_N_ADDR_RR(5, regHL); }
 	void CPU::ExecuteCBAF() { RES_N_R(5, GetRegisterA()); }
 
 	void CPU::ExecuteCBB0() { RES_N_R(6, GetRegisterB()); }
@@ -2208,7 +2225,7 @@ namespace SHG
 	void CPU::ExecuteCBB3() { RES_N_R(6, GetRegisterE()); }
 	void CPU::ExecuteCBB4() { RES_N_R(6, GetRegisterH()); }
 	void CPU::ExecuteCBB5() { RES_N_R(6, GetRegisterL()); }
-	void CPU::ExecuteCBB6() { RES_N_ADDR_RR(6, GetRegisterHL()); }
+	void CPU::ExecuteCBB6() { RES_N_ADDR_RR(6, regHL); }
 	void CPU::ExecuteCBB7() { RES_N_R(6, GetRegisterA()); }
 	void CPU::ExecuteCBB8() { RES_N_R(7, GetRegisterB()); }
 	void CPU::ExecuteCBB9() { RES_N_R(7, GetRegisterC()); }
@@ -2216,7 +2233,7 @@ namespace SHG
 	void CPU::ExecuteCBBB() { RES_N_R(7, GetRegisterE()); }
 	void CPU::ExecuteCBBC() { RES_N_R(7, GetRegisterH()); }
 	void CPU::ExecuteCBBD() { RES_N_R(7, GetRegisterL()); }
-	void CPU::ExecuteCBBE() { RES_N_ADDR_RR(7, GetRegisterHL()); }
+	void CPU::ExecuteCBBE() { RES_N_ADDR_RR(7, regHL); }
 	void CPU::ExecuteCBBF() { RES_N_R(7, GetRegisterA()); }
 
 	void CPU::ExecuteCBC0() { SET_N_R(0, GetRegisterB()); }
@@ -2225,7 +2242,7 @@ namespace SHG
 	void CPU::ExecuteCBC3() { SET_N_R(0, GetRegisterE()); }
 	void CPU::ExecuteCBC4() { SET_N_R(0, GetRegisterH()); }
 	void CPU::ExecuteCBC5() { SET_N_R(0, GetRegisterL()); }
-	void CPU::ExecuteCBC6() { SET_N_ADDR_RR(0, GetRegisterHL()); }
+	void CPU::ExecuteCBC6() { SET_N_ADDR_RR(0, regHL); }
 	void CPU::ExecuteCBC7() { SET_N_R(0, GetRegisterA()); }
 	void CPU::ExecuteCBC8() { SET_N_R(1, GetRegisterB()); }
 	void CPU::ExecuteCBC9() { SET_N_R(1, GetRegisterC()); }
@@ -2233,7 +2250,7 @@ namespace SHG
 	void CPU::ExecuteCBCB() { SET_N_R(1, GetRegisterE()); }
 	void CPU::ExecuteCBCC() { SET_N_R(1, GetRegisterH()); }
 	void CPU::ExecuteCBCD() { SET_N_R(1, GetRegisterL()); }
-	void CPU::ExecuteCBCE() { SET_N_ADDR_RR(1, GetRegisterHL()); }
+	void CPU::ExecuteCBCE() { SET_N_ADDR_RR(1, regHL); }
 	void CPU::ExecuteCBCF() { SET_N_R(1, GetRegisterA()); }
 
 	void CPU::ExecuteCBD0() { SET_N_R(2, GetRegisterB()); }
@@ -2242,7 +2259,7 @@ namespace SHG
 	void CPU::ExecuteCBD3() { SET_N_R(2, GetRegisterE()); }
 	void CPU::ExecuteCBD4() { SET_N_R(2, GetRegisterH()); }
 	void CPU::ExecuteCBD5() { SET_N_R(2, GetRegisterL()); }
-	void CPU::ExecuteCBD6() { SET_N_ADDR_RR(2, GetRegisterHL()); }
+	void CPU::ExecuteCBD6() { SET_N_ADDR_RR(2, regHL); }
 	void CPU::ExecuteCBD7() { SET_N_R(2, GetRegisterA()); }
 	void CPU::ExecuteCBD8() { SET_N_R(3, GetRegisterB()); }
 	void CPU::ExecuteCBD9() { SET_N_R(3, GetRegisterC()); }
@@ -2250,7 +2267,7 @@ namespace SHG
 	void CPU::ExecuteCBDB() { SET_N_R(3, GetRegisterE()); }
 	void CPU::ExecuteCBDC() { SET_N_R(3, GetRegisterH()); }
 	void CPU::ExecuteCBDD() { SET_N_R(3, GetRegisterL()); }
-	void CPU::ExecuteCBDE() { SET_N_ADDR_RR(3, GetRegisterHL()); }
+	void CPU::ExecuteCBDE() { SET_N_ADDR_RR(3, regHL); }
 	void CPU::ExecuteCBDF() { SET_N_R(3, GetRegisterA()); }
 
 	void CPU::ExecuteCBE0() { SET_N_R(4, GetRegisterB()); }
@@ -2259,7 +2276,7 @@ namespace SHG
 	void CPU::ExecuteCBE3() { SET_N_R(4, GetRegisterE()); }
 	void CPU::ExecuteCBE4() { SET_N_R(4, GetRegisterH()); }
 	void CPU::ExecuteCBE5() { SET_N_R(4, GetRegisterL()); }
-	void CPU::ExecuteCBE6() { SET_N_ADDR_RR(4, GetRegisterHL()); }
+	void CPU::ExecuteCBE6() { SET_N_ADDR_RR(4, regHL); }
 	void CPU::ExecuteCBE7() { SET_N_R(4, GetRegisterA()); }
 	void CPU::ExecuteCBE8() { SET_N_R(5, GetRegisterB()); }
 	void CPU::ExecuteCBE9() { SET_N_R(5, GetRegisterC()); }
@@ -2267,7 +2284,7 @@ namespace SHG
 	void CPU::ExecuteCBEB() { SET_N_R(5, GetRegisterE()); }
 	void CPU::ExecuteCBEC() { SET_N_R(5, GetRegisterH()); }
 	void CPU::ExecuteCBED() { SET_N_R(5, GetRegisterL()); }
-	void CPU::ExecuteCBEE() { SET_N_ADDR_RR(5, GetRegisterHL()); }
+	void CPU::ExecuteCBEE() { SET_N_ADDR_RR(5, regHL); }
 	void CPU::ExecuteCBEF() { SET_N_R(5, GetRegisterA()); }
 
 	void CPU::ExecuteCBF0() { SET_N_R(6, GetRegisterB()); }
@@ -2276,7 +2293,7 @@ namespace SHG
 	void CPU::ExecuteCBF3() { SET_N_R(6, GetRegisterE()); }
 	void CPU::ExecuteCBF4() { SET_N_R(6, GetRegisterH()); }
 	void CPU::ExecuteCBF5() { SET_N_R(6, GetRegisterL()); }
-	void CPU::ExecuteCBF6() { SET_N_ADDR_RR(6, GetRegisterHL()); }
+	void CPU::ExecuteCBF6() { SET_N_ADDR_RR(6, regHL); }
 	void CPU::ExecuteCBF7() { SET_N_R(6, GetRegisterA()); }
 	void CPU::ExecuteCBF8() { SET_N_R(7, GetRegisterB()); }
 	void CPU::ExecuteCBF9() { SET_N_R(7, GetRegisterC()); }
@@ -2284,6 +2301,6 @@ namespace SHG
 	void CPU::ExecuteCBFB() { SET_N_R(7, GetRegisterE()); }
 	void CPU::ExecuteCBFC() { SET_N_R(7, GetRegisterH()); }
 	void CPU::ExecuteCBFD() { SET_N_R(7, GetRegisterL()); }
-	void CPU::ExecuteCBFE() { SET_N_ADDR_RR(7, GetRegisterHL()); }
+	void CPU::ExecuteCBFE() { SET_N_ADDR_RR(7, regHL); }
 	void CPU::ExecuteCBFF() { SET_N_R(7, GetRegisterA()); }
 }
