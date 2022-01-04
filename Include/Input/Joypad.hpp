@@ -11,7 +11,8 @@ namespace SHG
 	{
 	public:
 		Joypad(InputManager& inputManager, Memory& memoryMap);
-		void LoadControllerMapping(const std::map<KeyCode, GBButton>& mapping);
+		void LoadKeyboardInputMapping(const std::map<KeyCode, GBButton>& mapping);
+		void LoadControllerInputMapping(const std::map<ControllerButtonCode, GBButton>& mapping);
 
 		uint8_t Read() const;
 		void Write(uint8_t value);
@@ -25,9 +26,11 @@ namespace SHG
 		bool IsRightOrAPressed() const;
 
 	private:
-		Memory& memoryMap;
+		Memory* memoryMap;
 
-		std::map<KeyCode, GBButton> controllerMapping;
+		std::map<KeyCode, GBButton> keyboardInputMapping;
+		std::map<ControllerButtonCode, GBButton> controllerInputMapping;
+
 		std::map<GBButton, bool> buttonStates;
 		bool isActionButtonsSelected = false;
 		bool isDirectionButtonsSelected = false;
@@ -35,6 +38,13 @@ namespace SHG
 		void OnKeyPressed(KeyCode keyCode);
 		void OnKeyReleased(KeyCode keyCode);
 		void SetButtonStateWithKeyCode(KeyCode keyCode, bool isPressed);
+
+		void OnControllerButtonPressed(ControllerButtonCode buttonCode);
+		void OnControllerButtonReleased(ControllerButtonCode buttonCode);
+		void SetButtonStateWithControllerButtonCode(ControllerButtonCode buttonCode, bool isPressed);
+
+		void SetButtonState(GBButton button, bool isPressed);
+
 		void ResetButtonStates();
 	};
 }

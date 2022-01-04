@@ -52,6 +52,7 @@ namespace SHG
 		memoryMap.Reset();
 
 		apu.Initialize();
+		inputManager.Initialize();
 
 		isRunning = true;
 		double timeSinceLastFrame = 0;

@@ -6,11 +6,11 @@ namespace SHG
 	{
 		A,
 		B, 
-		Right, 
-		Left, 
-		Up, 
-		Down, 
-		Start,
+		RIGHT, 
+		LEFT, 
+		UP, 
+		DOWN, 
+		START,
 		Select
 	};
 }

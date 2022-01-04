@@ -7,16 +7,28 @@
 
 namespace SHG
 {
-	const std::map<KeyCode, GBButton> DEFAULT_CONTROLLER_MAPPING =
+	const std::map<KeyCode, GBButton> DEFAULT_KEYBOARD_MAPPING =
 	{
-		{KeyCode::D, GBButton::Right},
-		{KeyCode::A, GBButton::Left},
-		{KeyCode::W, GBButton::Up},
-		{KeyCode::S, GBButton::Down},
+		{KeyCode::D, GBButton::RIGHT},
+		{KeyCode::A, GBButton::LEFT},
+		{KeyCode::W, GBButton::UP},
+		{KeyCode::S, GBButton::DOWN},
 		{KeyCode::J, GBButton::A},
 		{KeyCode::K, GBButton::B},
-		{KeyCode::P, GBButton::Start},
+		{KeyCode::P, GBButton::START},
 		{KeyCode::O, GBButton::Select},
+	};
+
+	const std::map<ControllerButtonCode, GBButton> DEFAULT_CONTROLLER_MAPPING =
+	{
+		{ControllerButtonCode::DPAD_RIGHT, GBButton::RIGHT},
+		{ControllerButtonCode::DPAD_LEFT, GBButton::LEFT},
+		{ControllerButtonCode::DPAD_UP, GBButton::UP},
+		{ControllerButtonCode::DPAD_DOWN, GBButton::DOWN},
+		{ControllerButtonCode::ACTION_0, GBButton::A},
+		{ControllerButtonCode::ACTION_1, GBButton::B},
+		{ControllerButtonCode::MENU, GBButton::START},
+		{ControllerButtonCode::SECONDARY_MENU, GBButton::Select}
 	};
 
 	// Joypad Register
@@ -29,21 +41,30 @@ namespace SHG
 	// Bit 1 - Left or B (0 = Pressed)
 	// Bit 0 - Right or A (0 = Pressed)
 
-	Joypad::Joypad(InputManager& inputManager, Memory& memoryMap) : memoryMap(memoryMap)
+	Joypad::Joypad(InputManager& inputManager, Memory& memoryMap) : memoryMap(&memoryMap)
 	{
 		ResetButtonStates();
-		LoadControllerMapping(DEFAULT_CONTROLLER_MAPPING);
+
+		LoadKeyboardInputMapping(DEFAULT_KEYBOARD_MAPPING);
+		LoadControllerInputMapping(DEFAULT_CONTROLLER_MAPPING);
 
 		inputManager.RegisterKeyPressedCallback(std::bind(&Joypad::OnKeyPressed, this, std::placeholders::_1));
 		inputManager.RegisterKeyReleasedCallback(std::bind(&Joypad::OnKeyReleased, this, std::placeholders::_1));
+
+		inputManager.RegisterControllerButtonPressedCallback(std::bind(&Joypad::OnControllerButtonPressed, this, std::placeholders::_1));
+		inputManager.RegisterControllerButtonReleasedCallback(std::bind(&Joypad::OnControllerButtonReleased, this, std::placeholders::_1));
 	}
 
-	void Joypad::LoadControllerMapping(const std::map<KeyCode, GBButton>& mapping)
+	void Joypad::LoadKeyboardInputMapping(const std::map<KeyCode, GBButton>& mapping)
 	{
-		controllerMapping = mapping;
+		keyboardInputMapping = mapping;
 	}
 
-	// TODO: Revisit
+	void Joypad::LoadControllerInputMapping(const std::map<ControllerButtonCode, GBButton>& mapping)
+	{
+		controllerInputMapping = mapping;
+	}
+
 	uint8_t Joypad::Read() const
 	{
 		uint8_t result = 0xCF;
@@ -52,22 +73,25 @@ namespace SHG
 		// otherwise the bit should be 1.
 		if (isDirectionButtonsSelected)
 		{
-			result = !(buttonStates.at(GBButton::Right) && !buttonStates.at(GBButton::Left))
-				| (!(buttonStates.at(GBButton::Left) && !buttonStates.at(GBButton::Right)) << 1)
-				| (!(buttonStates.at(GBButton::Up) && !buttonStates.at(GBButton::Down)) << 2)
-				| (!(buttonStates.at(GBButton::Down) && !buttonStates.at(GBButton::Up)) << 3);
+			// Opposing direction buttons cannot be pressed at the same time.
+			result = !(buttonStates.at(GBButton::RIGHT) && !buttonStates.at(GBButton::LEFT))
+				| (!(buttonStates.at(GBButton::LEFT) && !buttonStates.at(GBButton::RIGHT)) << 1)
+				| (!(buttonStates.at(GBButton::UP) && !buttonStates.at(GBButton::DOWN)) << 2)
+				| (!(buttonStates.at(GBButton::DOWN) && !buttonStates.at(GBButton::UP)) << 3);
 		}
 		else if (isActionButtonsSelected)
 		{
-			result = !buttonStates.at(GBButton::A)
+			result = 
+				!buttonStates.at(GBButton::A)
 				| (!buttonStates.at(GBButton::B) << 1)
 				| (!buttonStates.at(GBButton::Select) << 2)
-				| (!buttonStates.at(GBButton::Start) << 3);
+				| (!buttonStates.at(GBButton::START) << 3);
 		}
 
 		result |= !isDirectionButtonsSelected << 4;
 		result |= !isActionButtonsSelected << 5;
 
+		// The upper two bits are not used.
 		result |= 0b11000000;
 
 		return result;
@@ -100,33 +124,33 @@ namespace SHG
 
 	bool Joypad::IsDownOrStartPressed() const
 	{
-		return buttonStates.at(GBButton::Down) || buttonStates.at(GBButton::Start);
+		return buttonStates.at(GBButton::DOWN) || buttonStates.at(GBButton::START);
 	}
 
 	bool Joypad::IsUpOrSelectPressed() const
 	{
-		return buttonStates.at(GBButton::Up) || buttonStates.at(GBButton::Select);
+		return buttonStates.at(GBButton::UP) || buttonStates.at(GBButton::Select);
 	}
 
 	bool Joypad::IsLeftOrBPressed() const
 	{
-		return buttonStates.at(GBButton::Left) || buttonStates.at(GBButton::B);
+		return buttonStates.at(GBButton::LEFT) || buttonStates.at(GBButton::B);
 	}
 
 	bool Joypad::IsRightOrAPressed() const
 	{
-		return buttonStates.at(GBButton::Right) || buttonStates.at(GBButton::A);
+		return buttonStates.at(GBButton::RIGHT) || buttonStates.at(GBButton::A);
 	}
 
 	void Joypad::ResetButtonStates()
 	{
-		buttonStates[GBButton::Right] = false;
-		buttonStates[GBButton::Left] = false;
-		buttonStates[GBButton::Up] = false;
-		buttonStates[GBButton::Down] = false;
+		buttonStates[GBButton::RIGHT] = false;
+		buttonStates[GBButton::LEFT] = false;
+		buttonStates[GBButton::UP] = false;
+		buttonStates[GBButton::DOWN] = false;
 		buttonStates[GBButton::A] = false;
 		buttonStates[GBButton::B] = false;
-		buttonStates[GBButton::Start] = false;
+		buttonStates[GBButton::START] = false;
 		buttonStates[GBButton::Select] = false;
 	}
 
@@ -140,39 +164,62 @@ namespace SHG
 		SetButtonStateWithKeyCode(keyCode, false);
 	}
 
+	void Joypad::OnControllerButtonPressed(ControllerButtonCode buttonCode)
+	{
+		SetButtonStateWithControllerButtonCode(buttonCode, true);
+	}
+
+	void Joypad::OnControllerButtonReleased(ControllerButtonCode buttonCode)
+	{
+		SetButtonStateWithControllerButtonCode(buttonCode, false);
+	}
+
 	void Joypad::SetButtonStateWithKeyCode(KeyCode key, bool isPressed)
 	{
-		if (controllerMapping.find(key) != controllerMapping.end())
-		{
-			GBButton button = controllerMapping[key];
-			buttonStates[button] = isPressed;
+		if (keyboardInputMapping.find(key) == keyboardInputMapping.end())
+			return;
 
-			// TODO: Revisit
-			if (isPressed)
+		GBButton button = keyboardInputMapping[key];
+		SetButtonState(button, isPressed);
+	}
+
+	void Joypad::SetButtonStateWithControllerButtonCode(ControllerButtonCode buttonCode, bool isPressed)
+	{
+		if (controllerInputMapping.find(buttonCode) == controllerInputMapping.end())
+			return;
+
+		GBButton button = controllerInputMapping[buttonCode];
+		SetButtonState(button, isPressed);
+	}
+
+	void Joypad::SetButtonState(GBButton button, bool isPressed)
+	{
+		buttonStates[button] = isPressed;
+
+		if (isPressed)
+		{
+			if (isDirectionButtonsSelected)
 			{
-				if (isDirectionButtonsSelected)
+				switch (button)
 				{
-					switch (button)
-					{
-					case SHG::GBButton::Right:
-					case SHG::GBButton::Left:
-					case SHG::GBButton::Up:
-					case SHG::GBButton::Down:
-						RequestInterrupt(memoryMap, InterruptType::Joypad);
-						break;
-					}
+				case SHG::GBButton::RIGHT:
+				case SHG::GBButton::LEFT:
+				case SHG::GBButton::UP:
+				case SHG::GBButton::DOWN:
+					RequestInterrupt(*memoryMap, InterruptType::Joypad);
+					break;
 				}
-				else if (isActionButtonsSelected)
+			}
+			else if (isActionButtonsSelected)
+			{
+				switch (button)
 				{
-					switch (button)
-					{
-					case SHG::GBButton::A:
-					case SHG::GBButton::B:
-					case SHG::GBButton::Select:
-					case SHG::GBButton::Start:
-						RequestInterrupt(memoryMap, InterruptType::Joypad);
-						break;
-					}
+				case SHG::GBButton::A:
+				case SHG::GBButton::B:
+				case SHG::GBButton::Select:
+				case SHG::GBButton::START:
+					RequestInterrupt(*memoryMap, InterruptType::Joypad);
+					break;
 				}
 			}
 		}
