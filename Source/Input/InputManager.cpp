@@ -62,8 +62,8 @@ namespace SHG
 		{12, ControllerButtonCode::DPAD_DOWN},
 		{14, ControllerButtonCode::DPAD_RIGHT},
 		{13, ControllerButtonCode::DPAD_LEFT},
-		{6, ControllerButtonCode::MENU},
-		{4, ControllerButtonCode::SECONDARY_MENU},
+		{6, ControllerButtonCode::START},
+		{4, ControllerButtonCode::MENU},
 		{10, ControllerButtonCode::RIGHT_SHOULDER},
 		{9, ControllerButtonCode::LEFT_SHOULDER},
 	};

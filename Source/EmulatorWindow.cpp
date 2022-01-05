@@ -739,7 +739,7 @@ namespace SHG
 		ImGui::EndChild();
 		ImGui::EndGroup();
 	}
-	
+
 	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened)
 	{
 		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
@@ -751,20 +751,92 @@ namespace SHG
 		}
 	}
 
+	const std::array<std::string, 8> GB_BUTTONS = { "A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT" };
+
+	const char* CONTROLLER_BUTTONS[] = 
+	{
+		"A", "B", "X", "Y", "DPAD RIGHT", "DPAD LEFT", 
+		"DPAD UP", "DPAD DOWN", "RIGHT SHOULDER", "LEFT SHOULDER", 
+		"START", "MENU"
+	};
+
+	const char* KEYS[] =
+	{
+		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A",
+		"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
+		"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+		"RIGHT ARROW", "LEFT ARROW", "UP ARROW", "DOWN ARROW"
+	};
+
 	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad)
 	{
 		ImGui::BeginGroup();
 
 		if (ImGui::BeginChild("Controller/Keyboard Settings"))
 		{
-			ImGui::Text("Controller/Keyboard");
+			ImGui::Text("Controller/Keyboard Mapping");
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Spacing();
+
+			float columnWidth = 125;
+			int columnCount = 3;
+
+			if (ImGui::BeginTable("Test", columnCount, ImGuiTableFlags_Borders, ImVec2(columnWidth * columnCount + 30, 0)))
+			{
+				ImGui::TableSetupColumn("Game Boy", ImGuiTableColumnFlags_WidthFixed, columnWidth);
+				ImGui::TableSetupColumn("Controller", ImGuiTableColumnFlags_WidthFixed, columnWidth);
+				ImGui::TableSetupColumn("Keyboard", ImGuiTableColumnFlags_WidthFixed, columnWidth);
+				ImGui::TableHeadersRow();
+
+				for (int r = 0; r < GB_BUTTONS.size(); r++)
+				{
+					ImGui::TableNextRow();
+					auto gbButton = static_cast<GBButton>(r);
+
+					for (int c = 0; c < columnCount; c++)
+					{
+						ImGui::TableNextColumn();
+
+						switch (c)
+						{
+						case 0:
+							ImGui::Text(GB_BUTTONS.at(r).c_str());
+							break;
+						case 1:
+							RenderControllerButtonComboBox(joypad, gbButton, r, columnWidth);
+							break;
+						case 2:
+							RenderKeyCodeComboBox(joypad, gbButton, r, columnWidth);
+							break;
+						}
+					}
+				}
+
+				ImGui::EndTable();
+			}
 		}
 
 		ImGui::EndChild();
 		ImGui::EndGroup();
+	}
+
+	void EmulatorWindow::RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
+	{
+		int selected = static_cast<int>(joypad.GetControllerButtonCode(gbButton));
+
+		ImGui::SetNextItemWidth(width);
+		ImGui::Combo(("##Ctrl Button " + std::to_string(row)).c_str() , &selected, CONTROLLER_BUTTONS, IM_ARRAYSIZE(CONTROLLER_BUTTONS));
+		joypad.SetControllerButtonCode(gbButton, static_cast<ControllerButtonCode>(selected));
+	}
+
+	void EmulatorWindow::RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
+	{
+		int selected = static_cast<int>(joypad.GetKeyCode(gbButton));
+
+		ImGui::SetNextItemWidth(width);
+		ImGui::Combo(("##Key Code " + std::to_string(row)).c_str(), &selected, KEYS, IM_ARRAYSIZE(KEYS));
+		joypad.SetKeyCode(gbButton, static_cast<KeyCode>(selected));
 	}
 
 	void EmulatorWindow::EndFrame()

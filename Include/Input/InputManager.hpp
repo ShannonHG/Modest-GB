@@ -59,10 +59,8 @@ namespace SHG
 		DPAD_DOWN,
 		RIGHT_SHOULDER,
 		LEFT_SHOULDER,
-		RIGHT_TRIGGER,
-		LEFT_TRIGGER,
-		MENU, 
-		SECONDARY_MENU,
+		START, 
+		MENU,
 	};
 
 	using KeyInputEvent = std::function<void(KeyCode)>;

@@ -7,28 +7,16 @@
 
 namespace SHG
 {
-	const std::map<KeyCode, GBButton> DEFAULT_KEYBOARD_MAPPING =
+	const std::map<GBButton, ButtonKeyPair> DEFAULT_INPUT_MAPPING =
 	{
-		{KeyCode::D, GBButton::RIGHT},
-		{KeyCode::A, GBButton::LEFT},
-		{KeyCode::W, GBButton::UP},
-		{KeyCode::S, GBButton::DOWN},
-		{KeyCode::J, GBButton::A},
-		{KeyCode::K, GBButton::B},
-		{KeyCode::P, GBButton::START},
-		{KeyCode::O, GBButton::Select},
-	};
-
-	const std::map<ControllerButtonCode, GBButton> DEFAULT_CONTROLLER_MAPPING =
-	{
-		{ControllerButtonCode::DPAD_RIGHT, GBButton::RIGHT},
-		{ControllerButtonCode::DPAD_LEFT, GBButton::LEFT},
-		{ControllerButtonCode::DPAD_UP, GBButton::UP},
-		{ControllerButtonCode::DPAD_DOWN, GBButton::DOWN},
-		{ControllerButtonCode::ACTION_0, GBButton::A},
-		{ControllerButtonCode::ACTION_1, GBButton::B},
-		{ControllerButtonCode::MENU, GBButton::START},
-		{ControllerButtonCode::SECONDARY_MENU, GBButton::Select}
+		{GBButton::RIGHT, {ControllerButtonCode::DPAD_RIGHT, KeyCode::D}},
+		{GBButton::LEFT, {ControllerButtonCode::DPAD_LEFT, KeyCode::A}},
+		{GBButton::UP, {ControllerButtonCode::DPAD_UP, KeyCode::W}},
+		{GBButton::DOWN, {ControllerButtonCode::DPAD_DOWN, KeyCode::S}},
+		{GBButton::A, {ControllerButtonCode::ACTION_0, KeyCode::J}},
+		{GBButton::B, {ControllerButtonCode::ACTION_1, KeyCode::K}},
+		{GBButton::START, {ControllerButtonCode::START, KeyCode::P}},
+		{GBButton::Select, {ControllerButtonCode::MENU, KeyCode::O}}
 	};
 
 	// Joypad Register
@@ -45,8 +33,7 @@ namespace SHG
 	{
 		ResetButtonStates();
 
-		LoadKeyboardInputMapping(DEFAULT_KEYBOARD_MAPPING);
-		LoadControllerInputMapping(DEFAULT_CONTROLLER_MAPPING);
+		LoadInputMapping(DEFAULT_INPUT_MAPPING);
 
 		inputManager.RegisterKeyPressedCallback(std::bind(&Joypad::OnKeyPressed, this, std::placeholders::_1));
 		inputManager.RegisterKeyReleasedCallback(std::bind(&Joypad::OnKeyReleased, this, std::placeholders::_1));
@@ -55,14 +42,29 @@ namespace SHG
 		inputManager.RegisterControllerButtonReleasedCallback(std::bind(&Joypad::OnControllerButtonReleased, this, std::placeholders::_1));
 	}
 
-	void Joypad::LoadKeyboardInputMapping(const std::map<KeyCode, GBButton>& mapping)
+	void Joypad::LoadInputMapping(const std::map<GBButton, ButtonKeyPair>& mapping)
 	{
-		keyboardInputMapping = mapping;
+		inputMapping = mapping;
 	}
 
-	void Joypad::LoadControllerInputMapping(const std::map<ControllerButtonCode, GBButton>& mapping)
+	ControllerButtonCode Joypad::GetControllerButtonCode(GBButton button) const
 	{
-		controllerInputMapping = mapping;
+		return inputMapping.at(button).button;
+	}
+
+	KeyCode Joypad::GetKeyCode(GBButton button) const
+	{
+		return inputMapping.at(button).key;
+	}
+
+	void Joypad::SetControllerButtonCode(GBButton button, ControllerButtonCode buttonCode)
+	{
+		inputMapping[button].button = buttonCode;
+	}
+
+	void Joypad::SetKeyCode(GBButton button, KeyCode keyCode)
+	{
+		inputMapping[button].key = keyCode;
 	}
 
 	uint8_t Joypad::Read() const
@@ -81,7 +83,7 @@ namespace SHG
 		}
 		else if (isActionButtonsSelected)
 		{
-			result = 
+			result =
 				!buttonStates.at(GBButton::A)
 				| (!buttonStates.at(GBButton::B) << 1)
 				| (!buttonStates.at(GBButton::Select) << 2)
@@ -113,7 +115,7 @@ namespace SHG
 	}
 
 	bool Joypad::IsActionButtonsSelected() const
-	{	
+	{
 		return isActionButtonsSelected;
 	}
 
@@ -174,22 +176,26 @@ namespace SHG
 		SetButtonStateWithControllerButtonCode(buttonCode, false);
 	}
 
-	void Joypad::SetButtonStateWithKeyCode(KeyCode key, bool isPressed)
+	void Joypad::SetButtonStateWithKeyCode(KeyCode keyCode, bool isPressed)
 	{
-		if (keyboardInputMapping.find(key) == keyboardInputMapping.end())
-			return;
-
-		GBButton button = keyboardInputMapping[key];
-		SetButtonState(button, isPressed);
+		for (const std::pair<GBButton, ButtonKeyPair> entry : inputMapping)
+		{
+			if (entry.second.key == keyCode)
+			{
+				SetButtonState(entry.first, isPressed);
+			}
+		}
 	}
 
 	void Joypad::SetButtonStateWithControllerButtonCode(ControllerButtonCode buttonCode, bool isPressed)
 	{
-		if (controllerInputMapping.find(buttonCode) == controllerInputMapping.end())
-			return;
-
-		GBButton button = controllerInputMapping[buttonCode];
-		SetButtonState(button, isPressed);
+		for (const std::pair<GBButton, ButtonKeyPair> entry : inputMapping)
+		{
+			if (entry.second.button == buttonCode)
+			{
+				SetButtonState(entry.first, isPressed);
+			}
+		}
 	}
 
 	void Joypad::SetButtonState(GBButton button, bool isPressed)

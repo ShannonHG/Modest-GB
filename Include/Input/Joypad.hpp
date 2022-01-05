@@ -7,12 +7,21 @@
 
 namespace SHG
 {
+	struct ButtonKeyPair
+	{
+		ControllerButtonCode button;
+		KeyCode key;
+	};
+
 	class Joypad
 	{
 	public:
 		Joypad(InputManager& inputManager, Memory& memoryMap);
-		void LoadKeyboardInputMapping(const std::map<KeyCode, GBButton>& mapping);
-		void LoadControllerInputMapping(const std::map<ControllerButtonCode, GBButton>& mapping);
+		void LoadInputMapping(const std::map<GBButton, ButtonKeyPair>& mapping);
+		ControllerButtonCode GetControllerButtonCode(GBButton button) const;
+		KeyCode GetKeyCode(GBButton button)const;
+		void SetControllerButtonCode(GBButton button, ControllerButtonCode buttonCode);
+		void SetKeyCode(GBButton button, KeyCode keyCode);
 
 		uint8_t Read() const;
 		void Write(uint8_t value);
@@ -28,8 +37,7 @@ namespace SHG
 	private:
 		Memory* memoryMap;
 
-		std::map<KeyCode, GBButton> keyboardInputMapping;
-		std::map<ControllerButtonCode, GBButton> controllerInputMapping;
+		std::map<GBButton, ButtonKeyPair> inputMapping;
 
 		std::map<GBButton, bool> buttonStates;
 		bool isActionButtonsSelected = false;
