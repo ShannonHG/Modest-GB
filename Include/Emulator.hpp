@@ -29,10 +29,8 @@ namespace SHG
 		PPU ppu = PPU(memoryMap);
 		APU apu;
 		Timer timer = Timer(memoryMap);
-		BasicMemory vram = BasicMemory(8 * KiB);
 		BasicMemory wram = BasicMemory(8 * KiB);
 		BasicMemory hram = BasicMemory(127);
-		BasicMemory oam = BasicMemory(160);
 		BasicMemory echoRam = BasicMemory(122368);
 		BasicMemory restrictedMemory = BasicMemory(130464);
 		BasicMemory ioRegisters = BasicMemory(128);

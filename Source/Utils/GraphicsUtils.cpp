@@ -1,10 +1,12 @@
 #include "Utils/GraphicsUtils.hpp"
+#include "Utils/Arithmetic.hpp"
+#include "Utils/MemoryUtils.hpp"
 
 namespace SHG
 {
-	uint16_t GetTileIndexFromTileMaps(const Memory& memoryMap, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress)
+	uint16_t GetTileIndexFromTileMaps(const Memory* vram, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress)
 	{
-		return memoryMap.Read((tileX + tileY * TILE_MAP_WIDTH_IN_TILES) + (useAlternateTileMapAddress ? ALTERNATE_TILE_MAP_ADDRESS : DEFAULT_TILE_MAP_ADDRESS));
+		return NormalizedReadFromVRAM(vram, (tileX + tileY * TILE_MAP_WIDTH_IN_TILES) + (useAlternateTileMapAddress ? ALTERNATE_TILE_MAP_ADDRESS : DEFAULT_TILE_MAP_ADDRESS));
 	}
 
 	int32_t GetTileAddress(uint16_t tileIndex, uint8_t scanline, bool useUnsignedAddressingMode)
@@ -34,5 +36,15 @@ namespace SHG
 		uint8_t rawColor = 255 - ((colorIndexBits << 6) | (colorIndexBits << 4) | (colorIndexBits << 2) | colorIndexBits);
 
 		return Color{ rawColor, rawColor, rawColor, 255 };
+	}
+
+	uint8_t NormalizedReadFromVRAM(const Memory* vram, uint16_t address)
+	{
+		return vram->Read(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS));
+	}
+
+	void NormalizedWriteToVRAM(Memory* vram, uint16_t address, uint8_t value)
+	{
+		vram->Write(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS), value);
 	}
 }

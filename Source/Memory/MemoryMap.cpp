@@ -21,7 +21,7 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS))
 		{
-			return vram->Read(Arithmetic::Normalize(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS));
+			return ppu->ReadVRAM(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
 		{
@@ -29,19 +29,19 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS))
 		{
-			return wram->Read(Arithmetic::Normalize(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS));
+			return wram->Read(Arithmetic::NormalizeAddress(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS))
 		{
-			return echoRam->Read(Arithmetic::Normalize(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS));
+			return echoRam->Read(Arithmetic::NormalizeAddress(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
 		{
-			return oam->Read(Arithmetic::Normalize(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
+			return ppu->ReadOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS))
 		{
-			return restrictedMemory->Read(Arithmetic::Normalize(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS));
+			return restrictedMemory->Read(Arithmetic::NormalizeAddress(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
 		{
@@ -49,7 +49,7 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
 		{
-			return hram->Read(Arithmetic::Normalize(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS));
+			return hram->Read(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS));
 		}
 		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
 		{
@@ -74,7 +74,7 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS))
 		{
-			vram->Write(Arithmetic::Normalize(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS), value);
+			ppu->WriteToVRAM(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
 		{
@@ -82,19 +82,19 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS))
 		{
-			wram->Write(Arithmetic::Normalize(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS), value);
+			wram->Write(Arithmetic::NormalizeAddress(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS))
 		{
-			echoRam->Write(Arithmetic::Normalize(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS), value);
+			echoRam->Write(Arithmetic::NormalizeAddress(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
 		{
-			oam->Write(Arithmetic::Normalize(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS), value);
+			ppu->WriteToOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS))
 		{
-			restrictedMemory->Write(Arithmetic::Normalize(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS), value);
+			restrictedMemory->Write(Arithmetic::NormalizeAddress(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
 		{
@@ -102,7 +102,7 @@ namespace SHG
 		}
 		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
 		{
-			hram->Write(Arithmetic::Normalize(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS), value);
+			hram->Write(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS), value);
 		}
 		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
 		{
@@ -192,11 +192,6 @@ namespace SHG
 		this->timer = timer;
 	}
 
-	void MemoryMap::AttachVRAM(BasicMemory* vram)
-	{
-		this->vram = vram;
-	}
-
 	void MemoryMap::AttachWRAM(BasicMemory* wram)
 	{
 		this->wram = wram;
@@ -205,11 +200,6 @@ namespace SHG
 	void MemoryMap::AttachHRAM(BasicMemory* hram)
 	{
 		this->hram = hram;
-	}
-
-	void MemoryMap::AttachOAM(BasicMemory* oam)
-	{
-		this->oam = oam;
 	}
 
 	void MemoryMap::AttachEchoRAM(BasicMemory* echoRam)
@@ -315,7 +305,7 @@ namespace SHG
 		case GB_NR52_ADDRESS:
 			return apu->ReadNR52();
 		default:
-			return ioRegisters->Read(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS));
+			return ioRegisters->Read(Arithmetic::NormalizeAddress(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS));
 		}
 	}
 
@@ -435,7 +425,7 @@ namespace SHG
 			else
 			{
 				// Write to generic I/O memory.
-				ioRegisters->Write(Arithmetic::Normalize(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS), value);
+				ioRegisters->Write(Arithmetic::NormalizeAddress(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS), value);
 			}
 			break;
 		}

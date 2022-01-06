@@ -31,7 +31,6 @@ namespace SHG
 		void AttachVRAM(BasicMemory* vram);
 		void AttachWRAM(BasicMemory* wram);
 		void AttachHRAM(BasicMemory* hram);
-		void AttachOAM(BasicMemory* oam);
 		void AttachEchoRAM(BasicMemory* echoRam);
 		void AttachGenericIO(BasicMemory* ioRegisters);
 		void AttachInterruptEnableRegister(Register8* interruptEnableRegister);
@@ -44,10 +43,8 @@ namespace SHG
 		PPU* ppu;
 		APU* apu;
 		Timer* timer;
-		BasicMemory* vram;
 		BasicMemory* wram;
 		BasicMemory* hram;
-		BasicMemory* oam;
 		BasicMemory* echoRam;
 		BasicMemory* ioRegisters;
 		Register8* interruptEnableRegister;

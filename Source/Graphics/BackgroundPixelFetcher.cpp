@@ -11,8 +11,8 @@ namespace SHG
 	const uint8_t TILE_DATA_FETCH_DURATION_IN_CYCLES = 2;
 	const uint8_t SLEEP_DURATION_IN_CYCLES = 2;
 
-	BackgroundPixelFetcher::BackgroundPixelFetcher(Memory* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy)
-		: memoryMap(memoryMap), lcdc(lcdc), scx(scx), scy(scy), wx(wx), wy(wy)
+	BackgroundPixelFetcher::BackgroundPixelFetcher(Memory& vram, Register8& lcdc, Register8& scx, Register8& scy, Register8& wx, Register8& wy)
+		: vram(&vram), lcdc(&lcdc), scx(&scx), scy(&scy), wx(&wx), wy(&wy)
 	{
 
 	}
@@ -76,13 +76,13 @@ namespace SHG
 			tileX = static_cast<uint8_t>(std::floor((scx->Read() + x) / static_cast<float>(TILE_WIDTH_IN_PIXELS))) & 0x1F;
 			tileY = static_cast<uint8_t>(std::floor((GetAdjustedY() & 255) / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 
-			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX)));
+			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(vram, tileX, tileY, lcdc->Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX)));
 			break;
 		case BackgroundPixelFetcherMode::Window:
 			tileX = static_cast<uint8_t>(std::floor(x / static_cast<float>(TILE_WIDTH_IN_PIXELS)));
 			tileY = static_cast<uint8_t>(std::floor(y / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 
-			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(*memoryMap, tileX, tileY, lcdc->Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX)));
+			currentTileIndex = static_cast<uint8_t>(GetTileIndexFromTileMaps(vram, tileX, tileY, lcdc->Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX)));
 			break;
 		}
 
@@ -95,7 +95,7 @@ namespace SHG
 		if (currentStateElapsedCycles < TILE_DATA_FETCH_DURATION_IN_CYCLES)
 			return;
 
-		currentLowTileData = memoryMap->Read(GetTileAddress(currentTileIndex, GetAdjustedY() , lcdc->Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)));
+		currentLowTileData = NormalizedReadFromVRAM(vram, GetTileAddress(currentTileIndex, GetAdjustedY() , lcdc->Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)));
 
 		currentState = BackgroundPixelFetcherState::FetchingHighTileData;
 		currentStateElapsedCycles = 0;
@@ -106,7 +106,7 @@ namespace SHG
 		if (currentStateElapsedCycles < TILE_DATA_FETCH_DURATION_IN_CYCLES)
 			return;
 
-		currentHighTileData = memoryMap->Read(GetTileAddress(currentTileIndex, GetAdjustedY(), lcdc->Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)) + 1);
+		currentHighTileData = NormalizedReadFromVRAM(vram, GetTileAddress(currentTileIndex, GetAdjustedY(), lcdc->Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX)) + 1);
 
 		currentState = BackgroundPixelFetcherState::Sleeping;
 		currentStateElapsedCycles = 0;

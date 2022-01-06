@@ -133,10 +133,8 @@ namespace SHG
 		memoryMap.AttachHRAM(&hram);
 		memoryMap.AttachInterruptEnableRegister(&interruptEnableRegister);
 		memoryMap.AttachInterruptFlagRegister(&interruptFlagRegister);
-		memoryMap.AttachOAM(&oam);
 		memoryMap.AttachJoypadRegister(&joypad);
 		memoryMap.AttachTimer(&timer);
-		memoryMap.AttachVRAM(&vram);
 		memoryMap.AttachWRAM(&wram);
 		memoryMap.AttachRestrictedMemory(&restrictedMemory);
 	}

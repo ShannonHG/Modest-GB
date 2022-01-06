@@ -24,7 +24,7 @@ namespace SHG
 		SDL_AudioSpec outputSpec;
 
 		// TODO: Revisit
-		const char* name = SDL_GetAudioDeviceName(1, SDL_FALSE);
+		const char* name = SDL_GetAudioDeviceName(0, SDL_FALSE);
 		Logger::WriteInfo(name);
 		audioDeviceID = SDL_OpenAudioDevice(name, SDL_FALSE, &spec, &outputSpec, 0);
 		SDL_PauseAudioDevice(audioDeviceID, 0);

@@ -22,7 +22,7 @@ namespace SHG
 	class BackgroundPixelFetcher : public PixelFetcher
 	{
 	public:
-		BackgroundPixelFetcher(Memory* memoryMap, Register8* lcdc, Register8* scx, Register8* scy, Register8* wx, Register8* wy);
+		BackgroundPixelFetcher(Memory& vram, Register8& lcdc, Register8& scx, Register8& scy, Register8& wx, Register8& wy);
 		void SetMode(BackgroundPixelFetcherMode mode);
 		BackgroundPixelFetcherMode GetCurrentMode();
 		void Tick() override;
@@ -40,7 +40,7 @@ namespace SHG
 		Register8* scy = nullptr;
 		Register8* wx = nullptr;
 		Register8* wy = nullptr;
-		Memory* memoryMap = nullptr;
+		Memory* vram = nullptr;
 
 		void UpdateTileIndexFetchState();
 		void UpdateLowTileDataFetchState();

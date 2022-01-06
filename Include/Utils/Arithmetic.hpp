@@ -16,6 +16,6 @@ namespace SHG::Arithmetic
 	uint32_t EvenCeil(uint32_t operand);
 	bool IsInRange(int operand, int lowerLimit, int upperLimit);
 
-	// Remaps the operand to a value between 0 and [upperBound - lowerBound].
-	int Normalize(int operand, int lowerBound, int upperBound);
+	// Remaps the address to a value between 0 and [upperBound - lowerBound].
+	uint16_t NormalizeAddress(uint16_t operand, uint16_t lowerBound, uint16_t upperBound);
 }

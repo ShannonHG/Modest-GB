@@ -10,6 +10,7 @@
 #include "Graphics/SpritePixelFetcher.hpp"
 #include "Utils/GraphicsUtils.hpp"
 #include "Graphics/DMATransferRegister.hpp"
+#include "Memory/BasicMemory.hpp"
 
 namespace SHG
 {
@@ -43,6 +44,8 @@ namespace SHG
 		void WriteWY(uint8_t value);
 		void WriteWX(uint8_t value);
 		void WriteDMA(uint8_t value);
+		void WriteToVRAM(uint16_t address, uint8_t value);
+		void WriteToOAM(uint16_t address, uint8_t value);
 
 		uint8_t ReadLCDC() const;
 		uint8_t ReadLCDSTAT() const;
@@ -53,6 +56,8 @@ namespace SHG
 		uint8_t ReadWY() const;
 		uint8_t ReadWX() const;
 		uint8_t ReadDMA() const;
+		uint8_t ReadVRAM(uint16_t address) const;
+		uint8_t ReadOAM(uint16_t address) const;
 
 	private:
 		enum class Mode
@@ -77,7 +82,7 @@ namespace SHG
 		std::vector<Sprite> spritesOnCurrentScanline;
 		std::queue<Pixel> queuedSpritePixels;
 		int16_t currentScanlineX = 0;
-		Memory& memoryMap;
+		Memory* memoryMap;
 		Register8 lcdc;
 		Register8 stat;
 		Register8 scy;
@@ -86,6 +91,8 @@ namespace SHG
 		Register8 lyc;
 		Register8 wy;
 		Register8 wx;
+		BasicMemory oam = BasicMemory(160);
+		BasicMemory vram = BasicMemory(8 * KiB);
 		Register8 statInterruptLine;
 		DMATransferRegister dmaRegister;
 		Framebuffer primaryFramebuffer;
@@ -117,22 +124,27 @@ namespace SHG
 		void ChangeStatInterruptLineBit(uint8_t bitIndex, bool value);
 
 		void EnterHBlankMode();
-		void UpdateHBlankMode(uint32_t* cycles);
+		void UpdateHBlankMode(uint32_t& cycles);
 
 		void EnterVBlankMode();
-		void UpdateVBlankMode(uint32_t* cycles);
+		void UpdateVBlankMode(uint32_t& cycles);
 
 		void EnterOAMSearchMode();
-		void UpdateOAMSearchMode(uint32_t* cycles);
+		void UpdateOAMSearchMode(uint32_t& cycles);
 
 		void EnterLCDTransferMode();
-		void UpdateLCDTransferMode(uint32_t* cycles);
+		void UpdateLCDTransferMode(uint32_t& cycles);
 
 		void RefreshLYCFlag();
 		Sprite GetSpriteAtIndex(uint8_t index);
 
 		void UpdateDMATransferProcess(uint32_t cycles);
 		void RenderPixel(const Pixel& pixel);
+
+		
+		
+		uint8_t NormalizedReadFromOAM(uint16_t address);
+		void NormalizedWriteToOAM(uint16_t address, uint8_t value);
 
 		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType);
 	};

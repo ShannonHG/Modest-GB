@@ -18,7 +18,7 @@ namespace SHG
 	class SpritePixelFetcher : public PixelFetcher
 	{
 	public:
-		SpritePixelFetcher(Memory* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher);
+		SpritePixelFetcher(Memory& vram, Register8& lcdc, BackgroundPixelFetcher& backgroundPixelFetcher);
 		void SetSpritesOnScanline(const std::vector<Sprite>& sprites);
 		SpritePixelFetcherState GetState();
 		void Tick() override;
@@ -29,7 +29,7 @@ namespace SHG
 		Sprite currentSprite;
 		int currentSpriteIndex = 0;
 		uint8_t currentLowTileData = 0;
-		Memory* memoryMap = nullptr;
+		Memory* vram = nullptr;
 		Register8* lcdc = nullptr;
 		BackgroundPixelFetcher* backgroundPixelFetcher = nullptr;
 		std::vector<Sprite> spritesOnCurrentScanline;

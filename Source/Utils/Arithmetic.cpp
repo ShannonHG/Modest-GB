@@ -91,8 +91,8 @@ namespace SHG::Arithmetic
 		return operand >= lowerLimit && operand <= upperLimit;
 	}
 
-	int Arithmetic::Normalize(int operand, int lowerBound, int upperBound)
+	uint16_t Arithmetic::NormalizeAddress(uint16_t address, uint16_t lowerBound, uint16_t upperBound)
 	{
-		return std::clamp(operand - lowerBound, 0, upperBound);
+		return std::clamp(address - lowerBound, 0, (int)upperBound);
 	}
 }

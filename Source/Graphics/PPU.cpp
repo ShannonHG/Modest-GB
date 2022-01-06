@@ -23,9 +23,9 @@ namespace SHG
 
 	const int16_t DEFAULT_SCANLINE_X = -7;
 
-	PPU::PPU(Memory& memoryMap) : memoryMap(memoryMap),
-		backgroundPixelFetcher(&memoryMap, &lcdc, &scx, &scy, &wx, &wy),
-		spritePixelFetcher(&memoryMap, &lcdc, &backgroundPixelFetcher)
+	PPU::PPU(Memory& memoryMap) : memoryMap(&memoryMap),
+		backgroundPixelFetcher(vram, lcdc, scx, scy, wx, wy),
+		spritePixelFetcher(vram, lcdc, backgroundPixelFetcher)
 	{
 		paletteTints =
 		{
@@ -112,6 +112,27 @@ namespace SHG
 		dmaRegister.Write(value);
 	}
 
+	void PPU::WriteToVRAM(uint16_t address, uint8_t value)
+	{
+		// VRAM access is blocked in mode 3, and during DMA transfer.
+		if (currentMode == Mode::LCDTransfer ||
+			currentDMATransferState == DMATransferState::InProgress)
+			return;
+
+		vram.Write(address, value);
+	}
+	
+	void PPU::WriteToOAM(uint16_t address, uint8_t value)
+	{
+		// OAM access is blocked in modes 2 and 3, and during DMA transfer.
+		if (currentMode == Mode::SearchingOAM || 
+			currentMode == Mode::LCDTransfer || 
+			currentDMATransferState == DMATransferState::InProgress)
+			return;
+
+		oam.Write(address, value);
+	}
+
 	uint8_t PPU::ReadLCDC() const
 	{
 		return lcdc.Read();
@@ -156,6 +177,27 @@ namespace SHG
 		return dmaRegister.Read();
 	}
 
+	uint8_t PPU::ReadVRAM(uint16_t address) const
+	{
+		// VRAM access is blocked in mode 3, and during DMA transfer.
+		if (currentMode == Mode::LCDTransfer || 
+			currentDMATransferState == DMATransferState::InProgress)
+			return 0xFF;
+
+		return vram.Read(address);
+	}
+	
+	uint8_t PPU::ReadOAM(uint16_t address) const
+	{
+		// OAM access is blocked in modes 2 and 3, and during DMA transfer.
+		if (currentMode == Mode::SearchingOAM || 
+			currentMode == Mode::LCDTransfer || 
+			currentDMATransferState == DMATransferState::InProgress)
+			return 0xFF;
+
+		return oam.Read(address);
+	}
+
 	void PPU::SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color)
 	{
 		if (paletteTints.find(paletteAddress) == paletteTints.end())
@@ -194,7 +236,6 @@ namespace SHG
 	{
 		while (cycles > 0)
 		{
-			// TODO: Confirm logic
 			if (!lcdc.Read(LCDC_PPU_ENABLE_BIT_INDEX))
 			{
 				SetCurrentMode(Mode::HBlank);
@@ -217,16 +258,16 @@ namespace SHG
 			switch (currentMode)
 			{
 			case Mode::HBlank:
-				UpdateHBlankMode(&cycles);
+				UpdateHBlankMode(cycles);
 				break;
 			case Mode::VBlank:
-				UpdateVBlankMode(&cycles);
+				UpdateVBlankMode(cycles);
 				break;
 			case Mode::SearchingOAM:
-				UpdateOAMSearchMode(&cycles);
+				UpdateOAMSearchMode(cycles);
 				break;
 			case Mode::LCDTransfer:
-				UpdateLCDTransferMode(&cycles);
+				UpdateLCDTransferMode(cycles);
 				break;
 			}
 
@@ -242,11 +283,11 @@ namespace SHG
 		ChangeStatInterruptLineBit(STAT_HBLANK_INTERRUPT_SOURCE_BIT_INDEX, true);
 	}
 
-	void PPU::UpdateHBlankMode(uint32_t* cycles)
+	void PPU::UpdateHBlankMode(uint32_t& cycles)
 	{
 		assert(cycles != nullptr);
 
-		uint32_t newElapsedCycles = currentScanlineElapsedCycles + *cycles;
+		uint32_t newElapsedCycles = currentScanlineElapsedCycles + cycles;
 		if (newElapsedCycles >= SCANLINE_DURATION_IN_CYCLES)
 		{
 			// Restart the count since a new scanline is about to begin.
@@ -262,12 +303,12 @@ namespace SHG
 				EnterOAMSearchMode();
 
 			// We only need enough cycles to reach 456, so any remaining cycles should be return.
-			*cycles = (newElapsedCycles - SCANLINE_DURATION_IN_CYCLES);
+			cycles = (newElapsedCycles - SCANLINE_DURATION_IN_CYCLES);
 			return;
 		}
 
 		currentScanlineElapsedCycles = newElapsedCycles;
-		*cycles = 0;
+		cycles = 0;
 	}
 
 
@@ -276,7 +317,7 @@ namespace SHG
 		SetCurrentMode(Mode::VBlank);
 		ChangeStatInterruptLineBit(STAT_VBLANK_INTERRUPT_SOURCE_BIT_INDEX, true);
 
-		RequestInterrupt(memoryMap, InterruptType::VBlank);
+		RequestInterrupt(*memoryMap, InterruptType::VBlank);
 
 		// Causes the window to render the most up to date version of the framebuffer.
 		primaryFramebuffer.UploadData();
@@ -284,11 +325,11 @@ namespace SHG
 
 	}
 
-	void PPU::UpdateVBlankMode(uint32_t* cycles)
+	void PPU::UpdateVBlankMode(uint32_t& cycles)
 	{
 		assert(cycles != nullptr);
 
-		uint32_t newElapsedCycles = currentScanlineElapsedCycles + *cycles;
+		uint32_t newElapsedCycles = currentScanlineElapsedCycles + cycles;
 		if (newElapsedCycles >= SCANLINE_DURATION_IN_CYCLES)
 		{
 			// Reset the elapsed cycles, since a new scanline is about to be started.
@@ -310,12 +351,12 @@ namespace SHG
 			}
 
 			// We only need enough cycles to reach 456, so any remaining cycles should be returned.
-			*cycles = newElapsedCycles - SCANLINE_DURATION_IN_CYCLES;
+			cycles = newElapsedCycles - SCANLINE_DURATION_IN_CYCLES;
 			return;
 		}
 
 		currentScanlineElapsedCycles = newElapsedCycles;
-		*cycles = 0;
+		cycles = 0;
 	}
 
 
@@ -332,12 +373,12 @@ namespace SHG
 
 	}
 
-	void PPU::UpdateOAMSearchMode(uint32_t* cycles)
+	void PPU::UpdateOAMSearchMode(uint32_t& cycles)
 	{
 		assert(cycles != nullptr);
 
 		uint32_t previousElapsedCycles = Arithmetic::EvenCeil(currentScanlineElapsedCycles);
-		currentScanlineElapsedCycles = std::min(static_cast<int>(currentScanlineElapsedCycles + *cycles), static_cast<int>(OAM_SEARCH_MODE_DURATION_IN_CYCLES));
+		currentScanlineElapsedCycles = std::min(static_cast<int>(currentScanlineElapsedCycles + cycles), static_cast<int>(OAM_SEARCH_MODE_DURATION_IN_CYCLES));
 
 		uint32_t targetCycles = Arithmetic::EvenCeil(currentScanlineElapsedCycles);
 		for (uint32_t cycle = previousElapsedCycles; cycle < targetCycles; cycle += 2)
@@ -361,7 +402,7 @@ namespace SHG
 			}
 		}
 
-		(*cycles) = 0;
+		cycles = 0;
 		if (currentScanlineElapsedCycles >= OAM_SEARCH_MODE_DURATION_IN_CYCLES)
 		{
 			EnterLCDTransferMode();
@@ -373,18 +414,18 @@ namespace SHG
 	{
 		// Each sprite has 4-bytes of attribute data in OAM.
 		uint16_t attributeAddress = GB_OAM_START_ADDRESS + (index * SPRITE_ATTRIBUTE_BYTE_COUNT);
-		uint8_t flags = memoryMap.Read(attributeAddress + 3);
+		uint8_t flags = NormalizedReadFromOAM(attributeAddress + 3);
 
 		Sprite sprite =
 		{
 			// OAM contains the sprite's X position plus 8, so to get the true X position we need to subtract 8.
-			.x = static_cast<int16_t>(memoryMap.Read(attributeAddress + 1) - TILE_WIDTH_IN_PIXELS),
+			.x = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress + 1) - TILE_WIDTH_IN_PIXELS),
 
 			// OAM contains the sprite's 16 position plus 16, so to get the true Y position we need to subtract 16.
-			.y = static_cast<int16_t>(memoryMap.Read(attributeAddress) - MAX_SPRITE_HEIGHT_IN_PIXELS),
+			.y = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress) - MAX_SPRITE_HEIGHT_IN_PIXELS),
 
 			// In 8x16 mode, the least significant bit of the tile index should be ignored to ensure that it points to the first/top tile of the sprite.
-			.tileIndex = static_cast<uint8_t>(lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? memoryMap.Read(attributeAddress + 2) & 0xFE : memoryMap.Read(attributeAddress + 2)),
+			.tileIndex = static_cast<uint8_t>(lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? NormalizedReadFromOAM(attributeAddress + 2) & 0xFE : NormalizedReadFromOAM(attributeAddress + 2)),
 
 			// Flags 
 			.xFlip = static_cast<bool>((flags >> 5) & 1),
@@ -409,9 +450,9 @@ namespace SHG
 		SetCurrentMode(Mode::LCDTransfer);
 	}
 
-	void PPU::UpdateLCDTransferMode(uint32_t* cycles)
+	void PPU::UpdateLCDTransferMode(uint32_t& cycles)
 	{
-		while ((*cycles) > 0)
+		while (cycles > 0)
 		{
 			wasWXConditionTriggered = currentScanlineX + 7 == wx.Read();
 
@@ -437,7 +478,7 @@ namespace SHG
 				continue;
 			}
 
-			(*cycles)--;
+			cycles--;
 			currentScanlineElapsedCycles++;
 
 			SpritePixelFetcherState prevSpritePixelFetcherState = spritePixelFetcher.GetState();
@@ -507,7 +548,7 @@ namespace SHG
 
 	void PPU::RenderPixel(const Pixel& pixel)
 	{
-		Color color = GetColorFromColorIndex(pixel.colorIndex, memoryMap.Read(pixel.paletteAddress));
+		Color color = GetColorFromColorIndex(pixel.colorIndex, memoryMap->Read(pixel.paletteAddress));
 
 		// Convert color components to the 0 - 1 range so they can be 
 		// multiplied with the palette tint's components to produce the final color.
@@ -546,7 +587,7 @@ namespace SHG
 		// states logically OR'ed into the STAT interrupt line. If a source sets its bit to 1,
 		// and the STAT interrupt line is currently 0, then a STAT interrupt will be triggered.
 		if (!statInterruptLine.Read() && value)
-			RequestInterrupt(memoryMap, InterruptType::LCDStat);
+			RequestInterrupt(*memoryMap, InterruptType::LCDStat);
 
 		statInterruptLine.ChangeBit(bitIndex, value);
 	}
@@ -571,11 +612,11 @@ namespace SHG
 		{
 			for (uint32_t i = 0; i < cycles; i++)
 			{
-				// A DMA transfer causes data to be transfer from $XX00-$XX9F to $FFE0-$FE9F.
+				// A DMA transfer causes data to be transfer from $XX00-$XX9F to $FFE0-$FE9F (OAM).
 				// Since a DMA transfer lasts 160 cycles and also transfers 160 bytes, the elapsed DMA transfer time
 				// can be used as the offset from the source and destination addresses.
-				uint8_t sourceData = memoryMap.Read(dmaRegister.GetSourceStartAddress() + currentDMATransferElapsedTime);
-				memoryMap.Write(DMA_TRANSFER_DESTINATION_START_ADDRESS + currentDMATransferElapsedTime, sourceData);
+				uint8_t sourceData = memoryMap->Read(dmaRegister.GetSourceStartAddress() + currentDMATransferElapsedTime);
+				NormalizedWriteToOAM(DMA_TRANSFER_DESTINATION_START_ADDRESS + currentDMATransferElapsedTime, sourceData);
 
 				currentDMATransferElapsedTime++;
 
@@ -587,6 +628,16 @@ namespace SHG
 				}
 			}
 		}
+	}
+	
+	uint8_t PPU::NormalizedReadFromOAM(uint16_t address)
+	{
+		return oam.Read(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
+	}
+
+	void PPU::NormalizedWriteToOAM(uint16_t address, uint8_t value)
+	{
+		oam.Write(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS), value);
 	}
 
 	const Framebuffer& PPU::GetPrimaryFramebuffer() const
@@ -616,7 +667,7 @@ namespace SHG
 
 	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType)
 	{
-		uint16_t tileIndex = GetTileIndexFromTileMaps(memoryMap, static_cast<uint8_t>(scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS)), static_cast<uint8_t>(scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS)), useAlternateTileMapAddress);
+		uint16_t tileIndex = GetTileIndexFromTileMaps(&vram, static_cast<uint8_t>(scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS)), static_cast<uint8_t>(scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS)), useAlternateTileMapAddress);
 		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
 
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
@@ -640,8 +691,8 @@ namespace SHG
 			{
 				// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
 				// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
-				uint8_t colorIndex = GetColorIndexFromTileData(px, memoryMap.Read(tileAddress), memoryMap.Read(tileAddress + 1));
-				color = GetColorFromColorIndex(colorIndex, memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS));
+				uint8_t colorIndex = GetColorIndexFromTileData(px, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
+				color = GetColorFromColorIndex(colorIndex, memoryMap->Read(GB_BACKGROUND_PALETTE_ADDRESS));
 			}
 
 			framebuffer.SetPixel(scanlineX, scanlineY, color);
@@ -684,7 +735,7 @@ namespace SHG
 	{
 		Sprite sprite = GetSpriteAtIndex(debugCurrentSpriteIndex);
 
-		uint8_t palette = memoryMap.Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
+		uint8_t palette = memoryMap->Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
 		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
 
@@ -696,8 +747,8 @@ namespace SHG
 		uint8_t tile = static_cast<uint8_t>(std::floor(debugSpriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
 		uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - debugSpriteScanline : debugSpriteScanline) % TILE_HEIGHT_IN_PIXELS;
 
-		uint8_t lowTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
-		uint8_t highTileData = memoryMap.Read(GetTileAddress(sprite.tileIndex + tile, tileScanline, true) + 1);
+		uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
+		uint8_t highTileData = NormalizedReadFromVRAM(&vram, (sprite.tileIndex + tile, tileScanline, true) + 1);
 
 		uint8_t y = (tileY * ySpacing) + debugSpriteScanline;
 
@@ -726,13 +777,13 @@ namespace SHG
 
 	void PPU::DebugDrawTiles()
 	{
-		uint8_t palette = memoryMap.Read(GB_BACKGROUND_PALETTE_ADDRESS);
+		uint8_t palette = memoryMap->Read(GB_BACKGROUND_PALETTE_ADDRESS);
 		uint8_t tileX = debugTileIndex % TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES;
 		uint8_t tileY = static_cast<uint8_t>(std::floor(debugTileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES)));
 		uint8_t spacing = TILE_WIDTH_IN_PIXELS + 1;
 
-		uint8_t lowTileData = memoryMap.Read(GetTileAddress(debugTileIndex, debugTileScanline, true));
-		uint8_t highTileData = memoryMap.Read(GetTileAddress(debugTileIndex, debugTileScanline, true) + 1);
+		uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(debugTileIndex, debugTileScanline, true));
+		uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(debugTileIndex, debugTileScanline, true) + 1);
 
 		uint8_t y = (tileY * spacing) + debugTileScanline;
 

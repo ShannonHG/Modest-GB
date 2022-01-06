@@ -4,12 +4,13 @@
 #include "Utils/GBSpecs.hpp"
 #include "Utils/MemoryUtils.hpp"
 #include "Logger.hpp"
+#include "Utils/Arithmetic.hpp"
 
 namespace SHG
 {
 	// TODO: Improve timing accuracy.
-	SpritePixelFetcher::SpritePixelFetcher(Memory* memoryMap, Register8* lcdc, BackgroundPixelFetcher* backgroundPixelFetcher)
-		: memoryMap(memoryMap), lcdc(lcdc), backgroundPixelFetcher(backgroundPixelFetcher)
+	SpritePixelFetcher::SpritePixelFetcher(Memory& vram, Register8& lcdc, BackgroundPixelFetcher& backgroundPixelFetcher)
+		: vram(&vram), lcdc(&lcdc), backgroundPixelFetcher(&backgroundPixelFetcher)
 	{
 
 	}
@@ -95,13 +96,14 @@ namespace SHG
 
 	void SpritePixelFetcher::UpdateLowTileDataFetchState()
 	{
-		currentLowTileData = memoryMap->Read(GetCurrentSpriteTileAddress());
+		currentLowTileData = NormalizedReadFromVRAM(vram, GetCurrentSpriteTileAddress());
+
 		currentState = SpritePixelFetcherState::PushingPixelsToQueue;
 	}
 
 	void SpritePixelFetcher::UpdatePixelPushState()
 	{
-		uint8_t highTileData = memoryMap->Read(GetCurrentSpriteTileAddress() + 1);
+		uint8_t highTileData = NormalizedReadFromVRAM(vram, GetCurrentSpriteTileAddress() + 1);
 
 		// Add transparent pixels with the lowest priority to the queue. 
 		while (queuedPixels.size() < TILE_WIDTH_IN_PIXELS)
