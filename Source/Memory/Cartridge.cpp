@@ -1,4 +1,3 @@
-#include <fstream>
 #include <cmath>
 #include <cassert>
 #include <iterator>
@@ -99,12 +98,14 @@ namespace SHG
 		0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 	};
 
-	bool Cartridge::Load(const std::string& romFilePath)
+	bool Cartridge::Load(const std::string& romFilePath, const std::string& saveDataPath)
 	{
 		auto file = std::ifstream(romFilePath, std::ios::binary);
 
 		if (!file.is_open())
 			return false;
+
+		this->saveDataPath = saveDataPath;
 
 		// Load the ROM file into a vector of bytes.
 		auto romData = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
@@ -156,6 +157,10 @@ namespace SHG
 			{
 				Logger::WriteInfo("Attaching RAM to MBC", CARTRIDGE_LOG_HEADER);
 				memoryBankController->AttachRAM(ram);
+				memoryBankController->SetRAMWriteCallback(std::bind(&Cartridge::OnRAMWrite, this, std::placeholders::_1, std::placeholders::_2));
+
+				// Load saved RAM data (if any), from the saved data path.
+				LoadSavedData();
 			}
 
 			if (GetROMSize() > 0)
@@ -214,7 +219,10 @@ namespace SHG
 			if (ram.size() > 0 && IsRAMAddress(address))
 			{
 				// Normalize the address to the range [0, RAM_SIZE].
-				ram[address - OPTIONAL_8KB_RAM_START_ADDRESS] = value;
+				uint16_t normalizedAddress = address - OPTIONAL_8KB_RAM_START_ADDRESS;
+				ram[normalizedAddress] = value;
+
+				OnRAMWrite(normalizedAddress, value);
 			}
 			break;
 		default:
@@ -364,6 +372,42 @@ namespace SHG
 			WriteUnsupportedMBCMesage();
 			break;
 		}
+	}
+
+	void Cartridge::LoadSavedData()
+	{
+		if (!saveDataFile.is_open())
+		{
+			// Attempt to open an existing save data file. Since std::ios::in is used, 
+			// the stream will not attempt to create the file.
+			saveDataFile.open(saveDataPath, std::ios::in | std::ios::out | std::ofstream::binary);
+
+			// If there was no existing save data file, then create one.
+			if (!saveDataFile.is_open())
+				saveDataFile.open(saveDataPath, std::ios::out | std::ofstream::binary);
+
+			Logger::WriteInfo("Save data will be stored at: " + saveDataPath);
+		}
+
+		int count = 0;
+		while (!saveDataFile.eof() && count < ram.size())
+		{
+			char byteBuffer[1];
+			saveDataFile.read(byteBuffer, 1);
+			ram[count] = static_cast<uint8_t>(byteBuffer[0]);
+
+			count++;
+		}
+
+		saveDataFile.clear();
+	}
+
+	void Cartridge::OnRAMWrite(uint16_t address, uint8_t value)
+	{
+		saveDataFile.seekp(address);
+
+		char outByte = static_cast<char>(value);
+		saveDataFile.write(&outByte, 1);
 	}
 
 	bool Cartridge::IsRAMAddress(uint16_t address) const

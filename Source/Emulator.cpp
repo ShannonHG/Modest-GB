@@ -139,7 +139,7 @@ namespace SHG
 		memoryMap.AttachRestrictedMemory(&restrictedMemory);
 	}
 
-	void Emulator::AddLogEntry(std::string logEntry, LogMessageType messageType)
+	void Emulator::AddLogEntry(const std::string& logEntry, LogMessageType messageType)
 	{
 		if (!window.shouldRenderLogWindow)
 			return;
@@ -163,7 +163,7 @@ namespace SHG
 		SaveConfigurationFile();
 	}
 
-	void Emulator::OnFileSelected(std::string path)
+	void Emulator::OnFileSelected(const std::string& path)
 	{
 		if (path.empty())
 			return;
@@ -187,11 +187,13 @@ namespace SHG
 		logEntries.clear();
 	}
 
-	bool Emulator::LoadROM(std::string& romFilePath)
+	bool Emulator::LoadROM(const std::string& romFilePath)
 	{
 		memoryMap.Reset();
 
-		if (!cartridge.Load(romFilePath))
+		std::string saveDataPath = romFilePath.substr(0, romFilePath.find_last_of(".")) + ".sav";
+
+		if (!cartridge.Load(romFilePath, saveDataPath))
 		{
 			Logger::WriteError("Invalid ROM file provided");
 			return false;

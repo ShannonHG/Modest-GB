@@ -168,27 +168,27 @@ namespace SHG
 		SDL_RenderClear(sdlRenderer);
 	}
 
-	void EmulatorWindow::RegisterFileSelectionCallback(FileSelectionEvent callback)
+	void EmulatorWindow::RegisterFileSelectionCallback(FileSelectionCallback callback)
 	{
 		romFileSelectionCallback = callback;
 	}
 
-	void EmulatorWindow::RegisterPauseButtonCallback(SimpleEvent callback)
+	void EmulatorWindow::RegisterPauseButtonCallback(SimpleCallback callback)
 	{
 		pauseButtonPressedCallback = callback;
 	}
 
-	void EmulatorWindow::RegisterStepButtonCallback(SimpleEvent callback)
+	void EmulatorWindow::RegisterStepButtonCallback(SimpleCallback callback)
 	{
 		stepButtonPressedCallback = callback;
 	}
 
-	void EmulatorWindow::RegisterClearButtonCallback(SimpleEvent callback)
+	void EmulatorWindow::RegisterClearButtonCallback(SimpleCallback callback)
 	{
 		clearButtonPressedCallback = callback;
 	}
 
-	void EmulatorWindow::RegisterQuitButtonCallback(SimpleEvent callback)
+	void EmulatorWindow::RegisterQuitButtonCallback(SimpleCallback callback)
 	{
 		quitButtonPressedCallback = callback;
 	}

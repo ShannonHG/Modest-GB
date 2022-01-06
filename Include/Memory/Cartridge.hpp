@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 #include <string>
 #include <map>
 #include <vector>
@@ -24,8 +25,7 @@ namespace SHG
 	class Cartridge : public Memory
 	{
 	public:
-		bool Load(const std::string& romFilePath);
-		bool Load(const std::vector<uint8_t>& romData);
+		bool Load(const std::string& romFilePath, const std::string& saveDataPath);
 
 		MemoryBankControllerType GetMemoryBankControllerType();
 		uint32_t GetROMSize();
@@ -35,7 +35,10 @@ namespace SHG
 		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
 		void Reset() override;
+
 	private:
+		std::fstream saveDataFile;
+		std::string saveDataPath;
 		bool isROMLoaded = false;
 
 		std::unique_ptr<MemoryBankController> memoryBankController;
@@ -45,10 +48,16 @@ namespace SHG
 		std::vector<uint8_t> rom;
 		std::string title;
 
+		bool Load(const std::vector<uint8_t>& romData);
+
 		void InitializeMemoryBankController(uint8_t byte);
 		void DecodeROMSize(uint8_t byte);
 		void InitializeRAM(uint8_t byte);
 		bool IsRAMAddress(uint16_t address) const;
 		void WriteUnsupportedMBCMesage();
+
+		void LoadSavedData();
+
+		void OnRAMWrite(uint16_t address, uint8_t value);
 	};
 }

@@ -2,18 +2,23 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <functional>
 #include "Utils/DataConversions.hpp"
 #include "Utils/MemoryUtils.hpp"
 #include "Memory/Memory.hpp"
 
 namespace SHG
 {
+	using RAMWriteCallback = std::function<void(uint16_t, uint8_t)>;
+
 	class MemoryBankController : public Memory
 	{
 	public:
 		static const uint16_t ROM_BANK_SIZE;
 		static const uint16_t RAM_BANK_SIZE;
 
+		void SetRAMWriteCallback(RAMWriteCallback callback);
+			
 		void AttachRAM(std::vector<uint8_t>& ram);
 		void AttachROM(std::vector<uint8_t>& rom);
 
@@ -30,6 +35,7 @@ namespace SHG
 		static uint32_t CalculatePhysicalRAMAddress(uint8_t ramBankNumber, uint16_t virtualAddressRangeStart, uint16_t targetVirtualAddress);
 
 	protected:
+		RAMWriteCallback ramWriteCallback;
 
 		std::vector<uint8_t>* ram{};
 		std::vector<uint8_t>* rom{};

@@ -28,6 +28,11 @@ namespace SHG
 			rom->clear();
 	}
 
+	void MemoryBankController::SetRAMWriteCallback(RAMWriteCallback callback)
+	{
+		ramWriteCallback = callback;
+	}
+
 	void MemoryBankController::PrintMissingROMMessage() const
 	{
 		Logger::WriteError("Attempted to access ROM data through, but no ROM is attached", GetMessageHeader());
@@ -75,6 +80,9 @@ namespace SHG
 		}
 
 		(*ram)[address] = value;
+
+		if (ramWriteCallback)
+			ramWriteCallback(address, value);
 	}
 
 	uint8_t MemoryBankController::ReadFromRAM(uint32_t address) const

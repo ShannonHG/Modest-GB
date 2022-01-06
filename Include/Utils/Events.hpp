@@ -2,6 +2,6 @@
 
 namespace SHG
 {
-	using SimpleEvent = std::function<void()>;
-	using FileSelectionEvent = std::function<void(std::string)>;
+	using SimpleCallback = std::function<void()>;
+	using FileSelectionCallback = std::function<void(std::string)>;
 }

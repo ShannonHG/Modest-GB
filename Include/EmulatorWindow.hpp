@@ -30,11 +30,11 @@ namespace SHG
 		SDL_Window* GetSDLWindow();
 		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
 	
-		void RegisterFileSelectionCallback(FileSelectionEvent callback);
-		void RegisterPauseButtonCallback(SimpleEvent callback);
-		void RegisterStepButtonCallback(SimpleEvent callback);
-		void RegisterClearButtonCallback(SimpleEvent callback);
-		void RegisterQuitButtonCallback(SimpleEvent callback);
+		void RegisterFileSelectionCallback(FileSelectionCallback callback);
+		void RegisterPauseButtonCallback(SimpleCallback callback);
+		void RegisterStepButtonCallback(SimpleCallback callback);
+		void RegisterClearButtonCallback(SimpleCallback callback);
+		void RegisterQuitButtonCallback(SimpleCallback callback);
 
 		void SetPauseButtonLabel(const std::string& label);
 
@@ -51,11 +51,11 @@ namespace SHG
 		SDL_Window* sdlWindow = nullptr;
 		SDL_Renderer* sdlRenderer = nullptr;
 
-		FileSelectionEvent romFileSelectionCallback;
-		SimpleEvent pauseButtonPressedCallback;
-		SimpleEvent stepButtonPressedCallback;
-		SimpleEvent clearButtonPressedCallback;
-		SimpleEvent quitButtonPressedCallback;
+		FileSelectionCallback romFileSelectionCallback;
+		SimpleCallback pauseButtonPressedCallback;
+		SimpleCallback stepButtonPressedCallback;
+		SimpleCallback clearButtonPressedCallback;
+		SimpleCallback quitButtonPressedCallback;
 
 		std::string pauseButtonLabel = "Pause";
 

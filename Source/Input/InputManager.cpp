@@ -89,7 +89,7 @@ namespace SHG
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			if (e.type == SDL_QUIT)
 			{
-				for (SimpleEvent callback : exitEventCallbacks)
+				for (SimpleCallback callback : exitEventCallbacks)
 					callback();
 
 				return;
@@ -148,7 +148,7 @@ namespace SHG
 		controllerButtonReleasedCallbacks.push_back(callback);
 	}
 
-	void InputManager::RegisterExitEventCallback(SimpleEvent callback)
+	void InputManager::RegisterExitEventCallback(SimpleCallback callback)
 	{
 		exitEventCallbacks.push_back(callback);
 	}

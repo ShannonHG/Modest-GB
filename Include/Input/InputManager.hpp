@@ -76,13 +76,13 @@ namespace SHG
 		void RegisterKeyReleasedCallback(KeyInputEvent callback);
 		void RegisterControllerButtonPressedCallback(ControllerInputEvent callback);
 		void RegisterControllerButtonReleasedCallback(ControllerInputEvent callback);
-		void RegisterExitEventCallback(SimpleEvent callback);
+		void RegisterExitEventCallback(SimpleCallback callback);
 	private:
 		std::vector<KeyInputEvent> keyPressedCallbacks;
 		std::vector<KeyInputEvent> keyReleasedCallbacks;
 		std::vector<ControllerInputEvent> controllerButtonPressedCallbacks;
 		std::vector<ControllerInputEvent> controllerButtonReleasedCallbacks;
-		std::vector<SimpleEvent> exitEventCallbacks;
+		std::vector<SimpleCallback> exitEventCallbacks;
 
 		void InvokeKeyInputCallbacks(std::vector<KeyInputEvent>& callbacks, KeyCode keyCode);
 		void InvokeControllerInputCallbacks(std::vector<ControllerInputEvent>& callbacks, ControllerButtonCode buttonCode);

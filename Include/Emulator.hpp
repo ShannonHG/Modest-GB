@@ -50,10 +50,10 @@ namespace SHG
 		void OnStepButtonPressed();
 		void OnClearButtonPressed();
 
-		void AddLogEntry(std::string logEntry, LogMessageType messageType);
-		void OnFileSelected(std::string path);
+		void AddLogEntry(const std::string& logEntry, LogMessageType messageType);
+		void OnFileSelected(const std::string& path);
 
-		bool LoadROM(std::string& romFilePath);
+		bool LoadROM(const std::string& romFilePath);
 
 		void SetupMemoryMap();
 
