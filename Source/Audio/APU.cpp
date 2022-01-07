@@ -11,6 +11,7 @@ namespace SHG
 	const int SAMPLE_FREQUENCY = 44100;
 	const uint16_t AUDIO_BUFFER_SIZE = 4096;
 	const uint32_t FRAME_SEQUENCER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 512.0f));
+	const uint32_t SAMPLE_COLLECTION_TIMER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / static_cast<float>(SAMPLE_FREQUENCY)));
 
 	void APU::Initialize()
 	{
@@ -24,16 +25,13 @@ namespace SHG
 		SDL_AudioSpec outputSpec;
 
 		// TODO: Revisit
-		const char* name = SDL_GetAudioDeviceName(0, SDL_FALSE);
+		const char* name = SDL_GetAudioDeviceName(1, SDL_FALSE);
 		Logger::WriteInfo(name);
 		audioDeviceID = SDL_OpenAudioDevice(name, SDL_FALSE, &spec, &outputSpec, 0);
 		SDL_PauseAudioDevice(audioDeviceID, 0);
 
-		frameSequencerTimer.SetPeriod(FRAME_SEQUENCER_PERIOD);
-		frameSequencerTimer.Restart();
-
-		sampleCollectionTimer.SetPeriod(static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 44100.0f)));
-		sampleCollectionTimer.Restart();
+		frameSequencerTimer.Restart(FRAME_SEQUENCER_PERIOD);
+		sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
 	}
 
 	void APU::Tick(uint32_t cycles)
@@ -42,6 +40,8 @@ namespace SHG
 		{
 			if (frameSequencerTimer.Tick())
 			{
+				frameSequencerTimer.Restart(FRAME_SEQUENCER_PERIOD);
+
 				switch (frameSequencerStep)
 				{
 				case 0:
@@ -93,6 +93,8 @@ namespace SHG
 
 			if (sampleCollectionTimer.Tick())
 			{
+				sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
+
 				float sample = 0;
 
 				if (isChannel1Connected)
@@ -111,7 +113,7 @@ namespace SHG
 			}
 
 			// TODO: Revisit
-			if (samples.size() >= 4096)
+			if (samples.size() >= AUDIO_BUFFER_SIZE)
 			{
 				if (SDL_QueueAudio(audioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
 					Logger::WriteError("SDL failed to play audio. Error: " + std::string(SDL_GetError()));
@@ -351,11 +353,16 @@ namespace SHG
 	uint8_t APU::ReadNR52() const
 	{
 		return
-			static_cast<int8_t>(channel1.IsEnabled()) |
+			(static_cast<int8_t>(channel1.IsEnabled()) |
 			static_cast<int8_t>(channel2.IsEnabled() << 1) |
 			static_cast<int8_t>(channel3.IsEnabled() << 2) |
 			static_cast<int8_t>(channel3.IsEnabled() << 3) |
-			static_cast<int8_t>(isSoundControllerEnabled << 7);
+			static_cast<int8_t>(isSoundControllerEnabled << 7)) | 0x70;
+	}
+
+	uint8_t APU::ReadWavePatternRAM() const
+	{
+		return channel3.ReadWavePatternRAM();
 	}
 
 	void APU::SetChannel1ConnectionStatus(bool value)

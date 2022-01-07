@@ -11,7 +11,7 @@ namespace SHG
 
 	SoundChannel::SoundChannel()
 	{
-		
+
 	}
 
 	void SoundChannel::TickFrequencyTimer()
@@ -20,7 +20,10 @@ namespace SHG
 			return;
 
 		if (frequencyTimer.Tick())
+		{
+			ReloadFrequencyTimer();
 			OnFrequencyTimerReachedZero();
+		}
 	}
 
 	void SoundChannel::TickVolumeEnvelopeTimer()
@@ -30,12 +33,17 @@ namespace SHG
 
 		if (envelopeTimer.Tick())
 		{
-			// Decrement or increment the volume depending on the envelope direction.
-			int16_t newVolume = volume + static_cast<int8_t>(GetVolumeEnvelopeDirection());
+			ReloadEnvelopeTimer();
 
-			// If the new volume does not overflow, then update the volume.
-			if (newVolume >= 0 && newVolume <= MAX_UNSCALED_VOLUME)
-				volume = newVolume;
+			if (GetVolumeEnvelopeTimerPeriod() != 0)
+			{
+				// Decrement or increment the volume depending on the envelope direction.
+				int16_t newVolume = volume + static_cast<int8_t>(GetVolumeEnvelopeDirection());
+
+				// If the new volume does not overflow, then update the volume.
+				if (newVolume >= 0 && newVolume <= MAX_UNSCALED_VOLUME)
+					volume = static_cast<uint8_t>(newVolume);
+			}
 		}
 	}
 
@@ -44,10 +52,15 @@ namespace SHG
 		if (!isSoundControllerEnabled)
 			return;
 
-		// If the length timer reaches 0, and the respective bit in NRX4 is set, 
-		// the this channel should be disabled.
-		if (lengthTimer.Tick() && IsConstrainedByLength())
-			isEnabled = false;
+		if (lengthTimer.Tick())
+		{
+			ReloadLengthTimer();
+
+			// If the length timer reaches 0, and the respective bit in NRX4 is set, 
+			// the this channel should be disabled.
+			if (IsConstrainedByLength())
+				isEnabled = false;
+		}
 	}
 
 	bool SoundChannel::IsEnabled() const
@@ -58,7 +71,7 @@ namespace SHG
 	float SoundChannel::GetSample() const
 	{
 		// Outputs an amplitude between -1 and 1.
-		return isEnabled && isSoundControllerEnabled ? ((GenerateSample() /  MAX_UNSCALED_VOLUME) * 2) - 1 : 0;
+		return isEnabled && isSoundControllerEnabled ? ((GenerateSample() / MAX_UNSCALED_VOLUME) * 2) - 1 : 0;
 	}
 
 	void SoundChannel::Reset()
@@ -175,11 +188,8 @@ namespace SHG
 		if (lengthTimer.IsStopped())
 			ReloadLengthTimer();
 
-		frequencyTimer.SetPeriod(GetFrequencyTimerPeriod());
-		frequencyTimer.Restart();
-
-		envelopeTimer.SetPeriod(GetVolumeEnvelopeTimerPeriod());
-		envelopeTimer.Restart();
+		ReloadFrequencyTimer();
+		ReloadEnvelopeTimer();
 
 		volume = GetInitialEnvelopeVolume();
 	}
@@ -191,8 +201,20 @@ namespace SHG
 
 	void SoundChannel::ReloadLengthTimer()
 	{
-		lengthTimer.SetPeriod(GetLengthTimerPeriod());
-		lengthTimer.Restart();
+		lengthTimer.Restart(GetLengthTimerPeriod());
+	}
+
+	void SoundChannel::ReloadFrequencyTimer()
+	{
+		frequencyTimer.Restart(GetFrequencyTimerPeriod());
+	}
+
+	void SoundChannel::ReloadEnvelopeTimer()
+	{
+		uint16_t period = GetVolumeEnvelopeTimerPeriod();
+
+		// The volume envelope timer treats a period of 0 as 8.
+		envelopeTimer.Restart(period == 0 ? 8 : period);
 	}
 
 	void SoundChannel::OnFrequencyTimerReachedZero()

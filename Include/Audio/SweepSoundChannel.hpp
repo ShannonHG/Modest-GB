@@ -9,6 +9,7 @@ namespace SHG
 		SweepSoundChannel();
 		void TickSweepTimer();
 		void Reset() override;
+		uint8_t ReadNRX0() const override;
 
 	protected:
 		void OnTrigger() override;
@@ -19,8 +20,9 @@ namespace SHG
 		AudioTimer sweepTimer;
 		uint16_t shadowFrequency = 0;
 
-		uint32_t CalculateShadowFrequency() const;
-		bool PerformOverflowCheck(uint32_t newFrequency);
+		void ReloadSweepTimer();
+		int32_t CalculateShadowFrequency() const;
+		bool PerformOverflowCheck(int32_t newFrequency);
 		void UpdateFrequency(uint16_t newFrequency);
 
 		uint8_t GetSweepPeriod() const;

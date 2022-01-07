@@ -11,10 +11,7 @@ namespace SHG
 		{
 			counter--;
 			if (counter == 0)
-			{
-				Restart();
 				return true;
-			}
 		}
 
 		return false;
@@ -24,7 +21,6 @@ namespace SHG
 	{
 		isEnabled = false;
 		counter = 0;
-		period = 0;
 	}
 
 	void AudioTimer::Enable()
@@ -32,12 +28,7 @@ namespace SHG
 		isEnabled = true;
 	}
 
-	void AudioTimer::SetPeriod(uint32_t duration)
-	{
-		period = duration;
-	}
-
-	void AudioTimer::Restart()
+	void AudioTimer::Restart(uint16_t period)
 	{
 		counter = period;
 		Enable();

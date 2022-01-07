@@ -29,18 +29,50 @@ namespace SHG
 			return;
 		}
 
+		previousWaveRAMValue = value;
+
 		samples[address - WAVE_PATTERN_RAM_START_ADDRESS] = (value >> 4) & 0b1111;
 		samples[(address - WAVE_PATTERN_RAM_START_ADDRESS) + 1] = value & 0b1111;
 	}
 
-	uint32_t WaveSoundChannel::GetLengthTimerPeriod() const
+	uint8_t WaveSoundChannel::ReadNRX0() const
+	{
+		return SoundChannel::ReadNRX0() | 0x7F;
+	}
+
+	uint8_t WaveSoundChannel::ReadNRX1() const
+	{
+		return SoundChannel::ReadNRX1() | 0xFF;
+	}
+
+	uint8_t WaveSoundChannel::ReadNRX2() const
+	{
+		return SoundChannel::ReadNRX2() | 0x9F;
+	}
+
+	uint8_t WaveSoundChannel::ReadNRX3() const
+	{
+		return SoundChannel::ReadNRX3() | 0xFF;
+	}
+
+	uint8_t WaveSoundChannel::ReadNRX4() const
+	{
+		return SoundChannel::ReadNRX4() | 0xBF;
+	}
+
+	uint8_t WaveSoundChannel::ReadWavePatternRAM() const
+	{
+		return previousWaveRAMValue;
+	}
+
+	uint16_t WaveSoundChannel::GetLengthTimerPeriod() const
 	{
 		return nrx1.Read();
 	}
 
 	float WaveSoundChannel::GenerateSample() const
 	{
-		return samples[sampleIndex] >> GetVolumeControlShift();
+		return static_cast<float>(samples[sampleIndex] >> GetVolumeControlShift());
 	}
 
 	bool WaveSoundChannel::IsConstrainedByLength() const
@@ -48,7 +80,7 @@ namespace SHG
 		return nrx4.Read(6);
 	}
 
-	uint32_t WaveSoundChannel::GetFrequencyTimerPeriod() const
+	uint16_t WaveSoundChannel::GetFrequencyTimerPeriod() const
 	{
 		uint16_t frequency = (nrx4.Read(0, 2) << 8) | nrx3.Read();
 		return (2048 - frequency) * 2;
@@ -76,7 +108,7 @@ namespace SHG
 		return 0;
 	}
 
-	uint32_t WaveSoundChannel::GetVolumeEnvelopeTimerPeriod() const
+	uint16_t WaveSoundChannel::GetVolumeEnvelopeTimerPeriod() const
 	{
 		return 0;
 	}

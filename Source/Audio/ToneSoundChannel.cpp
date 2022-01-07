@@ -41,12 +41,37 @@ namespace SHG
 			DisableVolumeEnvelope();
 	}
 
-	float ToneSoundChannel::GenerateSample() const
+	uint8_t ToneSoundChannel::ReadNRX0() const
 	{
-		return WAVEFORMS.at(GetWaveformIndex())[waveformPosition] * volume;
+		return SoundChannel::ReadNRX0() | 0xFF;
 	}
 
-	uint32_t ToneSoundChannel::GetFrequency() const
+	uint8_t ToneSoundChannel::ReadNRX1() const
+	{
+		return SoundChannel::ReadNRX1() | 0x3F;
+	}
+
+	uint8_t ToneSoundChannel::ReadNRX2() const
+	{
+		return SoundChannel::ReadNRX2() | 0x00;
+	}
+
+	uint8_t ToneSoundChannel::ReadNRX3() const
+	{
+		return SoundChannel::ReadNRX3() | 0xFF;
+	}
+
+	uint8_t ToneSoundChannel::ReadNRX4() const
+	{
+		return SoundChannel::ReadNRX4() | 0xBF;
+	}
+
+	float ToneSoundChannel::GenerateSample() const
+	{
+		return static_cast<float>(WAVEFORMS.at(GetWaveformIndex())[waveformPosition] * volume);
+	}
+
+	uint16_t ToneSoundChannel::GetFrequency() const
 	{
 		// Bits 0 - 2 of NRX4 define the upper 3 bits of the 11 bit frequency, 
 		// and NRX3 defines the lower 8 bits.
@@ -86,17 +111,17 @@ namespace SHG
 		return nrx4.Read(6);
 	}
 
-	uint32_t ToneSoundChannel::GetFrequencyTimerPeriod() const
+	uint16_t ToneSoundChannel::GetFrequencyTimerPeriod() const
 	{
 		return ((2048 - GetFrequency()) * 4);
 	}
 
-	uint32_t ToneSoundChannel::GetVolumeEnvelopeTimerPeriod() const
+	uint16_t ToneSoundChannel::GetVolumeEnvelopeTimerPeriod() const
 	{
 		return nrx2.Read(0, 2);
 	}
 
-	uint32_t ToneSoundChannel::GetLengthTimerPeriod() const
+	uint16_t ToneSoundChannel::GetLengthTimerPeriod() const
 	{
 		return nrx1.Read(0, 5);
 	}

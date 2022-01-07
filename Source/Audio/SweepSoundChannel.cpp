@@ -9,7 +9,7 @@ namespace SHG
 
 	SweepSoundChannel::SweepSoundChannel() : ToneSoundChannel()
 	{
-		
+
 	}
 
 	void SweepSoundChannel::Reset()
@@ -28,11 +28,13 @@ namespace SHG
 
 		if (sweepTimer.Tick())
 		{
+			ReloadSweepTimer();
+
 			if (isSweepEnabled && GetSweepPeriod() != 0)
 			{
-				uint32_t newShadowFrequency = CalculateShadowFrequency();
+				int32_t newShadowFrequency = CalculateShadowFrequency();
 
-				if (PerformOverflowCheck(newShadowFrequency))
+				if (GetSweepShift() != 0 && PerformOverflowCheck(newShadowFrequency))
 				{
 					// Update the frequency bits stored in NR13 and NR14.
 					UpdateFrequency(newShadowFrequency);
@@ -45,19 +47,21 @@ namespace SHG
 		}
 	}
 
+	uint8_t SweepSoundChannel::ReadNRX0() const
+	{
+		return SoundChannel::ReadNRX0() | 0x80;
+	}
+
 	void SweepSoundChannel::OnTrigger()
 	{
 		ToneSoundChannel::OnTrigger();
 
 		// Copy the frequency to the shadow register
 		shadowFrequency = GetFrequency();
+		ReloadSweepTimer();
 
 		uint8_t sweepPeriod = GetSweepPeriod();
 		uint8_t sweepShift = GetSweepShift();
-
-		// The sweep timer treats a period of 0 as 8.
-		sweepTimer.SetPeriod(sweepPeriod);
-		sweepTimer.Restart();
 
 		// Enable the sweep functionality if either the sweep period or sweep shift are non-zero, otherwise disable it.
 		isSweepEnabled = sweepPeriod != 0 || sweepShift != 0;
@@ -70,17 +74,17 @@ namespace SHG
 		}
 	}
 
-	uint32_t SweepSoundChannel::CalculateShadowFrequency() const
+	int32_t SweepSoundChannel::CalculateShadowFrequency() const
 	{
 		return shadowFrequency + ((shadowFrequency >> GetSweepShift()) * static_cast<int8_t>(GetSweepDirection()));
 	}
 
-	bool SweepSoundChannel::PerformOverflowCheck(uint32_t newFrequency)
+	bool SweepSoundChannel::PerformOverflowCheck(int32_t newFrequency)
 	{
 		// The frequency of this channel is 11 bits wide, so if the new 
 		// frequency is larger than 2047 (max value that can be represented with 11 bits), 
-		// then the new frequency should not be used. Additionally, this channel is disabled.
-		if (newFrequency > MAX_FREQUENCY)
+		// then the new frequency should not be used, and this channel should be disabled.
+		if (newFrequency < 0 || newFrequency > MAX_FREQUENCY)
 		{
 			isEnabled = false;
 			return false;
@@ -113,5 +117,13 @@ namespace SHG
 	uint8_t SweepSoundChannel::GetSweepShift() const
 	{
 		return nrx0.Read(0, 2);
+	}
+
+	void SweepSoundChannel::ReloadSweepTimer()
+	{
+		uint16_t period = GetSweepPeriod();
+
+		// The sweep timer treats a period of 0 as 8.
+		sweepTimer.Restart(period == 0 ? 8 : period);
 	}
 }

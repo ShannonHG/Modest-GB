@@ -160,7 +160,7 @@ namespace SHG
 				memoryBankController->SetRAMWriteCallback(std::bind(&Cartridge::OnRAMWrite, this, std::placeholders::_1, std::placeholders::_2));
 
 				// Load saved RAM data (if any), from the saved data path.
-				LoadSavedData();
+				OpenSaveDataFile();
 			}
 
 			if (GetROMSize() > 0)
@@ -221,8 +221,6 @@ namespace SHG
 				// Normalize the address to the range [0, RAM_SIZE].
 				uint16_t normalizedAddress = address - OPTIONAL_8KB_RAM_START_ADDRESS;
 				ram[normalizedAddress] = value;
-
-				OnRAMWrite(normalizedAddress, value);
 			}
 			break;
 		default:
@@ -374,7 +372,7 @@ namespace SHG
 		}
 	}
 
-	void Cartridge::LoadSavedData()
+	void Cartridge::OpenSaveDataFile()
 	{
 		if (!saveDataFile.is_open())
 		{

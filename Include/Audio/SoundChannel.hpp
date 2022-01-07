@@ -54,6 +54,8 @@ namespace SHG
 		Register8 nrx4;
 
 		void DisableVolumeEnvelope();
+		void ReloadFrequencyTimer();
+		void ReloadEnvelopeTimer();
 		void ReloadLengthTimer();
 
 		virtual void OnTrigger();
@@ -64,9 +66,9 @@ namespace SHG
 		virtual bool IsConstrainedByLength() const = 0;
 		virtual float GenerateSample() const = 0;
 
-		virtual uint32_t GetFrequencyTimerPeriod() const = 0;
-		virtual uint32_t GetLengthTimerPeriod() const = 0;
-		virtual uint32_t GetVolumeEnvelopeTimerPeriod() const = 0;
+		virtual uint16_t GetFrequencyTimerPeriod() const = 0;
+		virtual uint16_t GetLengthTimerPeriod() const = 0;
+		virtual uint16_t GetVolumeEnvelopeTimerPeriod() const = 0;
 
 	private:
 		AudioTimer frequencyTimer;

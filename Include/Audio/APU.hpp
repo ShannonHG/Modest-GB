@@ -68,6 +68,7 @@ namespace SHG
 		uint8_t ReadNR50() const;
 		uint8_t ReadNR51() const;
 		uint8_t ReadNR52() const;
+		uint8_t ReadWavePatternRAM() const;
 
 	private:
 		bool isChannel1Connected = true;

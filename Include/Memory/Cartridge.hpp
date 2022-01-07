@@ -56,7 +56,7 @@ namespace SHG
 		bool IsRAMAddress(uint16_t address) const;
 		void WriteUnsupportedMBCMesage();
 
-		void LoadSavedData();
+		void OpenSaveDataFile();
 
 		void OnRAMWrite(uint16_t address, uint8_t value);
 	};

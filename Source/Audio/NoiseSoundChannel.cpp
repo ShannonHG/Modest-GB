@@ -31,7 +31,32 @@ namespace SHG
 			DisableVolumeEnvelope();
 	}
 
-	uint32_t NoiseSoundChannel::GetFrequencyTimerPeriod() const
+	uint8_t NoiseSoundChannel::ReadNRX0() const
+	{
+		return SoundChannel::ReadNRX0() | 0xFF;
+	}
+
+	uint8_t NoiseSoundChannel::ReadNRX1() const
+	{
+		return SoundChannel::ReadNRX1() | 0xFF;
+	}
+
+	uint8_t NoiseSoundChannel::ReadNRX2() const
+	{
+		return SoundChannel::ReadNRX2() | 0x00;
+	}
+
+	uint8_t NoiseSoundChannel::ReadNRX3() const
+	{
+		return SoundChannel::ReadNRX3() | 0x00;
+	}
+
+	uint8_t NoiseSoundChannel::ReadNRX4() const
+	{
+		return SoundChannel::ReadNRX4() | 0xBF;
+	}
+
+	uint16_t NoiseSoundChannel::GetFrequencyTimerPeriod() const
 	{
 		uint8_t divisorCode = nrx3.Read(0, 2);
 		return (divisorCode == 0 ? 8 : divisorCode * 16) << GetFrequencyShift();
@@ -52,7 +77,7 @@ namespace SHG
 		return static_cast<float>(((~shiftRegister.Read()) & 1) * volume);
 	}
 
-	uint32_t NoiseSoundChannel::GetLengthTimerPeriod() const
+	uint16_t NoiseSoundChannel::GetLengthTimerPeriod() const
 	{
 		return nrx1.Read(0, 5);
 	}
@@ -67,7 +92,7 @@ namespace SHG
 		return nrx2.Read(4, 7);
 	}
 
-	uint32_t NoiseSoundChannel::GetVolumeEnvelopeTimerPeriod() const
+	uint16_t NoiseSoundChannel::GetVolumeEnvelopeTimerPeriod() const
 	{
 		return nrx2.Read(0, 2);
 	}
@@ -81,7 +106,7 @@ namespace SHG
 	{
 		SoundChannel::OnTrigger();
 
-		shiftRegister.Fill(true);
+		shiftRegister.Fill(1);
 	}
 
 	uint8_t NoiseSoundChannel::GetShiftRegisterSize() const

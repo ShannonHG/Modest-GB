@@ -181,7 +181,7 @@ namespace SHG
 	{
 		this->ppu = ppu;
 	}
-	
+
 	void MemoryMap::AttachAPU(APU* apu)
 	{
 		this->apu = apu;
@@ -305,7 +305,15 @@ namespace SHG
 		case GB_NR52_ADDRESS:
 			return apu->ReadNR52();
 		default:
-			return ioRegisters->Read(Arithmetic::NormalizeAddress(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS));
+			if (address >= GB_WAVE_PATTERN_RAM_START_ADDRESS && address <= GB_WAVE_PATTERN_RAM_END_ADDRESS)
+			{
+				return apu->ReadWavePatternRAM();
+			}
+			else
+			{
+				// Read from generic I/O memory.
+				return ioRegisters->Read(Arithmetic::NormalizeAddress(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS));
+			}
 		}
 	}
 
@@ -374,7 +382,7 @@ namespace SHG
 			break;
 		case GB_NR14_ADDRESS:
 			apu->WriteToNR14(value);
-			break;		
+			break;
 		case GB_NR21_ADDRESS:
 			apu->WriteToNR21(value);
 			break;
