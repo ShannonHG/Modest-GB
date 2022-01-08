@@ -295,6 +295,10 @@ namespace SHG
 						shouldRenderJoypadDebugWindow = true;
 
 					ImGui::Spacing();
+					if (ImGui::MenuItem("Timer"))
+						shouldRenderTimerDebugWindow = true;
+
+					ImGui::Spacing();
 					if (ImGui::MenuItem("Logs"))
 						shouldRenderLogWindow = true;
 
@@ -528,21 +532,16 @@ namespace SHG
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
+
 			ImGui::Text(("LCDC: " + GetHexString8(ppu.ReadLCDC())).c_str());
-			//ImGui::SameLine();
 			ImGui::Text(("STAT: " + GetHexString8(ppu.ReadLCDSTAT())).c_str());
-			//ImGui::SameLine();
-			ImGui::Text(("LY: " + GetHexString8(ppu.ReadLY())).c_str());
+			ImGui::Text(("LY:   " + GetHexString8(ppu.ReadLY())).c_str());
+			ImGui::Text(("LYC:  " + GetHexString8(ppu.ReadLYC())).c_str());
+			ImGui::Text(("SCY:  " + GetHexString8(ppu.ReadSCY())).c_str());
+			ImGui::Text(("SCX:  " + GetHexString8(ppu.ReadSCX())).c_str());
+			ImGui::Text(("WY:   " + GetHexString8(ppu.ReadWY())).c_str());
+			ImGui::Text(("WX:   " + GetHexString8(ppu.ReadWX())).c_str());
 
-			ImGui::Text(("LYC: " + GetHexString8(ppu.ReadLYC())).c_str());
-			//ImGui::SameLine();
-			ImGui::Text(("SCY: " + GetHexString8(ppu.ReadSCY())).c_str());
-			//ImGui::SameLine();
-			ImGui::Text(("SCX: " + GetHexString8(ppu.ReadSCX())).c_str());
-
-			ImGui::Text(("WY: " + GetHexString8(ppu.ReadWY())).c_str());
-			//ImGui::SameLine();
-			ImGui::Text(("WX: " + GetHexString8(ppu.ReadWX())).c_str());
 			ImGui::Separator();
 		}
 
@@ -592,7 +591,15 @@ namespace SHG
 
 		if (ImGui::Begin("Timer", &shouldRenderTimerDebugWindow))
 		{
-			// TODO: Implement
+			ImGui::Text("Registers");
+			ImGui::Separator();
+
+			ImGui::Text(("DIV:  " + GetHexString8(timer.GetDividerRegister())).c_str());
+			ImGui::Text(("TIMA: " + GetHexString8(timer.GetTimerCounter())).c_str());
+			ImGui::Text(("TMA:  " + GetHexString8(timer.GetTimerModulo())).c_str());
+			ImGui::Text(("TAC:  " + GetHexString8(timer.GetTimerControlRegister())).c_str());
+
+			ImGui::Separator();
 		}
 
 		ImGui::End();
