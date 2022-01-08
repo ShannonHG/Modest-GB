@@ -15,6 +15,10 @@ namespace SHG
 	public:
 		void Initialize();
 		void Tick(uint32_t cycles);
+		void RefreshOutputDevices();
+
+		const std::vector<std::string>& GetAllAudioDeviceNames() const;
+		void SetOutputDevice(const std::string& audioDeviceName);
 
 		void SetChannel1ConnectionStatus(bool value);
 		void SetChannel2ConnectionStatus(bool value);
@@ -90,9 +94,14 @@ namespace SHG
 		std::array<SoundChannel*, 4> channels = { &channel1, &channel2, &channel3, &channel4 };
 		std::array<uint8_t, 4> connectionStates = { true, true, true, true };
 
-		SDL_AudioDeviceID audioDeviceID = 0;
+		SDL_AudioDeviceID currentAudioDeviceID = 0;
+		std::string currentAudioDeviceName;
+		SDL_AudioSpec currentAudioSpec;
+		std::vector<std::string> audioDeviceNames;
+
 		std::vector<float> samples;
 
 		void MixChannels();
+		void RefreshAudioDeviceNames();
 	};
 }

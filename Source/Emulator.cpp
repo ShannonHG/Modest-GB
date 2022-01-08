@@ -113,6 +113,7 @@ namespace SHG
 
 			if (timeSinceLastFrame >= GB_DURATION_PER_FRAME)
 			{
+				apu.RefreshOutputDevices();
 				inputManager.Update();
 				window.Render(memoryMap, ppu, processor, apu, joypad, timer, cyclesPerSecond, logEntries);
 				timeSinceLastFrame = 0;

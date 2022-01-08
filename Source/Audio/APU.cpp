@@ -7,6 +7,7 @@
 
 namespace SHG
 {
+	const std::string APU_MESSAGE_HEADER = "[APU]";
 	const uint8_t AUDIO_CHANNELS = 2;
 	const int SAMPLE_FREQUENCY = 44100;
 	const uint16_t AUDIO_BUFFER_SIZE = 4096;
@@ -15,23 +16,52 @@ namespace SHG
 
 	void APU::Initialize()
 	{
-		SDL_AudioSpec spec;
-		SDL_zero(spec);
-		spec.freq = SAMPLE_FREQUENCY;
-		spec.format = AUDIO_F32;
-		spec.channels = AUDIO_CHANNELS;
-		spec.samples = AUDIO_BUFFER_SIZE;
+		SDL_zero(currentAudioSpec);
+		currentAudioSpec.freq = SAMPLE_FREQUENCY;
+		currentAudioSpec.format = AUDIO_F32;
+		currentAudioSpec.channels = AUDIO_CHANNELS;
+		currentAudioSpec.samples = AUDIO_BUFFER_SIZE;
 
-		SDL_AudioSpec outputSpec;
-
-		// TODO: Revisit
-		const char* name = SDL_GetAudioDeviceName(1, SDL_FALSE);
-		Logger::WriteInfo(name);
-		audioDeviceID = SDL_OpenAudioDevice(name, SDL_FALSE, &spec, &outputSpec, 0);
-		SDL_PauseAudioDevice(audioDeviceID, 0);
+		RefreshAudioDeviceNames();
 
 		frameSequencerTimer.Restart(FRAME_SEQUENCER_PERIOD);
 		sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
+	}
+
+	const std::vector<std::string>& APU::GetAllAudioDeviceNames() const
+	{
+		return audioDeviceNames;
+	}
+
+	void APU::SetOutputDevice(const std::string& audioDeviceName)
+	{
+		// Close the existing audio device, if any.
+		if (currentAudioDeviceID > 0 && currentAudioDeviceName != audioDeviceName)
+			SDL_CloseAudioDevice(currentAudioDeviceID);
+
+		SDL_AudioDeviceID result = SDL_OpenAudioDevice(audioDeviceName.c_str(), SDL_FALSE, &currentAudioSpec, nullptr, 0);
+
+		if (result == 0)
+		{
+			Logger::WriteError("Failed to select output device: " + audioDeviceName, APU_MESSAGE_HEADER);
+			return;
+		}
+		
+		currentAudioDeviceID = result;
+		currentAudioDeviceName = audioDeviceName;
+
+		SDL_PauseAudioDevice(currentAudioDeviceID, SDL_FALSE);
+		Logger::WriteInfo("Selected output device: " + audioDeviceName, APU_MESSAGE_HEADER);
+	}
+
+	void APU::RefreshOutputDevices()
+	{
+		// Check if any audio devices were added or removed.
+		if (SDL_GetNumAudioDevices(SDL_FALSE) != audioDeviceNames.size())
+		{
+			Logger::WriteInfo("Output devices changed.", APU_MESSAGE_HEADER);
+			RefreshAudioDeviceNames();
+		}
 	}
 
 	void APU::Tick(uint32_t cycles)
@@ -101,8 +131,8 @@ namespace SHG
 
 			if (samples.size() >= AUDIO_BUFFER_SIZE)
 			{
-				if (SDL_QueueAudio(audioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
-					Logger::WriteError("SDL failed to play audio. Error: " + std::string(SDL_GetError()));
+				if (SDL_QueueAudio(currentAudioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
+					Logger::WriteError("SDL failed to play audio. Error: " + std::string(SDL_GetError()), APU_MESSAGE_HEADER);
 
 				samples.clear();
 			}
@@ -214,9 +244,7 @@ namespace SHG
 		isSoundControllerEnabled = Arithmetic::GetBit(value, 7);
 
 		if (isSoundControllerEnabled)
-		{
 			frameSequencerStep = 0;
-		}
 
 		for (uint8_t i = 0; i < 4; i++)
 		{
@@ -416,5 +444,29 @@ namespace SHG
 		// In stereo mode, SDL expects the samples in left/right ordering.
 		samples.push_back(left);
 		samples.push_back(right);
+	}
+
+	void APU::RefreshAudioDeviceNames()
+	{
+		audioDeviceNames.clear();
+
+		bool isCurrentDeviceFound = false;
+		int outputDeviceCount = SDL_GetNumAudioDevices(SDL_FALSE);
+		
+		for (int i = 0; i < outputDeviceCount; i++)
+		{
+			const char* name = SDL_GetAudioDeviceName(i, SDL_FALSE);
+
+			// Is the currently selected audio device still connected?
+			if (name == currentAudioDeviceName)
+				isCurrentDeviceFound = true;
+
+			Logger::WriteInfo("Output device: " + std::string(name), APU_MESSAGE_HEADER);
+			audioDeviceNames.push_back(name);
+		}
+
+		// Is the currently selected audio device is no longer connected, then choose a new device.
+		if (!isCurrentDeviceFound)
+			SetOutputDevice(SDL_GetAudioDeviceName(outputDeviceCount - 1, SDL_FALSE));
 	}
 }
