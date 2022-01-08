@@ -121,12 +121,12 @@ namespace SHG
 
 		vram.Write(address, value);
 	}
-	
+
 	void PPU::WriteToOAM(uint16_t address, uint8_t value)
 	{
 		// OAM access is blocked in modes 2 and 3, and during DMA transfer.
-		if (currentMode == Mode::SearchingOAM || 
-			currentMode == Mode::LCDTransfer || 
+		if (currentMode == Mode::SearchingOAM ||
+			currentMode == Mode::LCDTransfer ||
 			currentDMATransferState == DMATransferState::InProgress)
 			return;
 
@@ -180,18 +180,18 @@ namespace SHG
 	uint8_t PPU::ReadVRAM(uint16_t address) const
 	{
 		// VRAM access is blocked in mode 3, and during DMA transfer.
-		if (currentMode == Mode::LCDTransfer || 
+		if (currentMode == Mode::LCDTransfer ||
 			currentDMATransferState == DMATransferState::InProgress)
 			return 0xFF;
 
 		return vram.Read(address);
 	}
-	
+
 	uint8_t PPU::ReadOAM(uint16_t address) const
 	{
 		// OAM access is blocked in modes 2 and 3, and during DMA transfer.
-		if (currentMode == Mode::SearchingOAM || 
-			currentMode == Mode::LCDTransfer || 
+		if (currentMode == Mode::SearchingOAM ||
+			currentMode == Mode::LCDTransfer ||
 			currentDMATransferState == DMATransferState::InProgress)
 			return 0xFF;
 
@@ -525,7 +525,8 @@ namespace SHG
 					}
 
 					// Render the pixel and increase the X coordinate of the current scanline by 1.
-					RenderPixel(selectedPixel);
+					RenderPixel(primaryFramebuffer, selectedPixel, currentScanlineX, ly.Read());
+					currentScanlineX++;
 				}
 			}
 			else
@@ -535,7 +536,8 @@ namespace SHG
 					selectedPixel = spritePixelFetcher.PopPixel();
 
 				// Render the pixel and increase the X coordinate of the current scanline by 1.
-				RenderPixel(selectedPixel);
+				RenderPixel(primaryFramebuffer, selectedPixel, currentScanlineX, ly.Read());
+				currentScanlineX++;
 			}
 
 			if (currentScanlineX >= GB_SCREEN_WIDTH)
@@ -546,7 +548,7 @@ namespace SHG
 		}
 	}
 
-	void PPU::RenderPixel(const Pixel& pixel)
+	void PPU::RenderPixel(Framebuffer& framebuffer, const Pixel& pixel, uint16_t scanlineX, uint16_t scanlineY)
 	{
 		Color color = GetColorFromColorIndex(pixel.colorIndex, memoryMap->Read(pixel.paletteAddress));
 
@@ -560,8 +562,7 @@ namespace SHG
 		color.g = static_cast<uint8_t>(floatGreen * paletteTints[pixel.paletteAddress][pixel.colorIndex].g);
 		color.b = static_cast<uint8_t>(floatBlue * paletteTints[pixel.paletteAddress][pixel.colorIndex].b);
 
-		primaryFramebuffer.SetPixel(currentScanlineX, ly.Read(), color);
-		currentScanlineX++;
+		framebuffer.SetPixel(scanlineX, scanlineY, color);
 	}
 
 	void PPU::SetCurrentMode(Mode mode)
@@ -612,7 +613,7 @@ namespace SHG
 		{
 			for (uint32_t i = 0; i < cycles; i++)
 			{
-				// A DMA transfer causes data to be transfer from $XX00-$XX9F to $FFE0-$FE9F (OAM).
+				// A DMA transfer causes data to be transferred from $XX00-$XX9F to $FFE0-$FE9F (OAM).
 				// Since a DMA transfer lasts 160 cycles and also transfers 160 bytes, the elapsed DMA transfer time
 				// can be used as the offset from the source and destination addresses.
 				uint8_t sourceData = memoryMap->Read(dmaRegister.GetSourceStartAddress() + currentDMATransferElapsedTime);
@@ -629,7 +630,7 @@ namespace SHG
 			}
 		}
 	}
-	
+
 	uint8_t PPU::NormalizedReadFromOAM(uint16_t address)
 	{
 		return oam.Read(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
@@ -673,29 +674,17 @@ namespace SHG
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
-			Color color;
-			uint8_t minX = scx.Read();
-			uint8_t maxX = (scx.Read() + GB_SCREEN_WIDTH) & 255;
-			uint8_t minY = scy.Read();
-			uint8_t maxY = (scy.Read() + GB_SCREEN_HEIGHT) & 255;
+			// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
+			// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
+			uint8_t colorIndex = GetColorIndexFromTileData(px, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
 
-			// TODO: Cleanup
-			bool isOnXScrollBox = (scanlineX == minX || scanlineX == maxX) && (maxY > minY ? (scanlineY >= minY && scanlineY <= maxY) : (scanlineY >= minY || scanlineY <= maxY));
-			bool isOnYScrollBox = (scanlineY == minY || scanlineY == maxY) && (maxX > minX ? (scanlineX >= minX && scanlineX <= maxX) : (scanlineX >= minX || scanlineX <= maxX));
-
-			if (tileMapType == TileMapType::Background && (isOnXScrollBox || isOnYScrollBox))
+			Pixel pixel = 
 			{
-				color = SCROLL_BOX_DEBUG_COLOR;
-			}
-			else
-			{
-				// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
-				// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
-				uint8_t colorIndex = GetColorIndexFromTileData(px, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
-				color = GetColorFromColorIndex(colorIndex, memoryMap->Read(GB_BACKGROUND_PALETTE_ADDRESS));
-			}
+				.colorIndex = colorIndex,
+				.paletteAddress = GB_BACKGROUND_PALETTE_ADDRESS
+			};
 
-			framebuffer.SetPixel(scanlineX, scanlineY, color);
+			RenderPixel(framebuffer, pixel, scanlineX, scanlineY);
 
 			// HBlank
 			if (scanlineX == TILE_MAP_WIDTH_IN_PIXELS - 1)
@@ -735,7 +724,6 @@ namespace SHG
 	{
 		Sprite sprite = GetSpriteAtIndex(debugCurrentSpriteIndex);
 
-		uint8_t palette = memoryMap->Read(sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS);
 		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
 
@@ -748,7 +736,7 @@ namespace SHG
 		uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - debugSpriteScanline : debugSpriteScanline) % TILE_HEIGHT_IN_PIXELS;
 
 		uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
-		uint8_t highTileData = NormalizedReadFromVRAM(&vram, (sprite.tileIndex + tile, tileScanline, true) + 1);
+		uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true) + 1);
 
 		uint8_t y = (tileY * ySpacing) + debugSpriteScanline;
 
@@ -757,7 +745,14 @@ namespace SHG
 			uint8_t x = (tileX * xSpacing) + (sprite.xFlip ? 7 - px : px);
 
 			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
-			spriteDebugFramebuffer.SetPixel(x, y, GetColorFromColorIndex(colorIndex, palette));
+
+			Pixel pixel =
+			{
+				.colorIndex = colorIndex,
+				.paletteAddress = sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS
+			};
+
+			RenderPixel(spriteDebugFramebuffer, pixel, x, y);
 		}
 
 		debugSpriteScanline++;

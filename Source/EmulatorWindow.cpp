@@ -8,8 +8,11 @@
 namespace SHG
 {
 	const char* DEFAULT_WINDOW_TITLE = "Game Boy Emulator";
-	const uint16_t DEFAULT_WINDOW_WIDTH = 1024;
-	const uint16_t DEFAULT_WINDOW_HEIGHT = 576;
+	const uint16_t DEFAULT_SDL_WINDOW_WIDTH = 1024;
+	const uint16_t DEFAULT_SDL_WINDOW_HEIGHT = 576;
+
+	const uint16_t MINIMUM_SDL_WINDOW_WIDTH = 256;
+	const uint16_t MINIMUM_SDL_WINDOW_HEIGHT = 144;
 
 	const uint8_t SETTINGS_VIDEO_WINDOW_ID = 0;
 	const uint8_t SETTINGS_AUDIO_WINDOW_ID = 1;
@@ -64,13 +67,15 @@ namespace SHG
 			return false;
 		}
 
-		sdlWindow = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+		sdlWindow = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_SDL_WINDOW_WIDTH, DEFAULT_SDL_WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
 		if (sdlWindow == nullptr)
 		{
 			Logger::WriteError("Failed to create SDL window. Error: " + std::string(SDL_GetError()));
 			return false;
 		}
+
+		SDL_SetWindowMinimumSize(sdlWindow, MINIMUM_SDL_WINDOW_WIDTH, MINIMUM_SDL_WINDOW_HEIGHT);
 
 		sdlRenderer = SDL_CreateRenderer(sdlWindow, 0, 0);
 
@@ -91,6 +96,9 @@ namespace SHG
 		ImGui_ImplSDLRenderer_Init(sdlRenderer);
 
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.WindowMinSize = ImVec2(225, 150);
 
 		return true;
 	}
@@ -648,6 +656,7 @@ namespace SHG
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(610, 541), ImGuiCond_FirstUseEver);
 
 		if (ImGui::Begin("Settings", &shouldRenderSettingsWindow))
 		{
@@ -724,7 +733,7 @@ namespace SHG
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "BGP 3", GB_BACKGROUND_PALETTE_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 0 (OBP0):");
+			ImGui::Text("Sprite 0 (OBP0):            ");
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP0 0", GB_SPRITE_PALETTE_0_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
@@ -734,7 +743,7 @@ namespace SHG
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP0 3", GB_SPRITE_PALETTE_0_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 1 (OBP1):");
+			ImGui::Text("Sprite 1 (OBP1):            ");
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP1 0", GB_SPRITE_PALETTE_1_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();

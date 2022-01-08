@@ -139,9 +139,7 @@ namespace SHG
 		Sprite GetSpriteAtIndex(uint8_t index);
 
 		void UpdateDMATransferProcess(uint32_t cycles);
-		void RenderPixel(const Pixel& pixel);
-
-		
+		void RenderPixel(Framebuffer& framebuffer, const Pixel& pixel, uint16_t scanlineX, uint16_t scanlineY);
 		
 		uint8_t NormalizedReadFromOAM(uint16_t address);
 		void NormalizedWriteToOAM(uint16_t address, uint8_t value);
