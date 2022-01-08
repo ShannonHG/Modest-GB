@@ -7,7 +7,7 @@
 
 namespace SHG
 {
-	const uint8_t AUDIO_CHANNELS = 1;
+	const uint8_t AUDIO_CHANNELS = 2;
 	const int SAMPLE_FREQUENCY = 44100;
 	const uint16_t AUDIO_BUFFER_SIZE = 4096;
 	const uint32_t FRAME_SEQUENCER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 512.0f));
@@ -95,24 +95,10 @@ namespace SHG
 			{
 				sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
 
-				float sample = 0;
-
-				if (isChannel1Connected)
-					sample += channel1.GetSample();
-
-				if (isChannel2Connected)
-					sample += channel2.GetSample();
-
-				if (isChannel3Connected)
-					sample += channel3.GetSample();
-
-				if (isChannel4Connected)
-					sample += channel4.GetSample();
-
-				samples.push_back(sample);
+				// Mix the sound channels, and add the samples to the buffer.
+				MixChannels();
 			}
 
-			// TODO: Revisit
 			if (samples.size() >= AUDIO_BUFFER_SIZE)
 			{
 				if (SDL_QueueAudio(audioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
@@ -215,31 +201,29 @@ namespace SHG
 
 	void APU::WriteToNR50(uint8_t value)
 	{
-		// TODO: Implement
+		nr50.Write(value);
 	}
 
 	void APU::WriteToNR51(uint8_t value)
 	{
-		// TODO: Implement
+		nr51.Write(value);
 	}
 
 	void APU::WriteToNR52(uint8_t value)
 	{
 		isSoundControllerEnabled = Arithmetic::GetBit(value, 7);
 
-		if (!isSoundControllerEnabled)
+		if (isSoundControllerEnabled)
 		{
-			channel1.DisableSoundController();
-			channel2.DisableSoundController();
-			channel3.DisableSoundController();
-			channel4.DisableSoundController();
+			frameSequencerStep = 0;
 		}
-		else
+
+		for (uint8_t i = 0; i < 4; i++)
 		{
-			channel1.EnableSoundController();
-			channel2.EnableSoundController();
-			channel3.EnableSoundController();
-			channel4.EnableSoundController();
+			if (!isSoundControllerEnabled)
+				channels[i]->DisableSoundController();
+			else 
+				channels[i]->EnableSoundController();
 		}
 	}
 
@@ -340,24 +324,22 @@ namespace SHG
 
 	uint8_t APU::ReadNR50() const
 	{
-		// TODO: Implement
-		return 0;
+		return nr50.Read();
 	}
 
 	uint8_t APU::ReadNR51() const
 	{
-		// TODO: Implement
-		return 0;
+		return nr51.Read();
 	}
 
 	uint8_t APU::ReadNR52() const
 	{
 		return
 			(static_cast<int8_t>(channel1.IsEnabled()) |
-			static_cast<int8_t>(channel2.IsEnabled() << 1) |
-			static_cast<int8_t>(channel3.IsEnabled() << 2) |
-			static_cast<int8_t>(channel3.IsEnabled() << 3) |
-			static_cast<int8_t>(isSoundControllerEnabled << 7)) | 0x70;
+				static_cast<int8_t>(channel2.IsEnabled() << 1) |
+				static_cast<int8_t>(channel3.IsEnabled() << 2) |
+				static_cast<int8_t>(channel3.IsEnabled() << 3) |
+				static_cast<int8_t>(isSoundControllerEnabled << 7)) | 0x70;
 	}
 
 	uint8_t APU::ReadWavePatternRAM() const
@@ -367,41 +349,72 @@ namespace SHG
 
 	void APU::SetChannel1ConnectionStatus(bool value)
 	{
-		isChannel1Connected = value;
+		connectionStates[0] = value;
 	}
 
 	void APU::SetChannel2ConnectionStatus(bool value)
 	{
-		isChannel2Connected = value;
+		connectionStates[1] = value;
 	}
 
 	void APU::SetChannel3ConnectionStatus(bool value)
 	{
-		isChannel3Connected = value;
+		connectionStates[2] = value;
 	}
 
 	void APU::SetChannel4ConnectionStatus(bool value)
 	{
-		isChannel4Connected = value;
+		connectionStates[3] = value;
 	}
 
 	bool APU::IsChannel1Connected() const
 	{
-		return isChannel1Connected;
+		return connectionStates[0];
 	}
 
 	bool APU::IsChannel2Connected() const
 	{
-		return isChannel2Connected;
+		return connectionStates[1];
 	}
 
 	bool APU::IsChannel3Connected() const
 	{
-		return isChannel3Connected;
+		return connectionStates[2];
 	}
 
 	bool APU::IsChannel4Connected() const
 	{
-		return isChannel4Connected;
+		return connectionStates[3];
+	}
+
+	void APU::MixChannels()
+	{
+		float right = 0;
+		float left = 0;
+
+		uint8_t rightVolume = nr50.Read(0, 2) + 1;
+		uint8_t leftVolume = nr50.Read(4, 6) + 1;
+
+		for (uint8_t i = 0; i < 4; i++)
+		{
+			if (!connectionStates[i])
+				continue;
+
+			// Check if NR51 states that the sound should be sent to the right audio channel.
+			if (nr51.Read(i))
+				right += channels[i]->GetSample() * rightVolume;
+
+			// Check if NR51 states that the sound should be sent to the left audio channel.
+			if (nr51.Read(i + 4))
+				left += channels[i]->GetSample() * leftVolume;
+		}
+
+		// Average the samples.
+		right /= 4.0f;
+		left /= 4.0f;
+
+		// In stereo mode, SDL expects the samples in left/right ordering.
+		samples.push_back(left);
+		samples.push_back(right);
 	}
 }

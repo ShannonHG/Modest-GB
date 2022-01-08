@@ -14,7 +14,6 @@ namespace SHG
 
 		uint8_t ReadNRX0() const override;
 		uint8_t ReadNRX1() const override;
-		uint8_t ReadNRX2() const override;
 		uint8_t ReadNRX3() const override;
 		uint8_t ReadNRX4() const override;
 

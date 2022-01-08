@@ -13,6 +13,8 @@ namespace SHG
 		void WriteToWavePatternRAM(uint16_t address, uint8_t value);
 		uint8_t ReadWavePatternRAM() const;
 
+		void WriteToNRX0(uint8_t value) override;
+
 		uint8_t ReadNRX0() const override;
 		uint8_t ReadNRX1() const override;
 		uint8_t ReadNRX2() const override;

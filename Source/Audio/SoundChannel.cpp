@@ -90,6 +90,7 @@ namespace SHG
 	void SoundChannel::EnableSoundController()
 	{
 		isSoundControllerEnabled = true;
+		Reset();
 	}
 
 	void SoundChannel::DisableSoundController()

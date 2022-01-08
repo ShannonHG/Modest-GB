@@ -36,6 +36,10 @@ namespace SHG
 	{
 		SoundChannel::WriteToNRX2(value);
 
+		// If the upper 5 bits of NRX2 are 0, then this channel is disabled.
+		if (nrx2.Read(3, 7) == 0)
+			isEnabled = false;
+
 		// If the period is 0, then stop the volume envelope.
 		if (GetVolumeEnvelopeTimerPeriod() == 0)
 			DisableVolumeEnvelope();
@@ -49,11 +53,6 @@ namespace SHG
 	uint8_t ToneSoundChannel::ReadNRX1() const
 	{
 		return SoundChannel::ReadNRX1() | 0x3F;
-	}
-
-	uint8_t ToneSoundChannel::ReadNRX2() const
-	{
-		return SoundChannel::ReadNRX2() | 0x00;
 	}
 
 	uint8_t ToneSoundChannel::ReadNRX3() const
@@ -85,6 +84,8 @@ namespace SHG
 
 	void ToneSoundChannel::OnFrequencyTimerReachedZero()
 	{
+		SoundChannel::OnFrequencyTimerReachedZero();
+
 		waveformPosition = (waveformPosition + 1) % 8;
 	}
 

@@ -302,6 +302,10 @@ namespace SHG
 			return apu->ReadNR43();
 		case GB_NR44_ADDRESS:
 			return apu->ReadNR44();
+		case GB_NR50_ADDRESS:
+			return apu->ReadNR50();
+		case GB_NR51_ADDRESS:
+			return apu->ReadNR51();
 		case GB_NR52_ADDRESS:
 			return apu->ReadNR52();
 		default:
@@ -421,6 +425,12 @@ namespace SHG
 			break;
 		case GB_NR44_ADDRESS:
 			apu->WriteToNR44(value);
+			break;
+		case GB_NR50_ADDRESS:
+			apu->WriteToNR50(value);
+			break;
+		case GB_NR51_ADDRESS:
+			apu->WriteToNR51(value);
 			break;
 		case GB_NR52_ADDRESS:
 			apu->WriteToNR52(value);

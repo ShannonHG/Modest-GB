@@ -21,6 +21,13 @@ namespace SHG
 		std::fill(samples.begin(), samples.end(), 0);
 	}
 
+	void WaveSoundChannel::WriteToNRX0(uint8_t value)
+	{
+		SoundChannel::WriteToNRX0(value);
+
+		isEnabled = nrx0.Read(7);
+	}
+
 	void WaveSoundChannel::WriteToWavePatternRAM(uint16_t address, uint8_t value)
 	{
 		if (address < WAVE_PATTERN_RAM_START_ADDRESS || address > WAVE_PATTERN_RAM_END_ADDRESS)
@@ -88,6 +95,8 @@ namespace SHG
 
 	void WaveSoundChannel::OnFrequencyTimerReachedZero()
 	{
+		SoundChannel::OnFrequencyTimerReachedZero();
+
 		sampleIndex = (sampleIndex + 1) % NUMBER_OF_SAMPLES;
 	}
 

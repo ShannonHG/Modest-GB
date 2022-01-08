@@ -26,6 +26,10 @@ namespace SHG
 	{
 		SoundChannel::WriteToNRX2(value);
 
+		// If the upper 5 bits of NR42 are 0, then this channel is disabled.
+		if (nrx2.Read(3, 7) == 0)
+			isEnabled = false;
+
 		// If the period is 0, then stop the volume envelope.
 		if (GetVolumeEnvelopeTimerPeriod() == 0)
 			DisableVolumeEnvelope();
@@ -41,16 +45,6 @@ namespace SHG
 		return SoundChannel::ReadNRX1() | 0xFF;
 	}
 
-	uint8_t NoiseSoundChannel::ReadNRX2() const
-	{
-		return SoundChannel::ReadNRX2() | 0x00;
-	}
-
-	uint8_t NoiseSoundChannel::ReadNRX3() const
-	{
-		return SoundChannel::ReadNRX3() | 0x00;
-	}
-
 	uint8_t NoiseSoundChannel::ReadNRX4() const
 	{
 		return SoundChannel::ReadNRX4() | 0xBF;
@@ -64,6 +58,8 @@ namespace SHG
 
 	void NoiseSoundChannel::OnFrequencyTimerReachedZero()
 	{
+		SoundChannel::OnFrequencyTimerReachedZero();
+
 		uint8_t xorResult = shiftRegister.Read(0) ^ shiftRegister.Read(1);
 		shiftRegister.Write(shiftRegister.Read() >> 1);
 		shiftRegister.SetBit(14, xorResult);

@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <map>
 #include "SDL.h"
 #include "Audio/ToneSoundChannel.hpp"
 #include "Audio/SweepSoundChannel.hpp"
@@ -71,11 +73,10 @@ namespace SHG
 		uint8_t ReadWavePatternRAM() const;
 
 	private:
-		bool isChannel1Connected = true;
-		bool isChannel2Connected = true;
-		bool isChannel3Connected = true;
-		bool isChannel4Connected = true;
-		bool isSoundControllerEnabled = true;
+		bool isSoundControllerEnabled = false;
+
+		Register8 nr50;
+		Register8 nr51;
 
 		AudioTimer frameSequencerTimer;
 		uint8_t frameSequencerStep = 0;
@@ -86,7 +87,12 @@ namespace SHG
 		WaveSoundChannel channel3;
 		NoiseSoundChannel channel4;
 
+		std::array<SoundChannel*, 4> channels = { &channel1, &channel2, &channel3, &channel4 };
+		std::array<uint8_t, 4> connectionStates = { true, true, true, true };
+
 		SDL_AudioDeviceID audioDeviceID = 0;
 		std::vector<float> samples;
+
+		void MixChannels();
 	};
 }
