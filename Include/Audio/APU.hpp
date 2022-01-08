@@ -17,8 +17,15 @@ namespace SHG
 		void Tick(uint32_t cycles);
 		void RefreshOutputDevices();
 
-		const std::vector<std::string>& GetAllAudioDeviceNames() const;
+		const std::vector<std::string>& GetAllOutputDeviceNames() const;
 		void SetOutputDevice(const std::string& audioDeviceName);
+		const std::string& GetCurrentOutputDeviceName();
+
+		float GetMasterVolume();
+		void SetMasterVolume(float volume);
+
+		void Mute(bool value);
+		bool IsMuted();
 
 		void SetChannel1ConnectionStatus(bool value);
 		void SetChannel2ConnectionStatus(bool value);
@@ -77,6 +84,8 @@ namespace SHG
 		uint8_t ReadWavePatternRAM() const;
 
 	private:
+		bool isMuted = false;
+		float masterVolume = 1;
 		bool isSoundControllerEnabled = false;
 
 		Register8 nr50;

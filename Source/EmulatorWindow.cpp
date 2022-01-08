@@ -30,6 +30,28 @@ namespace SHG
 	const uint8_t SPRITE_2_PALETTE_TINT_ID_2 = 10;
 	const uint8_t SPRITE_2_PALETTE_TINT_ID_3 = 11;
 
+	const float MAX_VOLUME = 100.0f;
+
+	const std::array<std::string, 8> GB_BUTTONS = 
+	{ 
+		"A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT" 
+	};
+
+	const std::array<std::string, 12> CONTROLLER_BUTTONS =
+	{
+		"A", "B", "X", "Y", "DPAD RIGHT", "DPAD LEFT",
+		"DPAD UP", "DPAD DOWN", "RIGHT SHOULDER", "LEFT SHOULDER",
+		"START", "MENU"
+	};
+
+	const std::array<std::string, 40> KEYS =
+	{
+		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A",
+		"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+		"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+		"RIGHT ARROW", "LEFT ARROW", "UP ARROW", "DOWN ARROW"
+	};
+
 	const ImGuiWindowFlags MAIN_WINDOW_FLAGS = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
 		| ImGuiWindowFlags_NoSavedSettings;
@@ -226,6 +248,7 @@ namespace SHG
 						}
 					}
 
+					ImGui::Spacing();
 					if (ImGui::MenuItem("Settings"))
 						shouldRenderSettingsWindow = true;
 
@@ -240,34 +263,40 @@ namespace SHG
 						if (ImGui::MenuItem("Registers"))
 							shouldRenderVideoRegistersDebugWindow = true;
 
+						ImGui::Spacing();
 						if (ImGui::MenuItem("Tiles"))
 							shouldRenderTilesDebugWindow = true;
 
+						ImGui::Spacing();
 						if (ImGui::MenuItem("Sprites"))
 							shouldRenderSpritesDebugWindow = true;
 
+						ImGui::Spacing();
 						if (ImGui::MenuItem("Background Tile Map"))
 							shouldRenderBackgroundTileMapDebugWindow = true;
 
+						ImGui::Spacing();
 						if (ImGui::MenuItem("Window Tile Map"))
 							shouldRenderWindowTileMapDebugWindow = true;
 
 						ImGui::EndMenu();
 					}
 
+					ImGui::Spacing();
 					if (ImGui::MenuItem("CPU"))
 						shouldRenderCPUDebugWindow = true;
 
+					ImGui::Spacing();
 					if (ImGui::MenuItem("Sound"))
 						shouldRenderSoundDebugWindow = true;
 
+					ImGui::Spacing();
 					if (ImGui::MenuItem("Joypad"))
 						shouldRenderJoypadDebugWindow = true;
 
+					ImGui::Spacing();
 					if (ImGui::MenuItem("Logs"))
 						shouldRenderLogWindow = true;
-
-
 
 					ImGui::EndMenu();
 				}
@@ -563,7 +592,7 @@ namespace SHG
 
 		if (ImGui::Begin("Timer", &shouldRenderTimerDebugWindow))
 		{
-
+			// TODO: Implement
 		}
 
 		ImGui::End();
@@ -622,9 +651,11 @@ namespace SHG
 				if (ImGui::Selectable("Video", selectedWindow == 0))
 					selectedWindow = SETTINGS_VIDEO_WINDOW_ID;
 
+				ImGui::Spacing();
 				if (ImGui::Selectable("Audio", selectedWindow == 1))
 					selectedWindow = SETTINGS_AUDIO_WINDOW_ID;
 
+				ImGui::Spacing();
 				if (ImGui::Selectable("Controller/Keyboard", selectedWindow == 2))
 					selectedWindow = SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID;
 			}
@@ -676,35 +707,35 @@ namespace SHG
 			ImGui::Text("Palette Tints");
 			ImGui::Separator();
 
-			ImGui::Text("Background And Window (BGP)");
+			ImGui::Text("Background And Window (BGP):");
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "BGP 0", GB_BACKGROUND_PALETTE_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "BGP 0", GB_BACKGROUND_PALETTE_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "BGP 1", GB_BACKGROUND_PALETTE_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "BGP 1", GB_BACKGROUND_PALETTE_ADDRESS, 1, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "BGP 2", GB_BACKGROUND_PALETTE_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "BGP 2", GB_BACKGROUND_PALETTE_ADDRESS, 2, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "BGP 3", GB_BACKGROUND_PALETTE_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "BGP 3", GB_BACKGROUND_PALETTE_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 0 (OBP0)");
+			ImGui::Text("Sprite 0 (OBP0):");
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP0 0", GB_SPRITE_PALETTE_0_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP0 0", GB_SPRITE_PALETTE_0_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP0 1", GB_SPRITE_PALETTE_0_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP0 1", GB_SPRITE_PALETTE_0_ADDRESS, 1, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP0 2", GB_SPRITE_PALETTE_0_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP0 2", GB_SPRITE_PALETTE_0_ADDRESS, 2, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP0 3", GB_SPRITE_PALETTE_0_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP0 3", GB_SPRITE_PALETTE_0_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 1 (OBP1)");
+			ImGui::Text("Sprite 1 (OBP1):");
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP1 0", GB_SPRITE_PALETTE_1_ADDRESS, 0, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP1 0", GB_SPRITE_PALETTE_1_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP1 1", GB_SPRITE_PALETTE_1_ADDRESS, 1, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP1 1", GB_SPRITE_PALETTE_1_ADDRESS, 1, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP1 2", GB_SPRITE_PALETTE_1_ADDRESS, 2, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP1 2", GB_SPRITE_PALETTE_1_ADDRESS, 2, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
-			RenderColorPaletteButton(ppu, "OBP1 3", GB_SPRITE_PALETTE_1_ADDRESS, 3, &paletteAddress, &colorIndex, &selectedTintLabel, &isPaletteTintEditorOpen);
+			RenderColorPaletteButton(ppu, "OBP1 3", GB_SPRITE_PALETTE_1_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 		}
 
 		ImGui::EndChild();
@@ -712,7 +743,8 @@ namespace SHG
 
 		if (isPaletteTintEditorOpen)
 		{
-			if (ImGui::Begin("Palette Editor", &isPaletteTintEditorOpen))
+			ImGui::SetNextWindowSize(ImVec2(250, 250));
+			if (ImGui::Begin("Palette Editor", &isPaletteTintEditorOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
 			{
 				Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 				ImVec4 tint = ConvertColorToImVec4(rawTint);
@@ -734,39 +766,60 @@ namespace SHG
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Spacing();
+
+			const std::vector<std::string>& outputDeviceNames = apu.GetAllOutputDeviceNames();
+			std::string selectedOutputDevice = apu.GetCurrentOutputDeviceName();
+
+			// Render list of audio output devices.
+			ImGui::Text("Output Device:");
+			ImGui::SameLine();
+			
+			if (ImGui::BeginCombo("##Audio Output Device", selectedOutputDevice.c_str()))
+			{
+				for (const std::string& name : outputDeviceNames)
+				{
+					// If the selectable is pressed, then set the selected device as the APU's output device.
+					if (ImGui::Selectable(name.c_str(), selectedOutputDevice == name))
+						apu.SetOutputDevice(name);
+				}
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::Spacing();
+
+			// Render volume slider.
+			float volume = apu.GetMasterVolume() * MAX_VOLUME;
+			ImGui::Text("Volume:       ");
+			ImGui::SameLine();
+			ImGui::SliderFloat("##Audio Settings Volume ", &volume, 0.0f, MAX_VOLUME, "%.0f", ImGuiSliderFlags_None);
+			apu.SetMasterVolume(volume / MAX_VOLUME);
+
+			ImGui::Spacing();
+
+			// Render mute button.
+			bool isMuted = apu.IsMuted();
+			ImGui::Text("Mute:         ");
+			ImGui::SameLine();
+			ImGui::Checkbox("##Audio Settings Mute", &isMuted);
+			apu.Mute(isMuted);
 		}
 
 		ImGui::EndChild();
 		ImGui::EndGroup();
 	}
 
-	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t* outPaletteAddress, uint8_t* outColorIndex, std::string* outLabel, bool* isColorPickerOpened)
+	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
 	{
 		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
 		{
-			*isColorPickerOpened = true;
-			*outPaletteAddress = paletteAddress;
-			*outColorIndex = colorIndex;
+			isColorPickerOpened = true;
+			outPaletteAddress = paletteAddress;
+			outColorIndex = colorIndex;
+			outLabel = label;
 		}
 	}
-
-	const std::array<std::string, 8> GB_BUTTONS = { "A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT" };
-
-	const char* CONTROLLER_BUTTONS[] = 
-	{
-		"A", "B", "X", "Y", "DPAD RIGHT", "DPAD LEFT", 
-		"DPAD UP", "DPAD DOWN", "RIGHT SHOULDER", "LEFT SHOULDER", 
-		"START", "MENU"
-	};
-
-	const char* KEYS[] =
-	{
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A",
-		"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
-		"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-		"RIGHT ARROW", "LEFT ARROW", "UP ARROW", "DOWN ARROW"
-	};
 
 	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad)
 	{
@@ -823,21 +876,38 @@ namespace SHG
 
 	void EmulatorWindow::RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
 	{
-		int selected = static_cast<int>(joypad.GetControllerButtonCode(gbButton));
-
+		int selectedButtonIndex = static_cast<int>(joypad.GetControllerButtonCode(gbButton)); 
 		ImGui::SetNextItemWidth(width);
-		ImGui::Combo(("##Ctrl Button " + std::to_string(row)).c_str() , &selected, CONTROLLER_BUTTONS, IM_ARRAYSIZE(CONTROLLER_BUTTONS));
-		joypad.SetControllerButtonCode(gbButton, static_cast<ControllerButtonCode>(selected));
+
+		if (ImGui::BeginCombo("##Controller Button", CONTROLLER_BUTTONS[selectedButtonIndex].c_str()))
+		{
+			for (int i = 0; i < CONTROLLER_BUTTONS.size(); i++)
+			{
+				if (ImGui::Selectable(CONTROLLER_BUTTONS[i].c_str(), selectedButtonIndex == i))
+					joypad.SetControllerButtonCode(gbButton, static_cast<ControllerButtonCode>(i));
+			}
+
+			ImGui::EndCombo();
+		}
+
+		
 	}
 
 	void EmulatorWindow::RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
 	{
-		int selected = static_cast<int>(joypad.GetKeyCode(gbButton));
-
+		int selectedKeyIndex = static_cast<int>(joypad.GetKeyCode(gbButton));
 		ImGui::SetNextItemWidth(width);
-		ImGui::Combo(("##Key Code " + std::to_string(row)).c_str(), &selected, KEYS, IM_ARRAYSIZE(KEYS));
-		joypad.SetKeyCode(gbButton, static_cast<KeyCode>(selected));
-	}
+
+		if (ImGui::BeginCombo("##Key Code ", KEYS[selectedKeyIndex].c_str()))
+		{
+			for (int i = 0; i < KEYS.size(); i++)
+			{
+				if (ImGui::Selectable(KEYS[i].c_str(), selectedKeyIndex == i))
+					joypad.SetKeyCode(gbButton, static_cast<KeyCode>(i));
+			}
+
+			ImGui::EndCombo();
+		}	}
 
 	void EmulatorWindow::EndFrame()
 	{

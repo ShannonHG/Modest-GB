@@ -13,6 +13,7 @@ namespace SHG
 	const uint16_t AUDIO_BUFFER_SIZE = 4096;
 	const uint32_t FRAME_SEQUENCER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 512.0f));
 	const uint32_t SAMPLE_COLLECTION_TIMER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / static_cast<float>(SAMPLE_FREQUENCY)));
+	const float MASTER_VOLUME_MULTIPLIER = 0.075f;
 
 	void APU::Initialize()
 	{
@@ -28,15 +29,46 @@ namespace SHG
 		sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
 	}
 
-	const std::vector<std::string>& APU::GetAllAudioDeviceNames() const
+	float APU::GetMasterVolume()
+	{
+		return masterVolume;
+	}
+
+	void APU::SetMasterVolume(float volume)
+	{
+		masterVolume = volume;
+	}
+
+	void APU::Mute(bool value)
+	{
+		isMuted = value;
+
+		if (isMuted)
+			samples.clear();
+	}
+
+	bool APU::IsMuted()
+	{
+		return isMuted;
+	}
+
+	const std::string& APU::GetCurrentOutputDeviceName()
+	{
+		return currentAudioDeviceName;
+	}
+
+	const std::vector<std::string>& APU::GetAllOutputDeviceNames() const
 	{
 		return audioDeviceNames;
 	}
 
 	void APU::SetOutputDevice(const std::string& audioDeviceName)
 	{
+		if (currentAudioDeviceName == audioDeviceName)
+			return;
+
 		// Close the existing audio device, if any.
-		if (currentAudioDeviceID > 0 && currentAudioDeviceName != audioDeviceName)
+		if (currentAudioDeviceID > 0)
 			SDL_CloseAudioDevice(currentAudioDeviceID);
 
 		SDL_AudioDeviceID result = SDL_OpenAudioDevice(audioDeviceName.c_str(), SDL_FALSE, &currentAudioSpec, nullptr, 0);
@@ -46,12 +78,12 @@ namespace SHG
 			Logger::WriteError("Failed to select output device: " + audioDeviceName, APU_MESSAGE_HEADER);
 			return;
 		}
-		
+
 		currentAudioDeviceID = result;
 		currentAudioDeviceName = audioDeviceName;
 
 		SDL_PauseAudioDevice(currentAudioDeviceID, SDL_FALSE);
-		Logger::WriteInfo("Selected output device: " + audioDeviceName, APU_MESSAGE_HEADER);
+		Logger::WriteInfo("Selected output device: " + currentAudioDeviceName, APU_MESSAGE_HEADER);
 	}
 
 	void APU::RefreshOutputDevices()
@@ -250,7 +282,7 @@ namespace SHG
 		{
 			if (!isSoundControllerEnabled)
 				channels[i]->DisableSoundController();
-			else 
+			else
 				channels[i]->EnableSoundController();
 		}
 	}
@@ -417,6 +449,9 @@ namespace SHG
 
 	void APU::MixChannels()
 	{
+		if (isMuted)
+			return;
+
 		float right = 0;
 		float left = 0;
 
@@ -441,9 +476,9 @@ namespace SHG
 		right /= 4.0f;
 		left /= 4.0f;
 
-		// In stereo mode, SDL expects the samples in left/right ordering.
-		samples.push_back(left);
-		samples.push_back(right);
+		// In stereo mode, SDL expects the samples in left/right ordering, so the left sample should be pushed first
+		samples.push_back(left * (masterVolume * MASTER_VOLUME_MULTIPLIER));
+		samples.push_back(right * (masterVolume * MASTER_VOLUME_MULTIPLIER));
 	}
 
 	void APU::RefreshAudioDeviceNames()
@@ -452,7 +487,7 @@ namespace SHG
 
 		bool isCurrentDeviceFound = false;
 		int outputDeviceCount = SDL_GetNumAudioDevices(SDL_FALSE);
-		
+
 		for (int i = 0; i < outputDeviceCount; i++)
 		{
 			const char* name = SDL_GetAudioDeviceName(i, SDL_FALSE);
