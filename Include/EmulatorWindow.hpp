@@ -84,10 +84,10 @@ namespace SHG
 		void RenderVideoSettingsWindow(PPU& ppu);
 		void RenderAudioSettingsWindow(APU& apu);
 		void RenderControllerAndKeyboardSettingsWindow(Joypad& joypad);
-
 		void RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width);
 		void RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width);
 		void RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened);
+		void RenderSavedDataSettingsWindow();
 
 		ImVec4 ConvertColorToImVec4(Color& color) const;
 		Color ConvertImVec4ToColor(ImVec4& vec) const;

@@ -8,6 +8,12 @@
 
 namespace SHG
 {
+	enum class SavedDataSearchType
+	{
+		ROM_DIRECTORY, 
+		MANAGED_DIRECTORY
+	};
+
 	enum class MemoryBankControllerType
 	{
 		None,
@@ -25,21 +31,25 @@ namespace SHG
 	class Cartridge : public Memory
 	{
 	public:
-		bool Load(const std::string& romFilePath, const std::string& saveDataPath);
+		bool Load(const std::string& romFilePath);
 
 		MemoryBankControllerType GetMemoryBankControllerType();
 		uint32_t GetROMSize();
 		uint32_t GetRAMSize();
 		bool IsROMLoaded();
 
+		void SetSavedDataSearchType(SavedDataSearchType searchType);
+		SavedDataSearchType GetSavedDataSearchType();
+
 		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;
 		void Reset() override;
 
 	private:
-		std::fstream saveDataFile;
-		std::string saveDataPath;
+		std::fstream savedDataStream;
+		std::string savedDataPath;
 		bool isROMLoaded = false;
+		SavedDataSearchType savedDataSearchType = SavedDataSearchType::ROM_DIRECTORY;
 
 		std::unique_ptr<MemoryBankController> memoryBankController;
 		MemoryBankControllerType memoryBankControllerType;
@@ -56,7 +66,7 @@ namespace SHG
 		bool IsRAMAddress(uint16_t address) const;
 		void WriteUnsupportedMBCMesage();
 
-		void OpenSaveDataFile();
+		void OpenSavedDataFile();
 
 		void OnRAMWrite(uint16_t address, uint8_t value);
 	};

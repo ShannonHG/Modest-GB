@@ -192,9 +192,7 @@ namespace SHG
 	{
 		memoryMap.Reset();
 
-		std::string saveDataPath = romFilePath.substr(0, romFilePath.find_last_of(".")) + ".sav";
-
-		if (!cartridge.Load(romFilePath, saveDataPath))
+		if (!cartridge.Load(romFilePath))
 		{
 			Logger::WriteError("Invalid ROM file provided");
 			return false;

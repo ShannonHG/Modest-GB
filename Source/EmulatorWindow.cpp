@@ -35,9 +35,9 @@ namespace SHG
 
 	const float MAX_VOLUME = 100.0f;
 
-	const std::array<std::string, 8> GB_BUTTONS = 
-	{ 
-		"A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT" 
+	const std::array<std::string, 8> GB_BUTTONS =
+	{
+		"A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT"
 	};
 
 	const std::array<std::string, 12> CONTROLLER_BUTTONS =
@@ -789,7 +789,7 @@ namespace SHG
 			// Render list of audio output devices.
 			ImGui::Text("Output Device:");
 			ImGui::SameLine();
-			
+
 			if (ImGui::BeginCombo("##Audio Output Device", selectedOutputDevice.c_str()))
 			{
 				for (const std::string& name : outputDeviceNames)
@@ -892,7 +892,7 @@ namespace SHG
 
 	void EmulatorWindow::RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
 	{
-		int selectedButtonIndex = static_cast<int>(joypad.GetControllerButtonCode(gbButton)); 
+		int selectedButtonIndex = static_cast<int>(joypad.GetControllerButtonCode(gbButton));
 		ImGui::SetNextItemWidth(width);
 
 		if (ImGui::BeginCombo("##Controller Button", CONTROLLER_BUTTONS[selectedButtonIndex].c_str()))
@@ -905,8 +905,6 @@ namespace SHG
 
 			ImGui::EndCombo();
 		}
-
-		
 	}
 
 	void EmulatorWindow::RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
@@ -923,7 +921,13 @@ namespace SHG
 			}
 
 			ImGui::EndCombo();
-		}	}
+		}
+	}
+
+	void EmulatorWindow::RenderSavedDataSettingsWindow()
+	{
+	
+	}
 
 	void EmulatorWindow::EndFrame()
 	{

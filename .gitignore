@@ -364,5 +364,8 @@ ThirdParty/
 # ROMs
 ROMs/
 
-# Save data files
+# Saved data directory
+Saved-Data/
+
+# Config files
 *.ini

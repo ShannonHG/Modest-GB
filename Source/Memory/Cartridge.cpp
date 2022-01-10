@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cassert>
 #include <iterator>
+#include <filesystem>
 #include "Logger.hpp"
 #include "Memory/Cartridge.hpp"
 #include "Logger.hpp"
@@ -98,14 +99,36 @@ namespace SHG
 		0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 	};
 
-	bool Cartridge::Load(const std::string& romFilePath, const std::string& saveDataPath)
+	bool Cartridge::Load(const std::string& romFilePath)
 	{
+		std::string relativeSavedDataPath = std::filesystem::path(romFilePath).filename().replace_extension(".sav").string();
+
+		switch (savedDataSearchType)
+		{
+		case SavedDataSearchType::ROM_DIRECTORY:
+			// Append the relative saved data path to the ROM directory path.
+			savedDataPath = (std::filesystem::path(romFilePath).parent_path() / relativeSavedDataPath).string();
+			break;
+		case SavedDataSearchType::MANAGED_DIRECTORY:
+		{
+			std::filesystem::path savedDataDir = std::filesystem::current_path() / "Saved-Data";
+
+			if (!std::filesystem::exists(savedDataDir))
+			{
+				Logger::WriteInfo("Creating saved directory: " + savedDataDir.string());
+				std::filesystem::create_directory(savedDataDir);
+			}
+
+			// Append the relative saved data path to the saved data dir.
+			savedDataPath = (savedDataDir / relativeSavedDataPath).string();
+			break;
+		}
+		}
+
 		auto file = std::ifstream(romFilePath, std::ios::binary);
 
 		if (!file.is_open())
 			return false;
-
-		this->saveDataPath = saveDataPath;
 
 		// Load the ROM file into a vector of bytes.
 		auto romData = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
@@ -160,7 +183,7 @@ namespace SHG
 				memoryBankController->SetRAMWriteCallback(std::bind(&Cartridge::OnRAMWrite, this, std::placeholders::_1, std::placeholders::_2));
 
 				// Load saved RAM data (if any), from the saved data path.
-				OpenSaveDataFile();
+				OpenSavedDataFile();
 			}
 
 			if (GetROMSize() > 0)
@@ -185,6 +208,17 @@ namespace SHG
 		ram.clear();
 		rom.clear();
 		title.clear();
+	}
+
+
+	void Cartridge::SetSavedDataSearchType(SavedDataSearchType searchType)
+	{
+		savedDataSearchType = searchType;
+	}
+
+	SavedDataSearchType Cartridge::GetSavedDataSearchType()
+	{
+		return savedDataSearchType;
 	}
 
 	bool Cartridge::IsROMLoaded()
@@ -372,40 +406,47 @@ namespace SHG
 		}
 	}
 
-	void Cartridge::OpenSaveDataFile()
+	void Cartridge::OpenSavedDataFile()
 	{
-		if (!saveDataFile.is_open())
+		if (savedDataStream.is_open())
+			savedDataStream.close();
+
+		// Attempt to open an existing saved data file. Since std::ios::in is used, 
+		// the stream will not attempt to create the file.
+		savedDataStream.open(savedDataPath, std::ios::in | std::ios::out | std::ofstream::binary);
+
+		// If there was no existing saved data file, then create one.
+		if (!savedDataStream.is_open())
+			savedDataStream.open(savedDataPath, std::ios::out | std::ofstream::binary);
+
+		// If the saved data file is still not open, then a problem ocurred.
+		if (!savedDataStream.is_open())
 		{
-			// Attempt to open an existing save data file. Since std::ios::in is used, 
-			// the stream will not attempt to create the file.
-			saveDataFile.open(saveDataPath, std::ios::in | std::ios::out | std::ofstream::binary);
-
-			// If there was no existing save data file, then create one.
-			if (!saveDataFile.is_open())
-				saveDataFile.open(saveDataPath, std::ios::out | std::ofstream::binary);
-
-			Logger::WriteInfo("Save data will be stored at: " + saveDataPath);
+			Logger::WriteError("Failed to open saved data file: " + savedDataPath, CARTRIDGE_LOG_HEADER);
+			return;
 		}
 
+		Logger::WriteInfo("Saved data will be stored at: " + savedDataPath, CARTRIDGE_LOG_HEADER);
+
 		int count = 0;
-		while (!saveDataFile.eof() && count < ram.size())
+		while (!savedDataStream.eof() && count < ram.size())
 		{
 			char byteBuffer[1];
-			saveDataFile.read(byteBuffer, 1);
+			savedDataStream.read(byteBuffer, 1);
 			ram[count] = static_cast<uint8_t>(byteBuffer[0]);
 
 			count++;
 		}
 
-		saveDataFile.clear();
+		savedDataStream.clear();
 	}
 
 	void Cartridge::OnRAMWrite(uint16_t address, uint8_t value)
 	{
-		saveDataFile.seekp(address);
+		savedDataStream.seekp(address);
 
 		char outByte = static_cast<char>(value);
-		saveDataFile.write(&outByte, 1);
+		savedDataStream.write(&outByte, 1);
 	}
 
 	bool Cartridge::IsRAMAddress(uint16_t address) const
