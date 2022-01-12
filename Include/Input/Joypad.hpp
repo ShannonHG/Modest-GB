@@ -18,6 +18,7 @@ namespace SHG
 	public:
 		Joypad(InputManager& inputManager, Memory& memoryMap);
 		void LoadInputMapping(const std::map<GBButton, ButtonKeyPair>& mapping);
+		const std::map<GBButton, ButtonKeyPair>& GetInputMapping() const;
 		ControllerButtonCode GetControllerButtonCode(GBButton button) const;
 		KeyCode GetKeyCode(GBButton button)const;
 		void SetControllerButtonCode(GBButton button, ControllerButtonCode buttonCode);

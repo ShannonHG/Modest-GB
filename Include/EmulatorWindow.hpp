@@ -28,7 +28,7 @@ namespace SHG
 
 		bool Initialize();
 		SDL_Window* GetSDLWindow();
-		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
+		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
 	
 		void RegisterFileSelectionCallback(FileSelectionCallback callback);
 		void RegisterPauseButtonCallback(SimpleCallback callback);
@@ -80,14 +80,16 @@ namespace SHG
 		void RenderTimerDebugWindow(const Timer& timer);
 		void RenderLogWindow(const std::string& logEntries);
 		
-		void RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad);
+		void RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, Cartridge& cartridge);
 		void RenderVideoSettingsWindow(PPU& ppu);
 		void RenderAudioSettingsWindow(APU& apu);
 		void RenderControllerAndKeyboardSettingsWindow(Joypad& joypad);
 		void RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width);
 		void RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width);
 		void RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened);
-		void RenderSavedDataSettingsWindow();
+		void RenderSavedDataSettingsWindow(Cartridge& cartridge);
+
+		std::string GetPathFromFileBrowser(const std::string& filters);
 
 		ImVec4 ConvertColorToImVec4(Color& color) const;
 		Color ConvertImVec4ToColor(ImVec4& vec) const;

@@ -109,7 +109,7 @@ namespace SHG
 			// Append the relative saved data path to the ROM directory path.
 			savedDataPath = (std::filesystem::path(romFilePath).parent_path() / relativeSavedDataPath).string();
 			break;
-		case SavedDataSearchType::MANAGED_DIRECTORY:
+		case SavedDataSearchType::EMULATOR_DIRECTORY:
 		{
 			std::filesystem::path savedDataDir = std::filesystem::current_path() / "Saved-Data";
 
@@ -216,7 +216,7 @@ namespace SHG
 		savedDataSearchType = searchType;
 	}
 
-	SavedDataSearchType Cartridge::GetSavedDataSearchType()
+	SavedDataSearchType Cartridge::GetSavedDataSearchType() const
 	{
 		return savedDataSearchType;
 	}

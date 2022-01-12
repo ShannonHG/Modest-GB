@@ -16,16 +16,17 @@ namespace SHG
 		void Initialize();
 		void Tick(uint32_t cycles);
 		void RefreshOutputDevices();
+		void Reset();
 
 		const std::vector<std::string>& GetAllOutputDeviceNames() const;
 		void SetOutputDevice(const std::string& audioDeviceName);
-		const std::string& GetCurrentOutputDeviceName();
+		const std::string& GetCurrentOutputDeviceName() const;
 
-		float GetMasterVolume();
+		float GetMasterVolume() const;
 		void SetMasterVolume(float volume);
 
 		void Mute(bool value);
-		bool IsMuted();
+		bool IsMuted() const;
 
 		void SetChannel1ConnectionStatus(bool value);
 		void SetChannel2ConnectionStatus(bool value);

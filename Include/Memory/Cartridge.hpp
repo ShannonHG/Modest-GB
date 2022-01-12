@@ -11,7 +11,7 @@ namespace SHG
 	enum class SavedDataSearchType
 	{
 		ROM_DIRECTORY, 
-		MANAGED_DIRECTORY
+		EMULATOR_DIRECTORY
 	};
 
 	enum class MemoryBankControllerType
@@ -39,7 +39,7 @@ namespace SHG
 		bool IsROMLoaded();
 
 		void SetSavedDataSearchType(SavedDataSearchType searchType);
-		SavedDataSearchType GetSavedDataSearchType();
+		SavedDataSearchType GetSavedDataSearchType() const;
 
 		uint8_t Read(uint16_t address) const override;
 		void Write(uint16_t address, uint8_t value) override;

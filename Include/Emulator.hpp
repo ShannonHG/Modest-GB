@@ -18,6 +18,7 @@ namespace SHG
 	class Emulator
 	{
 	public:
+		~Emulator();
 		bool Run();
 
 	private:
@@ -56,14 +57,5 @@ namespace SHG
 		bool LoadROM(const std::string& romFilePath);
 
 		void SetupMemoryMap();
-
-		void SaveConfigurationFile();
-		void LoadConfigurationFile();
-		void LoadConfigurationItem(std::ifstream& stream, const std::string& key, std::string& value);
-		void LoadConfigurationItemAsBool(std::ifstream& stream, const std::string& key, bool& value);
-		void LoadConfigurationItemAsInt(std::ifstream& stream, const std::string& key, int& value);
-		void SaveConfigurationItem(std::ofstream& stream, const std::string& key, const std::string& value);
-		void SaveBoolConfigurationItem(std::ofstream& stream, const std::string& key, bool value);
-		void SaveIntConfigurationItem(std::ofstream& stream, const std::string& key, int value);
 	};
 }

@@ -29,7 +29,23 @@ namespace SHG
 		sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
 	}
 
-	float APU::GetMasterVolume()
+	void APU::Reset()
+	{
+		channel1.Reset();
+		channel2.Reset();
+		channel3.Reset();
+		channel4.Reset();
+
+		frameSequencerTimer.Restart(FRAME_SEQUENCER_PERIOD);
+		sampleCollectionTimer.Restart(SAMPLE_COLLECTION_TIMER_PERIOD);
+
+		samples.clear();
+
+		if (currentAudioDeviceID > 0)
+			SDL_ClearQueuedAudio(currentAudioDeviceID);
+	}
+
+	float APU::GetMasterVolume() const
 	{
 		return masterVolume;
 	}
@@ -47,12 +63,12 @@ namespace SHG
 			samples.clear();
 	}
 
-	bool APU::IsMuted()
+	bool APU::IsMuted() const
 	{
 		return isMuted;
 	}
 
-	const std::string& APU::GetCurrentOutputDeviceName()
+	const std::string& APU::GetCurrentOutputDeviceName() const
 	{
 		return currentAudioDeviceName;
 	}
@@ -496,12 +512,11 @@ namespace SHG
 			if (name == currentAudioDeviceName)
 				isCurrentDeviceFound = true;
 
-			Logger::WriteInfo("Output device: " + std::string(name), APU_MESSAGE_HEADER);
 			audioDeviceNames.push_back(name);
 		}
 
 		// Is the currently selected audio device is no longer connected, then choose a new device.
 		if (!isCurrentDeviceFound)
-			SetOutputDevice(SDL_GetAudioDeviceName(outputDeviceCount - 1, SDL_FALSE));
+			SetOutputDevice(SDL_GetAudioDeviceName(std::max(outputDeviceCount - 1, 0), SDL_FALSE));
 	}
 }

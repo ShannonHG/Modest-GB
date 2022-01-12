@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 
 namespace SHG
 {
@@ -11,6 +12,18 @@ namespace SHG
 		UP, 
 		DOWN, 
 		START,
-		Select
+		SELECT
+	};
+
+	const std::map<GBButton, std::string> GBBUTTON_STRINGS
+	{
+		{ GBButton::A, "A" },
+		{ GBButton::B, "B" },
+		{ GBButton::RIGHT, "RIGHT" },
+		{ GBButton::LEFT, "LEFT" },
+		{ GBButton::UP, "UP" },
+		{ GBButton::DOWN, "DOWN" },
+		{ GBButton::START, "START" },
+		{ GBButton::SELECT, "SELECT" },
 	};
 }

@@ -5,7 +5,7 @@ namespace SHG
 {
 	const uint32_t GB_CLOCK_SPEED = 4194304;
 	const double GB_FRAMES_PER_SECOND = 59.7;
-	const double GB_DURATION_PER_FRAME = 1 / GB_FRAMES_PER_SECOND;
+	const double GB_SECONDS_PER_FRAME = 1 / GB_FRAMES_PER_SECOND;
 	const double GB_CYCLES_PER_FRAME = GB_CLOCK_SPEED / GB_FRAMES_PER_SECOND;
 	const uint8_t GB_SCREEN_WIDTH = 160;
 	const uint8_t GB_SCREEN_HEIGHT = 144;

@@ -16,7 +16,7 @@ namespace SHG
 		{GBButton::A, {ControllerButtonCode::ACTION_0, KeyCode::J}},
 		{GBButton::B, {ControllerButtonCode::ACTION_1, KeyCode::K}},
 		{GBButton::START, {ControllerButtonCode::START, KeyCode::P}},
-		{GBButton::Select, {ControllerButtonCode::MENU, KeyCode::O}}
+		{GBButton::SELECT, {ControllerButtonCode::MENU, KeyCode::O}}
 	};
 
 	// Joypad Register
@@ -45,6 +45,11 @@ namespace SHG
 	void Joypad::LoadInputMapping(const std::map<GBButton, ButtonKeyPair>& mapping)
 	{
 		inputMapping = mapping;
+	}
+
+	const std::map<GBButton, ButtonKeyPair>& Joypad::GetInputMapping() const
+	{
+		return inputMapping;
 	}
 
 	ControllerButtonCode Joypad::GetControllerButtonCode(GBButton button) const
@@ -86,7 +91,7 @@ namespace SHG
 			result =
 				!buttonStates.at(GBButton::A)
 				| (!buttonStates.at(GBButton::B) << 1)
-				| (!buttonStates.at(GBButton::Select) << 2)
+				| (!buttonStates.at(GBButton::SELECT) << 2)
 				| (!buttonStates.at(GBButton::START) << 3);
 		}
 
@@ -131,7 +136,7 @@ namespace SHG
 
 	bool Joypad::IsUpOrSelectPressed() const
 	{
-		return buttonStates.at(GBButton::UP) || buttonStates.at(GBButton::Select);
+		return buttonStates.at(GBButton::UP) || buttonStates.at(GBButton::SELECT);
 	}
 
 	bool Joypad::IsLeftOrBPressed() const
@@ -153,7 +158,7 @@ namespace SHG
 		buttonStates[GBButton::A] = false;
 		buttonStates[GBButton::B] = false;
 		buttonStates[GBButton::START] = false;
-		buttonStates[GBButton::Select] = false;
+		buttonStates[GBButton::SELECT] = false;
 	}
 
 	void Joypad::OnKeyPressed(KeyCode keyCode)
@@ -222,7 +227,7 @@ namespace SHG
 				{
 				case SHG::GBButton::A:
 				case SHG::GBButton::B:
-				case SHG::GBButton::Select:
+				case SHG::GBButton::SELECT:
 				case SHG::GBButton::START:
 					RequestInterrupt(*memoryMap, InterruptType::Joypad);
 					break;

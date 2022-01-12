@@ -17,6 +17,7 @@ namespace SHG
 	const uint8_t SETTINGS_VIDEO_WINDOW_ID = 0;
 	const uint8_t SETTINGS_AUDIO_WINDOW_ID = 1;
 	const uint8_t SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID = 2;
+	const uint8_t SETTINGS_SAVED_DATA_WINDOW_ID = 3;
 
 	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_0 = 0;
 	const uint8_t BACKGROUND_AND_WINDOW_PALETTE_TINT_ID_1 = 1;
@@ -35,25 +36,13 @@ namespace SHG
 
 	const float MAX_VOLUME = 100.0f;
 
-	const std::array<std::string, 8> GB_BUTTONS =
+	const std::map<SavedDataSearchType, std::string> SAVED_DATA_SEARCH_TYPE_STRINGS
 	{
-		"A", "B", "RIGHT", "LEFT", "UP", "DOWN", "START", "SELECT"
+		{ SavedDataSearchType::ROM_DIRECTORY, "ROM Directory" },
+		{ SavedDataSearchType::EMULATOR_DIRECTORY, "Emulator Directory" },
 	};
 
-	const std::array<std::string, 12> CONTROLLER_BUTTONS =
-	{
-		"A", "B", "X", "Y", "DPAD RIGHT", "DPAD LEFT",
-		"DPAD UP", "DPAD DOWN", "RIGHT SHOULDER", "LEFT SHOULDER",
-		"START", "MENU"
-	};
-
-	const std::array<std::string, 40> KEYS =
-	{
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A",
-		"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-		"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-		"RIGHT ARROW", "LEFT ARROW", "UP ARROW", "DOWN ARROW"
-	};
+	const uint16_t CUSTOM_SAVED_DATA_DIR_BUFFER_SIZE = 256;
 
 	const ImGuiWindowFlags MAIN_WINDOW_FLAGS = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
@@ -141,7 +130,7 @@ namespace SHG
 		SDL_SetWindowPosition(sdlWindow, x, y);
 	}
 
-	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
+	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
 	{
 		StartFrame();
 		ClearScreen();
@@ -180,7 +169,7 @@ namespace SHG
 			RenderLogWindow(logEntries);
 
 		if (shouldRenderSettingsWindow)
-			RenderSettingsWindow(ppu, apu, joypad);
+			RenderSettingsWindow(ppu, apu, joypad, cartridge);
 
 		EndFrame();
 	}
@@ -245,15 +234,10 @@ namespace SHG
 				{
 					if (ImGui::MenuItem("Load ROM"))
 					{
-						// TODO: Opening the file dialog seems to cause a memory leak.
-						nfdchar_t* outPath = nullptr;
-						NFD_OpenDialog("gb,rom", nullptr, &outPath);
+						std::string path = GetPathFromFileBrowser("gb,rom");
 
-						if (outPath != nullptr)
-						{
-							romFileSelectionCallback(outPath);
-							free(outPath);
-						}
+						if (!path.empty())
+							romFileSelectionCallback(path);
 					}
 
 					ImGui::Spacing();
@@ -379,13 +363,21 @@ namespace SHG
 			ImGui::Spacing();
 			ImGui::Spacing();
 
+			static bool isPaused = false;
 			if (ImGui::Button(pauseButtonLabel.c_str()))
+			{
+				isPaused = !isPaused;
 				pauseButtonPressedCallback();
+			}
 
 			ImGui::SameLine();
 
-			if (ImGui::Button("Step"))
-				stepButtonPressedCallback();
+			// "Stepping" only works when the emulator is paused.
+			if (isPaused)
+			{
+				if (ImGui::Button("Step"))
+					stepButtonPressedCallback();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -652,7 +644,7 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad)
+	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, Cartridge& cartridge)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -674,6 +666,10 @@ namespace SHG
 				ImGui::Spacing();
 				if (ImGui::Selectable("Controller/Keyboard", selectedWindow == 2))
 					selectedWindow = SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID;
+
+				ImGui::Spacing();
+				if (ImGui::Selectable("Saved Data", selectedWindow == 3))
+					selectedWindow = SETTINGS_SAVED_DATA_WINDOW_ID;
 			}
 
 			ImGui::Separator();
@@ -692,6 +688,9 @@ namespace SHG
 					break;
 				case SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID:
 					RenderControllerAndKeyboardSettingsWindow(joypad);
+					break;
+				case SETTINGS_SAVED_DATA_WINDOW_ID:
+					RenderSavedDataSettingsWindow(cartridge);
 					break;
 				}
 			}
@@ -858,7 +857,7 @@ namespace SHG
 				ImGui::TableSetupColumn("Keyboard", ImGuiTableColumnFlags_WidthFixed, columnWidth);
 				ImGui::TableHeadersRow();
 
-				for (int r = 0; r < GB_BUTTONS.size(); r++)
+				for (int r = 0; r < GBBUTTON_STRINGS.size(); r++)
 				{
 					ImGui::TableNextRow();
 					auto gbButton = static_cast<GBButton>(r);
@@ -870,7 +869,7 @@ namespace SHG
 						switch (c)
 						{
 						case 0:
-							ImGui::Text(GB_BUTTONS.at(r).c_str());
+							ImGui::Text(GBBUTTON_STRINGS.at(static_cast<GBButton>(r)).c_str());
 							break;
 						case 1:
 							RenderControllerButtonComboBox(joypad, gbButton, r, columnWidth);
@@ -892,15 +891,15 @@ namespace SHG
 
 	void EmulatorWindow::RenderControllerButtonComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
 	{
-		int selectedButtonIndex = static_cast<int>(joypad.GetControllerButtonCode(gbButton));
+		ControllerButtonCode selectedButton = joypad.GetControllerButtonCode(gbButton);
 		ImGui::SetNextItemWidth(width);
 
-		if (ImGui::BeginCombo("##Controller Button", CONTROLLER_BUTTONS[selectedButtonIndex].c_str()))
+		if (ImGui::BeginCombo(("##Controller Button" + std::to_string(row)).c_str(), CONTROLLER_BUTTON_STRINGS.at(selectedButton).c_str()))
 		{
-			for (int i = 0; i < CONTROLLER_BUTTONS.size(); i++)
+			for (const std::pair<ControllerButtonCode, std::string>& pair : CONTROLLER_BUTTON_STRINGS)
 			{
-				if (ImGui::Selectable(CONTROLLER_BUTTONS[i].c_str(), selectedButtonIndex == i))
-					joypad.SetControllerButtonCode(gbButton, static_cast<ControllerButtonCode>(i));
+				if (ImGui::Selectable(pair.second.c_str(), selectedButton == pair.first))
+					joypad.SetControllerButtonCode(gbButton, pair.first);
 			}
 
 			ImGui::EndCombo();
@@ -909,24 +908,73 @@ namespace SHG
 
 	void EmulatorWindow::RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width)
 	{
-		int selectedKeyIndex = static_cast<int>(joypad.GetKeyCode(gbButton));
+		KeyCode selectedKey = joypad.GetKeyCode(gbButton);
 		ImGui::SetNextItemWidth(width);
 
-		if (ImGui::BeginCombo("##Key Code ", KEYS[selectedKeyIndex].c_str()))
+		if (ImGui::BeginCombo(("##Key Code" + std::to_string(row)).c_str(), KEYCODE_STRINGS.at(selectedKey).c_str()))
 		{
-			for (int i = 0; i < KEYS.size(); i++)
+			for (const std::pair<KeyCode, std::string>& pair : KEYCODE_STRINGS)
 			{
-				if (ImGui::Selectable(KEYS[i].c_str(), selectedKeyIndex == i))
-					joypad.SetKeyCode(gbButton, static_cast<KeyCode>(i));
+				if (ImGui::Selectable(pair.second.c_str(), selectedKey == pair.first))
+					joypad.SetKeyCode(gbButton, pair.first);
 			}
 
 			ImGui::EndCombo();
 		}
 	}
 
-	void EmulatorWindow::RenderSavedDataSettingsWindow()
+	void EmulatorWindow::RenderSavedDataSettingsWindow(Cartridge& cartridge)
 	{
-	
+		ImGui::BeginGroup();
+
+		if (ImGui::BeginChild("Saved Data Settings"))
+		{
+			SavedDataSearchType currentSavedDataSearchType = cartridge.GetSavedDataSearchType();
+
+			ImGui::Text("Saved Data Location: ");
+			ImGui::SameLine();
+
+			if (ImGui::BeginCombo("##Saved Data Search Type", SAVED_DATA_SEARCH_TYPE_STRINGS.at(currentSavedDataSearchType).c_str()))
+			{
+				for (const std::pair<SavedDataSearchType, std::string>& pair : SAVED_DATA_SEARCH_TYPE_STRINGS)
+				{
+					if (ImGui::Selectable(pair.second.c_str(), pair.first == currentSavedDataSearchType))
+					{
+						currentSavedDataSearchType = pair.first;
+
+						// Update the cartridge's saved data search type.
+						cartridge.SetSavedDataSearchType(currentSavedDataSearchType);
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
+		ImGui::EndChild();
+		ImGui::EndGroup();
+	}
+
+	std::string EmulatorWindow::GetPathFromFileBrowser(const std::string& filters)
+	{
+		std::string resultPath = "";
+		nfdchar_t* outPath = nullptr;
+		nfdresult_t result = NFD_OpenDialog(filters.c_str(), nullptr, &outPath);
+
+		switch (result)
+		{
+		case NFD_OKAY:
+			resultPath = std::string(outPath);
+			free(outPath);
+			break;
+		case NFD_CANCEL:
+			break;
+		default:
+			Logger::WriteError("Failed to open file browser. Error: " + std::string(NFD_GetError()));
+			break;
+		}
+
+		return resultPath;
 	}
 
 	void EmulatorWindow::EndFrame()

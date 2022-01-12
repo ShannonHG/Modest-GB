@@ -41,10 +41,54 @@ namespace SHG
 		X,
 		Y,
 		Z,
-		RIGHT, 
-		LEFT,
-		UP, 
-		DOWN
+		RIGHT_ARROW, 
+		LEFT_ARROW,
+		UP_ARROW, 
+		DOWN_ARROW
+	};
+
+	const std::map<KeyCode, std::string> KEYCODE_STRINGS = 
+	{
+		{ KeyCode::NUM_0, "0" },
+		{ KeyCode::NUM_1, "1" },
+		{ KeyCode::NUM_2, "2" },
+		{ KeyCode::NUM_3, "3" },
+		{ KeyCode::NUM_4, "4" },
+		{ KeyCode::NUM_5, "5" },
+		{ KeyCode::NUM_6, "6" },
+		{ KeyCode::NUM_7, "7" },
+		{ KeyCode::NUM_8, "8" },
+		{ KeyCode::NUM_9, "9" },
+		{ KeyCode::A, "A" },
+		{ KeyCode::B, "B" },
+		{ KeyCode::C, "C" },
+		{ KeyCode::D, "D" },
+		{ KeyCode::E, "E" },
+		{ KeyCode::F, "F" },
+		{ KeyCode::G, "G" },
+		{ KeyCode::H, "H" },
+		{ KeyCode::I, "I" },
+		{ KeyCode::J, "J" },
+		{ KeyCode::K, "K" },
+		{ KeyCode::L, "L" },
+		{ KeyCode::M, "M" },
+		{ KeyCode::N, "N" },
+		{ KeyCode::O, "O" },
+		{ KeyCode::P, "P" },
+		{ KeyCode::Q, "Q" },
+		{ KeyCode::R, "R" },
+		{ KeyCode::S, "S" },
+		{ KeyCode::T, "T" },
+		{ KeyCode::U, "U" },
+		{ KeyCode::V, "V" },
+		{ KeyCode::W, "W" },
+		{ KeyCode::X, "X" },
+		{ KeyCode::Y, "Y" },
+		{ KeyCode::Z, "Z" },
+		{ KeyCode::RIGHT_ARROW, "RIGHT ARROW" },
+		{ KeyCode::LEFT_ARROW, "LEFT ARROW" },
+		{ KeyCode::UP_ARROW, "UP ARROW" },
+		{ KeyCode::DOWN_ARROW, "DOWN ARROW" }
 	};
 
 	enum class ControllerButtonCode
@@ -61,6 +105,22 @@ namespace SHG
 		LEFT_SHOULDER,
 		START, 
 		MENU,
+	};
+
+	const std::map<ControllerButtonCode, std::string> CONTROLLER_BUTTON_STRINGS
+	{
+		{ ControllerButtonCode::ACTION_0, "A" },
+		{ ControllerButtonCode::ACTION_1, "B" },
+		{ ControllerButtonCode::ACTION_2, "X" },
+		{ ControllerButtonCode::ACTION_3, "Y" },
+		{ ControllerButtonCode::DPAD_RIGHT, "DPAD RIGHT" },
+		{ ControllerButtonCode::DPAD_LEFT, "DPAD LEFT" },
+		{ ControllerButtonCode::DPAD_UP, "DPAD UP" },
+		{ ControllerButtonCode::DPAD_DOWN, "DPAD DOWN" },
+		{ ControllerButtonCode::RIGHT_SHOULDER, "RIGHT SHOULDER" },
+		{ ControllerButtonCode::LEFT_SHOULDER, "LEFT SHOULDER" },
+		{ ControllerButtonCode::START, "START" },
+		{ ControllerButtonCode::MENU, "MENU" }
 	};
 
 	using KeyInputEvent = std::function<void(KeyCode)>;

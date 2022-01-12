@@ -46,10 +46,10 @@ namespace SHG
 		{ SDLK_x, KeyCode::X },
 		{ SDLK_y, KeyCode::Y },
 		{ SDLK_z, KeyCode::Z },
-		{ SDLK_RIGHT, KeyCode::RIGHT },
-		{ SDLK_LEFT, KeyCode::LEFT },
-		{ SDLK_UP, KeyCode::UP },
-		{ SDLK_DOWN, KeyCode::DOWN },
+		{ SDLK_RIGHT, KeyCode::RIGHT_ARROW },
+		{ SDLK_LEFT, KeyCode::LEFT_ARROW },
+		{ SDLK_UP, KeyCode::UP_ARROW },
+		{ SDLK_DOWN, KeyCode::DOWN_ARROW },
 	};
 
 	const std::map<uint8_t, ControllerButtonCode> CONTROLLER_BUTTON_MAP =
