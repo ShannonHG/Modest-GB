@@ -89,6 +89,8 @@ namespace SHG
 		void RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened);
 		void RenderSavedDataSettingsWindow(Cartridge& cartridge);
 
+		void ApplyTheme();
+
 		std::string GetPathFromFileBrowser(const std::string& filters);
 
 		ImVec4 ConvertColorToImVec4(Color& color) const;

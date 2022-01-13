@@ -89,6 +89,8 @@ namespace SHG
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowMinSize = ImVec2(225, 150);
 
+		ApplyTheme();
+
 		return true;
 	}
 
@@ -953,6 +955,90 @@ namespace SHG
 
 		ImGui::EndChild();
 		ImGui::EndGroup();
+	}
+
+	void EmulatorWindow::ApplyTheme()
+	{
+		auto& colors = ImGui::GetStyle().Colors;
+		
+		// Window
+		colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.11f, 0.11f, 1.00f);
+
+		// Menu bar
+		colors[ImGuiCol_MenuBarBg] = colors[ImGuiCol_WindowBg];
+
+		// Title
+		colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+		colors[ImGuiCol_TitleBgActive] = colors[ImGuiCol_TitleBg];
+		colors[ImGuiCol_TitleBgCollapsed] = colors[ImGuiCol_TitleBg];
+
+		// Text
+		colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+		colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+
+		// Tabs
+		colors[ImGuiCol_Tab] = colors[ImGuiCol_TitleBg];
+		colors[ImGuiCol_TabHovered] = ImVec4(0.38f, 0.62f, 0.8f, 1.00f);
+		colors[ImGuiCol_TabActive] = ImVec4(0.18f, 0.42f, 0.6f, 1.00f);
+		colors[ImGuiCol_TabUnfocused] = colors[ImGuiCol_TitleBg];
+		colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+
+		// Collapsing headers, tree nodes, selectables, and menu items
+		colors[ImGuiCol_Header] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_HeaderHovered] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_HeaderActive] = colors[ImGuiCol_TabHovered];
+
+		// Separators
+		colors[ImGuiCol_Separator] = colors[ImGuiCol_TabUnfocusedActive];
+		colors[ImGuiCol_SeparatorHovered] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_SeparatorActive] = colors[ImGuiCol_TabHovered];
+
+		// Background for checkboxes, radio buttons, sliders, and text input fields.
+		colors[ImGuiCol_FrameBg] = colors[ImGuiCol_TabUnfocusedActive];
+		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+		colors[ImGuiCol_FrameBgActive] = ImVec4(0.43f, 0.43f, 0.43f, 1.00f);
+		
+		// Checkbox 
+		colors[ImGuiCol_CheckMark] = colors[ImGuiCol_Text];
+
+		// Buttons
+		colors[ImGuiCol_Button] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_ButtonHovered] = colors[ImGuiCol_TabHovered];
+		colors[ImGuiCol_ButtonActive] = ImVec4(0.48f, 0.72f, 0.9f, 1.00f);
+
+		colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
+		colors[ImGuiCol_ResizeGripHovered] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_ResizeGripActive] = colors[ImGuiCol_TabHovered];
+
+		// TODO: Colors below here are still using default ImGui values.
+		colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+		colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+		colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+		colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	
+		colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+		colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+		colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+		colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+
+		colors[ImGuiCol_DockingPreview] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_DockingEmptyBg] = colors[ImGuiCol_WindowBg];
+
+		// Tables
+		colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+		colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);  
+		colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);   
+		colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+		colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+
+		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+		colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+		colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	}
 
 	std::string EmulatorWindow::GetPathFromFileBrowser(const std::string& filters)
