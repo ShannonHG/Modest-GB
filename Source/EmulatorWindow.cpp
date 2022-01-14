@@ -48,6 +48,8 @@ namespace SHG
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
 		| ImGuiWindowFlags_NoSavedSettings;
 
+	const ImGuiWindowFlags GENERAL_WINDOW_FLAGS = ImGuiWindowFlags_NoCollapse;
+
 	bool EmulatorWindow::Initialize()
 	{
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0)
@@ -83,11 +85,6 @@ namespace SHG
 
 		ImGui_ImplSDL2_InitForSDLRenderer(sdlWindow);
 		ImGui_ImplSDLRenderer_Init(sdlRenderer);
-
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-		ImGuiStyle& style = ImGui::GetStyle();
-		style.WindowMinSize = ImVec2(225, 150);
 
 		ApplyTheme();
 
@@ -308,6 +305,18 @@ namespace SHG
 		ImGui::End();
 	}
 
+	bool EmulatorWindow::BeginWindow(const std::string& title, bool* isOpen, ImGuiWindowFlags flags)
+	{
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImGui::GetStyleColorVec4(ImGuiCol_TabActive));
+		return ImGui::Begin(title.c_str(), isOpen, GENERAL_WINDOW_FLAGS);
+	}
+
+	void EmulatorWindow::EndWindow()
+	{
+		ImGui::PopStyleColor();
+		ImGui::End();
+	}
+
 	// TODO: Remove scrollbar
 	void EmulatorWindow::RenderGameView(const PPU& ppu)
 	{
@@ -320,13 +329,12 @@ namespace SHG
 
 	void EmulatorWindow::RenderWindowWithFramebuffer(const std::string& title, const Framebuffer& framebuffer, bool* isOpen)
 	{
-		if (ImGui::Begin(title.c_str(), isOpen))
+		if (BeginWindow(title.c_str(), isOpen, GENERAL_WINDOW_FLAGS))
 		{
 			ImVec2 contentRegionSize = ImGui::GetContentRegionAvail();
 
 			ImVec2 imageSize;
 
-			// TODO: Fix flickering when the width and height are equal.
 			// Preserve the aspect ratio of the frameBuffer. 
 			if (contentRegionSize.x / contentRegionSize.y < framebuffer.GetAspectRatio())
 			{
@@ -348,7 +356,7 @@ namespace SHG
 			ImGui::Image((void*)framebuffer.GetTexture(), imageSize);
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderCPUDebugWindow(const CPU& processor, const MemoryMap& memoryMap, uint32_t cyclesPerSecond)
@@ -357,7 +365,7 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing CPU related information (clock speed, registers, etc.).
-		if (ImGui::Begin("CPU", &shouldRenderCPUDebugWindow))
+		if (BeginWindow("CPU", &shouldRenderCPUDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
 			ImGui::Text("Performance");
 			ImGui::Separator();
@@ -420,7 +428,7 @@ namespace SHG
 			ImGui::Text(("IME: " + std::to_string(processor.GetInterruptMasterEnableFlag())).c_str());
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderSoundDebugWindow(APU& apu)
@@ -428,7 +436,7 @@ namespace SHG
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
-		if (ImGui::Begin("Sound", &shouldRenderSoundDebugWindow))
+		if (BeginWindow("Sound", &shouldRenderSoundDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
 			ImGui::Text("Sound Control Registers");
 			ImGui::Separator();
@@ -494,7 +502,7 @@ namespace SHG
 			ImGui::Text(("NR44: " + GetHexString8(apu.ReadNR44())).c_str());
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderJoypadDebugWindow(const Joypad& joypad)
@@ -502,7 +510,7 @@ namespace SHG
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
-		if (ImGui::Begin("Joypad", &shouldRenderJoypadDebugWindow))
+		if (BeginWindow("Joypad", &shouldRenderJoypadDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
 			ImGui::Text(("JOYP: " + GetHexString8(joypad.Read())).c_str());
 			ImGui::Separator();
@@ -521,7 +529,7 @@ namespace SHG
 			ImGui::EndDisabled();
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderVideoRegistersDebugWindow(const PPU& ppu)
@@ -530,7 +538,7 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window showing information about the video-related registers.
-		if (ImGui::Begin("Video", &shouldRenderVideoRegistersDebugWindow))
+		if (BeginWindow("Video", &shouldRenderVideoRegistersDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
@@ -547,7 +555,7 @@ namespace SHG
 			ImGui::Separator();
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderTilesDebugWindow(const PPU& ppu)
@@ -591,7 +599,7 @@ namespace SHG
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
-		if (ImGui::Begin("Timer", &shouldRenderTimerDebugWindow))
+		if (BeginWindow("Timer", &shouldRenderTimerDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
 			ImGui::Text("Registers");
 			ImGui::Separator();
@@ -604,7 +612,7 @@ namespace SHG
 			ImGui::Separator();
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderLogWindow(const std::string& logEntries)
@@ -613,7 +621,7 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
 		// Window containing log entries.
-		if (ImGui::Begin("Logs", &shouldRenderLogWindow, ImGuiWindowFlags_NoScrollbar))
+		if (BeginWindow("Logs", &shouldRenderLogWindow, GENERAL_WINDOW_FLAGS | ImGuiWindowFlags_NoScrollbar))
 		{
 			ImGui::Checkbox("Trace", &isTraceEnabled);
 
@@ -643,7 +651,7 @@ namespace SHG
 				clearButtonPressedCallback();
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, Cartridge& cartridge)
@@ -652,7 +660,7 @@ namespace SHG
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSize(ImVec2(610, 541), ImGuiCond_FirstUseEver);
 
-		if (ImGui::Begin("Settings", &shouldRenderSettingsWindow))
+		if (BeginWindow("Settings", &shouldRenderSettingsWindow, GENERAL_WINDOW_FLAGS))
 		{
 			static int selectedWindow = SETTINGS_VIDEO_WINDOW_ID;
 
@@ -700,7 +708,7 @@ namespace SHG
 			ImGui::EndChild();
 		}
 
-		ImGui::End();
+		EndWindow();
 	}
 
 	void EmulatorWindow::RenderVideoSettingsWindow(PPU& ppu)
@@ -761,7 +769,7 @@ namespace SHG
 		if (isPaletteTintEditorOpen)
 		{
 			ImGui::SetNextWindowSize(ImVec2(250, 250));
-			if (ImGui::Begin("Palette Editor", &isPaletteTintEditorOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+			if (BeginWindow("Palette Editor", &isPaletteTintEditorOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
 			{
 				Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 				ImVec4 tint = ConvertColorToImVec4(rawTint);
@@ -769,7 +777,19 @@ namespace SHG
 				ppu.SetPaletteTint(paletteAddress, colorIndex, ConvertImVec4ToColor(tint));
 			}
 
-			ImGui::End();
+			EndWindow();
+		}
+	}
+
+	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
+	{
+		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
+		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
+		{
+			isColorPickerOpened = true;
+			outPaletteAddress = paletteAddress;
+			outColorIndex = colorIndex;
+			outLabel = label;
 		}
 	}
 
@@ -824,18 +844,6 @@ namespace SHG
 
 		ImGui::EndChild();
 		ImGui::EndGroup();
-	}
-
-	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
-	{
-		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
-		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
-		{
-			isColorPickerOpened = true;
-			outPaletteAddress = paletteAddress;
-			outColorIndex = colorIndex;
-			outLabel = label;
-		}
 	}
 
 	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad)
@@ -959,16 +967,29 @@ namespace SHG
 
 	void EmulatorWindow::ApplyTheme()
 	{
-		auto& colors = ImGui::GetStyle().Colors;
-		
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.WindowMinSize.x = 225;
+		style.WindowMenuButtonPosition = ImGuiDir_None;
+
+		float roundness = 1.0f;
+		style.ScrollbarRounding = roundness;
+		style.FrameRounding = roundness;
+		style.GrabRounding = roundness;
+		style.TabRounding = roundness;
+
+		auto& colors = style.Colors;
+
 		// Window
-		colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.11f, 0.11f, 1.00f);
+		colors[ImGuiCol_WindowBg] = ImVec4(0.07f, 0.07f, 0.07f, 1.00f);
 
 		// Menu bar
 		colors[ImGuiCol_MenuBarBg] = colors[ImGuiCol_WindowBg];
 
 		// Title
-		colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+		colors[ImGuiCol_TitleBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
 		colors[ImGuiCol_TitleBgActive] = colors[ImGuiCol_TitleBg];
 		colors[ImGuiCol_TitleBgCollapsed] = colors[ImGuiCol_TitleBg];
 
@@ -978,18 +999,18 @@ namespace SHG
 
 		// Tabs
 		colors[ImGuiCol_Tab] = colors[ImGuiCol_TitleBg];
-		colors[ImGuiCol_TabHovered] = ImVec4(0.38f, 0.62f, 0.8f, 1.00f);
+		colors[ImGuiCol_TabHovered] = ImVec4(0.28f, 0.52f, 0.7f, 1.00f);
 		colors[ImGuiCol_TabActive] = ImVec4(0.18f, 0.42f, 0.6f, 1.00f);
 		colors[ImGuiCol_TabUnfocused] = colors[ImGuiCol_TitleBg];
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+		colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.27f, 0.27f, 0.27f, 1.00f);
 
 		// Collapsing headers, tree nodes, selectables, and menu items
 		colors[ImGuiCol_Header] = colors[ImGuiCol_TabActive];
-		colors[ImGuiCol_HeaderHovered] = colors[ImGuiCol_TabActive];
-		colors[ImGuiCol_HeaderActive] = colors[ImGuiCol_TabHovered];
+		colors[ImGuiCol_HeaderHovered] = colors[ImGuiCol_TabHovered];
+		colors[ImGuiCol_HeaderActive] = ImVec4(0.38f, 0.62f, 0.8f, 1.00f);
 
 		// Separators
-		colors[ImGuiCol_Separator] = colors[ImGuiCol_TabUnfocusedActive];
+		colors[ImGuiCol_Separator] = ImVec4(0.21f, 0.21f, 0.21f, 1.00f);
 		colors[ImGuiCol_SeparatorHovered] = colors[ImGuiCol_TabActive];
 		colors[ImGuiCol_SeparatorActive] = colors[ImGuiCol_TabHovered];
 
@@ -997,7 +1018,7 @@ namespace SHG
 		colors[ImGuiCol_FrameBg] = colors[ImGuiCol_TabUnfocusedActive];
 		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
 		colors[ImGuiCol_FrameBgActive] = ImVec4(0.43f, 0.43f, 0.43f, 1.00f);
-		
+
 		// Checkbox 
 		colors[ImGuiCol_CheckMark] = colors[ImGuiCol_Text];
 
@@ -1010,26 +1031,29 @@ namespace SHG
 		colors[ImGuiCol_ResizeGripHovered] = colors[ImGuiCol_TabActive];
 		colors[ImGuiCol_ResizeGripActive] = colors[ImGuiCol_TabHovered];
 
+		colors[ImGuiCol_DockingPreview] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_DockingEmptyBg] = colors[ImGuiCol_TitleBg];
+
+		colors[ImGuiCol_Border] = colors[ImGuiCol_TabUnfocusedActive];
+		colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+
+		colors[ImGuiCol_SliderGrab] = colors[ImGuiCol_TabActive];
+		colors[ImGuiCol_SliderGrabActive] = colors[ImGuiCol_TabHovered];
+
+		colors[ImGuiCol_PopupBg] = colors[ImGuiCol_WindowBg];
+
 		// TODO: Colors below here are still using default ImGui values.
 		colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-		colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
-		colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	
+		
 		colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
 		colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
 		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
 		colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-		colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-		colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-
-		colors[ImGuiCol_DockingPreview] = colors[ImGuiCol_TabActive];
-		colors[ImGuiCol_DockingEmptyBg] = colors[ImGuiCol_WindowBg];
-
+		
 		// Tables
 		colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
-		colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);  
-		colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);   
+		colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+		colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
 		colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 		colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
 
