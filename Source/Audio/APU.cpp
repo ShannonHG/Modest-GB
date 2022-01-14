@@ -414,7 +414,7 @@ namespace SHG
 			(static_cast<int8_t>(channel1.IsEnabled()) |
 				static_cast<int8_t>(channel2.IsEnabled() << 1) |
 				static_cast<int8_t>(channel3.IsEnabled() << 2) |
-				static_cast<int8_t>(channel3.IsEnabled() << 3) |
+				static_cast<int8_t>(channel4.IsEnabled() << 3) |
 				static_cast<int8_t>(isSoundControllerEnabled << 7)) | 0x70;
 	}
 

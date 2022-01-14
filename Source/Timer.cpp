@@ -1,4 +1,5 @@
 #include <map>
+#include <algorithm>
 #include "Timer.hpp"
 #include "Utils/DataConversions.hpp"
 #include "Utils/Interrupts.hpp"
@@ -8,6 +9,7 @@
 namespace SHG
 {
 	const std::string TIMER_MESSAGE_HEADER = "[TIMER]";
+	const uint8_t TIMER_OVERFLOW_DELAY_IN_CYCLES = 4;
 
 	const std::map <TimerControlMode, uint8_t> TIMER_CONTROL_MODE_BIT_INDEXES =
 	{
@@ -31,11 +33,27 @@ namespace SHG
 
 	void Timer::Tick(uint32_t cycles)
 	{
-		// Incremented every cycle
-		SetInternalCounter(internalCounter + cycles);
+		wasCounterReloaded = false;
+		for (uint32_t i = 0; i < cycles; i++)
+		{
+			// If the overflow counter is greater than zero then an overflow is pending.
+			if (overflowCounter > 0)
+			{
+				overflowCounter = std::max(static_cast<int>(overflowCounter - cycles), 0);
+				if (overflowCounter == 0)
+				{
+					timerCounter = timerModulo;
+					wasCounterReloaded = true;
+					RequestInterrupt(memoryMap, InterruptType::Timer);
+				}
+			}
 
-		if (Logger::IsSystemEventLoggingEnabled)
-			PrintStatus();
+			// Incremented every cycle
+			SetInternalCounter(internalCounter + 1);
+
+			if (Logger::IsSystemEventLoggingEnabled)
+				PrintStatus();
+		}
 	}
 
 	uint8_t Timer::GetTimerCounter() const
@@ -61,23 +79,43 @@ namespace SHG
 
 	uint8_t Timer::GetTimerControlRegister() const
 	{
-		return (isClockEnabled << 2) | static_cast<uint8_t>(currentTimerControlMode);
+		return (isEnabled << 2) | static_cast<uint8_t>(currentTimerControlMode);
 	}
 
 	void Timer::WriteToTimerCounter(uint8_t value)
 	{
+		// If the timer counter is written to during the cycle that 
+		// the modulo is loaded into it, then the write to the counter should be ignored.
+		if (wasCounterReloaded) 
+			return;
+
 		timerCounter = value;
+
+		// Writing a value to the timer counter cancels any pending overflow.
+		overflowCounter = 0;
 	}
 
 	void Timer::WriteToTimerModulo(uint8_t value)
 	{
 		timerModulo = value;
+
+		// When the modulo is written to during the cycle that it is loaded into the timer counter, 
+		// then the written value should also be loaded into the counter.
+		if (wasCounterReloaded)
+			timerCounter = value;
 	}
 
 	void Timer::WriteToTimerControlRegister(uint8_t value)
 	{
-		isClockEnabled = (value & 0b100) >> 2;
+		bool wasPreviouslyEnabled = isEnabled;
+
+		isEnabled = (value & 0b100) >> 2;
 		currentTimerControlMode = static_cast<TimerControlMode>(value & 0b11);
+
+		// If the timer was previously enabled, the bit designated as the "timer control bit" is 1,
+		// and the timer is no longer enabled, then the timer counter should be incremented.
+		if ((wasPreviouslyEnabled && GetCurrentTimerControlBit()) && !isEnabled)
+			IncrementTimerCounter();
 	}
 
 	void Timer::WriteToDividerRegister(uint8_t value)
@@ -90,7 +128,7 @@ namespace SHG
 		internalCounter = 0;
 		timerCounter = 0;
 		timerModulo = 0;
-		isClockEnabled = false;
+		isEnabled = false;
 		currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
 	}
 
@@ -105,19 +143,27 @@ namespace SHG
 
 		internalCounter = value;
 
-		// If the bit designated as the "timer control bit" has changed from 1 to 0, then the timerCounter,
-		// should be incremented.
-		if (isClockEnabled && (isPrevControlBitEnabled && !GetCurrentTimerControlBit()))
+		// If the bit designated as the "timer control bit" has changed from 1 to 0, and
+		// the timer is enabled, then the timerCounter should be incremented.
+		if (isEnabled && (isPrevControlBitEnabled && !GetCurrentTimerControlBit()))
 		{
-			if (timerCounter == 255)
-			{
-				timerCounter = timerModulo;
-				RequestInterrupt(memoryMap, InterruptType::Timer);
-			}
-			else
-			{
-				timerCounter++;
-			}
+			IncrementTimerCounter();
+		}
+	}
+
+	void Timer::IncrementTimerCounter()
+	{
+		if (timerCounter == 255)
+		{
+			// When the timer counter overflows, there is a 4 cycle delay before
+			// the modulo will is loaded into it, and the timer interrupt is requested. 
+			// During these 4 cycles, the value in the timer counter is 0.
+			timerCounter = 0;
+			overflowCounter = TIMER_OVERFLOW_DELAY_IN_CYCLES;
+		}
+		else
+		{
+			timerCounter++;
 		}
 	}
 

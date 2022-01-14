@@ -40,10 +40,14 @@ namespace SHG
 		uint8_t timerCounter = 0;
 		uint8_t timerModulo = 0; 
 		TimerControlMode currentTimerControlMode = TimerControlMode::TIMER_CONTROL_MODE_1024;
-		bool isClockEnabled = false;
+		bool isEnabled = false;
+
+		int overflowCounter = 0;
+		bool wasCounterReloaded = false;
 
 		bool GetCurrentTimerControlBit() const;
 		void SetInternalCounter(uint16_t value);
+		void IncrementTimerCounter();
 
 		void PrintStatus() const;
 	};

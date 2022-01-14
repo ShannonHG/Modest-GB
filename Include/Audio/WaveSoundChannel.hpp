@@ -35,7 +35,6 @@ namespace SHG
 	private:
 		uint8_t sampleIndex = 0;
 		std::vector<uint8_t> samples;
-		uint8_t previousWaveRAMValue = 0;
 
 		uint8_t GetVolumeControlShift() const;
 	};

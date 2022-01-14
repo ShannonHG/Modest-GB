@@ -36,8 +36,6 @@ namespace SHG
 			return;
 		}
 
-		previousWaveRAMValue = value;
-
 		samples[address - WAVE_PATTERN_RAM_START_ADDRESS] = (value >> 4) & 0b1111;
 		samples[(address - WAVE_PATTERN_RAM_START_ADDRESS) + 1] = value & 0b1111;
 	}
@@ -69,7 +67,7 @@ namespace SHG
 
 	uint8_t WaveSoundChannel::ReadWavePatternRAM() const
 	{
-		return previousWaveRAMValue;
+		return isEnabled ? samples[sampleIndex] : 0xFF;
 	}
 
 	uint16_t WaveSoundChannel::GetLengthTimerPeriod() const
