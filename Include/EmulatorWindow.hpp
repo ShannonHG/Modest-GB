@@ -25,6 +25,7 @@ namespace SHG
 		bool shouldRenderTimerDebugWindow = false;
 		bool shouldRenderLogWindow = false;
 		bool shouldRenderSettingsWindow = false;
+		bool shouldAutoScrollLogsToBottom = false;
 
 		bool Initialize();
 		SDL_Window* GetSDLWindow();
@@ -38,14 +39,9 @@ namespace SHG
 
 		void SetPauseButtonLabel(const std::string& label);
 
-		bool IsTraceEnabled();
-		int GetWidth();
-		int GetHeight();
-		void SetSize(int width, int height);
-
-		int GetX();
-		int GetY();
-		void SetPosition(int x, int y);
+		bool IsMaximized();
+		void SetMaximizedValue(bool value, bool modifyWindow);
+		void Show();
 
 	private:
 		SDL_Window* sdlWindow = nullptr;
@@ -58,8 +54,7 @@ namespace SHG
 		SimpleCallback quitButtonPressedCallback;
 
 		std::string pauseButtonLabel = "Pause";
-
-		bool isTraceEnabled = false;
+		bool isMaximized = false;
 
 		ImGuiID dockspaceID = 0;
 
@@ -81,6 +76,8 @@ namespace SHG
 		void RenderLogWindow(const std::string& logEntries);
 		
 		void RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, Cartridge& cartridge);
+		void RenderSettingsWindowSelectableItem(const std::string& label, int selectableID, int& selectedWindowID);
+
 		void RenderVideoSettingsWindow(PPU& ppu);
 		void RenderAudioSettingsWindow(APU& apu);
 		void RenderControllerAndKeyboardSettingsWindow(Joypad& joypad);

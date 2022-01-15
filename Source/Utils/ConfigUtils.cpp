@@ -8,17 +8,19 @@
 
 namespace SHG::Config
 {
-	const std::string CPU_WINDOW_CONFIG_ITEM_NAME = "CPU Debug Window Open";
-	const std::string TILES_WINDOW_CONFIG_ITEM_NAME = "Tiles Debug Window Open";
-	const std::string BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME = "Background Map Debug Window Open";
-	const std::string WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME = "Window Map Debug Window Open";
-	const std::string SPRITES_WINDOW_CONFIG_ITEM_NAME = "Sprites Debug Window Open";
-	const std::string LOG_WINDOW_CONFIG_ITEM_NAME = "Log Window Open";
-	const std::string SETTINGS_WINDOW_CONFIG_ITEM_NAME = "Settings Window Open";
-	const std::string SOUND_WINDOW_CONFIG_ITEM_NAME = "Sound Debug Window Open";
-	const std::string TIMER_WINDOW_CONFIG_ITEM_NAME = "Timer Debug Window Open";
-	const std::string VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME = "Video Registers Debug Window Open";
-	const std::string JOYPAD_WINDOW_CONFIG_ITEM_NAME = "Joypad Debug Window Open";
+	const std::string MAIN_WINDOW_MAXIMIZED_NODE_NAME = "Maximized";
+	const std::string CPU_WINDOW_CONFIG_NODE_NAME = "CPU Debug Window Open";
+	const std::string TILES_WINDOW_CONFIG_NODE_NAME = "Tiles Debug Window Open";
+	const std::string BACKGROUND_MAP_WINDOW_CONFIG_NODE_NAME = "Background Map Debug Window Open";
+	const std::string WINDOW_MAP_WINDOW_CONFIG_NODE_NAME = "Window Map Debug Window Open";
+	const std::string SPRITES_WINDOW_CONFIG_NODE_NAME = "Sprites Debug Window Open";
+	const std::string LOG_WINDOW_CONFIG_NODE_NAME = "Log Window Open";
+	const std::string LOG_WINDOW_AUTO_SCROLL_CONFIG_NODE_NAME = "Auto Scroll Logs";
+	const std::string SETTINGS_WINDOW_CONFIG_NODE_NAME = "Settings Window Open";
+	const std::string SOUND_WINDOW_CONFIG_NODE_NAME = "Sound Debug Window Open";
+	const std::string TIMER_WINDOW_CONFIG_NODE_NAME = "Timer Debug Window Open";
+	const std::string VIDEO_REGISTERS_WINDOW_CONFIG_NODE_NAME = "Video Registers Debug Window Open";
+	const std::string JOYPAD_WINDOW_CONFIG_NODE_NAME = "Joypad Debug Window Open";
 
 	const std::string PALETTES_NODE_NAME = "Palettes";
 	const std::string MUTED_NODE_NAME = "Muted";
@@ -197,34 +199,38 @@ namespace SHG::Config
 
 	void SaveWindowConfiguration(YAML::Node node, EmulatorWindow& window)
 	{
-		node[CPU_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderCPUDebugWindow;
-		node[TILES_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderTilesDebugWindow;
-		node[BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderBackgroundTileMapDebugWindow;
-		node[WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderWindowTileMapDebugWindow;
-		node[SPRITES_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderSpritesDebugWindow;
-		node[LOG_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderLogWindow;
-		node[SETTINGS_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderSettingsWindow;
-		node[SOUND_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderSoundDebugWindow;
-		node[TIMER_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderTimerDebugWindow;
-		node[VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderVideoRegistersDebugWindow;
-		node[JOYPAD_WINDOW_CONFIG_ITEM_NAME] = window.shouldRenderJoypadDebugWindow;
+		node[MAIN_WINDOW_MAXIMIZED_NODE_NAME] = window.IsMaximized();
+		node[CPU_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderCPUDebugWindow;
+		node[TILES_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderTilesDebugWindow;
+		node[BACKGROUND_MAP_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderBackgroundTileMapDebugWindow;
+		node[WINDOW_MAP_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderWindowTileMapDebugWindow;
+		node[SPRITES_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderSpritesDebugWindow;
+		node[LOG_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderLogWindow;
+		node[SETTINGS_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderSettingsWindow;
+		node[SOUND_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderSoundDebugWindow;
+		node[TIMER_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderTimerDebugWindow;
+		node[VIDEO_REGISTERS_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderVideoRegistersDebugWindow;
+		node[JOYPAD_WINDOW_CONFIG_NODE_NAME] = window.shouldRenderJoypadDebugWindow;
+		node[LOG_WINDOW_AUTO_SCROLL_CONFIG_NODE_NAME] = window.shouldAutoScrollLogsToBottom;
 	}
 
 	bool LoadWindowConfiguration(YAML::Node node, EmulatorWindow& window)
 	{
 		try
 		{
-			window.shouldRenderCPUDebugWindow = node[CPU_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderTilesDebugWindow = node[TILES_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderBackgroundTileMapDebugWindow = node[BACKGROUND_MAP_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderWindowTileMapDebugWindow = node[WINDOW_MAP_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderSpritesDebugWindow = node[SPRITES_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderLogWindow = node[LOG_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderSettingsWindow = node[SETTINGS_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderSoundDebugWindow = node[SOUND_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderTimerDebugWindow = node[TIMER_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderVideoRegistersDebugWindow = node[VIDEO_REGISTERS_WINDOW_CONFIG_ITEM_NAME].as<bool>();
-			window.shouldRenderJoypadDebugWindow = node[JOYPAD_WINDOW_CONFIG_ITEM_NAME].as<bool>();
+			window.SetMaximizedValue(node[MAIN_WINDOW_MAXIMIZED_NODE_NAME].as<bool>(), true);
+			window.shouldRenderCPUDebugWindow = node[CPU_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderTilesDebugWindow = node[TILES_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderBackgroundTileMapDebugWindow = node[BACKGROUND_MAP_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderWindowTileMapDebugWindow = node[WINDOW_MAP_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderSpritesDebugWindow = node[SPRITES_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderLogWindow = node[LOG_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderSettingsWindow = node[SETTINGS_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderSoundDebugWindow = node[SOUND_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderTimerDebugWindow = node[TIMER_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderVideoRegistersDebugWindow = node[VIDEO_REGISTERS_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldRenderJoypadDebugWindow = node[JOYPAD_WINDOW_CONFIG_NODE_NAME].as<bool>();
+			window.shouldAutoScrollLogsToBottom = node[LOG_WINDOW_AUTO_SCROLL_CONFIG_NODE_NAME].as<bool>();
 		}
 		catch (std::exception e)
 		{

@@ -87,13 +87,9 @@ namespace SHG
 		while (SDL_PollEvent(&e))
 		{
 			ImGui_ImplSDL2_ProcessEvent(&e);
-			if (e.type == SDL_QUIT)
-			{
-				for (SimpleCallback callback : exitEventCallbacks)
-					callback();
 
-				return;
-			}
+			for (GenericInputEventCallback callback : genericInputEventCallbacks)
+				callback(e);
 
 			// Detect keyboard input.
 			SDL_Keycode keycode = e.key.keysym.sym;
@@ -127,41 +123,40 @@ namespace SHG
 		}
 	}
 
-
-	void InputManager::RegisterKeyPressedCallback(KeyInputEvent callback)
+	void InputManager::RegisterKeyPressedCallback(KeyInputEventCallback callback)
 	{
 		keyPressedCallbacks.push_back(callback);
 	}
 
-	void InputManager::RegisterKeyReleasedCallback(KeyInputEvent callback)
+	void InputManager::RegisterKeyReleasedCallback(KeyInputEventCallback callback)
 	{
 		keyReleasedCallbacks.push_back(callback);
 	}
 
-	void InputManager::RegisterControllerButtonPressedCallback(ControllerInputEvent callback)
+	void InputManager::RegisterControllerButtonPressedCallback(ControllerInputEventCallback callback)
 	{
 		controllerButtonPressedCallbacks.push_back(callback);
 	}
 
-	void InputManager::RegisterControllerButtonReleasedCallback(ControllerInputEvent callback)
+	void InputManager::RegisterControllerButtonReleasedCallback(ControllerInputEventCallback callback)
 	{
 		controllerButtonReleasedCallbacks.push_back(callback);
 	}
 
-	void InputManager::RegisterExitEventCallback(SimpleCallback callback)
+	void InputManager::RegisterGenericInputEventCallback(GenericInputEventCallback callback)
 	{
-		exitEventCallbacks.push_back(callback);
+		genericInputEventCallbacks.push_back(callback);
 	}
 
-	void InputManager::InvokeKeyInputCallbacks(std::vector<KeyInputEvent>& callbacks, KeyCode keyCode)
+	void InputManager::InvokeKeyInputCallbacks(std::vector<KeyInputEventCallback>& callbacks, KeyCode keyCode)
 	{
-		for (KeyInputEvent& callback : callbacks)
+		for (KeyInputEventCallback& callback : callbacks)
 			callback(keyCode);
 	}
 
-	void InputManager::InvokeControllerInputCallbacks(std::vector<ControllerInputEvent>& callbacks, ControllerButtonCode buttonCode)
+	void InputManager::InvokeControllerInputCallbacks(std::vector<ControllerInputEventCallback>& callbacks, ControllerButtonCode buttonCode)
 	{
-		for (ControllerInputEvent& callback : callbacks)
+		for (ControllerInputEventCallback& callback : callbacks)
 			callback(buttonCode);
 	}
 }

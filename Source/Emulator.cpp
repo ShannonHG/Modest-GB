@@ -35,7 +35,7 @@ namespace SHG
 		window.RegisterPauseButtonCallback(std::bind(&Emulator::OnPauseButtonPressed, this));
 		window.RegisterStepButtonCallback(std::bind(&Emulator::OnStepButtonPressed, this));
 		window.RegisterClearButtonCallback(std::bind(&Emulator::OnClearButtonPressed, this));
-		inputManager.RegisterExitEventCallback(std::bind(&Emulator::OnQuit, this));
+		inputManager.RegisterGenericInputEventCallback(std::bind(&Emulator::OnInputEventReceived, this, std::placeholders::_1));
 
 		ppu.InitializeFramebuffer(window.GetSDLWindow());
 		SetupMemoryMap();
@@ -45,6 +45,7 @@ namespace SHG
 		inputManager.Initialize();
 
 		Config::LoadConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, cartridge);
+		window.Show();
 
 		isRunning = true;
 		double timeSinceLastFrame = 0;
@@ -54,15 +55,11 @@ namespace SHG
 
 		auto prevTime = std::chrono::system_clock::now();
 
-		std::function<void()> onQuitCallback = std::bind(&Emulator::OnQuit, this);
-
 		while (isRunning)
 		{
 			auto currentTime = std::chrono::system_clock::now();
 			auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime).count();
 			prevTime = currentTime;
-
-			Logger::IsSystemEventLoggingEnabled = window.IsTraceEnabled();
 
 			if (cartridge.IsROMLoaded() && (!isPaused || isStepRequested) && cyclesSinceLastFrame < GB_CYCLES_PER_FRAME)
 			{
@@ -137,7 +134,7 @@ namespace SHG
 		if (!window.shouldRenderLogWindow)
 			return;
 
-		if (messageType != LogMessageType::SystemEvent || window.IsTraceEnabled())
+		if (messageType != LogMessageType::SystemEvent)
 			logEntries += logEntry + '\n';
 
 		if (logEntries.size() >= MAX_LOG_ENTRY_STRING_SIZE)
@@ -150,9 +147,27 @@ namespace SHG
 		}
 	}
 
-	void Emulator::OnQuit()
+	void Emulator::OnInputEventReceived(SDL_Event e)
 	{
-		isRunning = false;
+		switch (e.type)
+		{
+		case SDL_QUIT:
+			isRunning = false;
+			break;
+		case SDL_WINDOWEVENT:
+		{
+			switch (e.window.event)
+			{
+			case SDL_WINDOWEVENT_MAXIMIZED:
+				window.SetMaximizedValue(true, false);
+				break;
+			case SDL_WINDOWEVENT_RESTORED:
+				window.SetMaximizedValue(false, false);
+				break;
+			}
+			break;
+		}
+		}
 	}
 
 	void Emulator::OnFileSelected(const std::string& path)

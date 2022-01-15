@@ -123,8 +123,9 @@ namespace SHG
 		{ ControllerButtonCode::MENU, "MENU" }
 	};
 
-	using KeyInputEvent = std::function<void(KeyCode)>;
-	using ControllerInputEvent = std::function<void(ControllerButtonCode)>;
+	using KeyInputEventCallback = std::function<void(KeyCode)>;
+	using ControllerInputEventCallback = std::function<void(ControllerButtonCode)>;
+	using GenericInputEventCallback = std::function<void(SDL_Event)>;
 
 	class InputManager
 	{
@@ -132,19 +133,19 @@ namespace SHG
 		void Initialize();
 		void Update();
 
-		void RegisterKeyPressedCallback(KeyInputEvent callback);
-		void RegisterKeyReleasedCallback(KeyInputEvent callback);
-		void RegisterControllerButtonPressedCallback(ControllerInputEvent callback);
-		void RegisterControllerButtonReleasedCallback(ControllerInputEvent callback);
-		void RegisterExitEventCallback(SimpleCallback callback);
+		void RegisterKeyPressedCallback(KeyInputEventCallback callback);
+		void RegisterKeyReleasedCallback(KeyInputEventCallback callback);
+		void RegisterControllerButtonPressedCallback(ControllerInputEventCallback callback);
+		void RegisterControllerButtonReleasedCallback(ControllerInputEventCallback callback);
+		void RegisterGenericInputEventCallback(GenericInputEventCallback callback);
 	private:
-		std::vector<KeyInputEvent> keyPressedCallbacks;
-		std::vector<KeyInputEvent> keyReleasedCallbacks;
-		std::vector<ControllerInputEvent> controllerButtonPressedCallbacks;
-		std::vector<ControllerInputEvent> controllerButtonReleasedCallbacks;
-		std::vector<SimpleCallback> exitEventCallbacks;
+		std::vector<KeyInputEventCallback> keyPressedCallbacks;
+		std::vector<KeyInputEventCallback> keyReleasedCallbacks;
+		std::vector<ControllerInputEventCallback> controllerButtonPressedCallbacks;
+		std::vector<ControllerInputEventCallback> controllerButtonReleasedCallbacks;
+		std::vector<GenericInputEventCallback> genericInputEventCallbacks;
 
-		void InvokeKeyInputCallbacks(std::vector<KeyInputEvent>& callbacks, KeyCode keyCode);
-		void InvokeControllerInputCallbacks(std::vector<ControllerInputEvent>& callbacks, ControllerButtonCode buttonCode);
+		void InvokeKeyInputCallbacks(std::vector<KeyInputEventCallback>& callbacks, KeyCode keyCode);
+		void InvokeControllerInputCallbacks(std::vector<ControllerInputEventCallback>& callbacks, ControllerButtonCode buttonCode);
 	};
 }

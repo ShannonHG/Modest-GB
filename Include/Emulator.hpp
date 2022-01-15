@@ -46,7 +46,7 @@ namespace SHG
 
 		std::string logEntries;
 
-		void OnQuit();
+		void OnInputEventReceived(SDL_Event e);
 		void OnPauseButtonPressed();
 		void OnStepButtonPressed();
 		void OnClearButtonPressed();

@@ -20,7 +20,6 @@ namespace SHG
 		pixels = std::vector<uint32_t>(width * height);
 	}
 
-	// TODO: Handle case where the framebuffer is uninitialized
 
 	void Framebuffer::UploadData()
 	{
