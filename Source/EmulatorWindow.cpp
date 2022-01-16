@@ -112,7 +112,12 @@ namespace SHG
 		}
 	}
 
-	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
+	SDL_Window* EmulatorWindow::GetSDLWindow()
+	{
+		return sdlWindow;
+	}
+
+	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
 	{
 		StartFrame();
 		ClearScreen();
@@ -151,7 +156,7 @@ namespace SHG
 			RenderLogWindow(logEntries);
 
 		if (shouldRenderSettingsWindow)
-			RenderSettingsWindow(ppu, apu, joypad, cartridge);
+			RenderSettingsWindow(ppu, apu, joypad, inputManager, cartridge);
 
 		EndFrame();
 	}
@@ -630,7 +635,7 @@ namespace SHG
 		EndWindow();
 	}
 
-	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, Cartridge& cartridge)
+	void EmulatorWindow::RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -663,7 +668,7 @@ namespace SHG
 					RenderAudioSettingsWindow(apu);
 					break;
 				case SETTINGS_CONTROLLER_AND_KEYBOARD_WINDOW_ID:
-					RenderControllerAndKeyboardSettingsWindow(joypad);
+					RenderControllerAndKeyboardSettingsWindow(joypad, inputManager);
 					break;
 				case SETTINGS_SAVED_DATA_WINDOW_ID:
 					RenderSavedDataSettingsWindow(cartridge);
@@ -681,14 +686,10 @@ namespace SHG
 	{
 		bool isSelected = currentSelectionID == selectableID;
 
-		if (isSelected)
-			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetStyle().Colors[ImGuiCol_TabActive]);
-
-		if (ImGui::Selectable(label.c_str(), isSelected))
+		if (BeginSelectable(label.c_str(), isSelected))
 			currentSelectionID = selectableID;
 
-		if (isSelected)
-			ImGui::PopStyleColor();
+		EndSelectable(isSelected);
 	}
 
 	void EmulatorWindow::RenderVideoSettingsWindow(PPU& ppu)
@@ -785,7 +786,7 @@ namespace SHG
 			ImGui::Spacing();
 
 			const std::vector<std::string>& outputDeviceNames = apu.GetAllOutputDeviceNames();
-			std::string selectedOutputDevice = apu.GetCurrentOutputDeviceName();
+			const std::string& selectedOutputDevice = apu.GetCurrentOutputDeviceName();
 
 			// Render list of audio output devices.
 			ImGui::Text("Output Device:");
@@ -798,8 +799,10 @@ namespace SHG
 				for (const std::string& name : outputDeviceNames)
 				{
 					// If the selectable is pressed, then set the selected device as the APU's output device.
-					if (ImGui::Selectable(name.c_str(), selectedOutputDevice == name, ImGuiSelectableFlags_None))
+					if (BeginSelectable(name.c_str(), selectedOutputDevice == name, ImGuiSelectableFlags_None))
 						apu.SetOutputDevice(name);
+
+					EndSelectable(selectedOutputDevice == name);
 				}
 
 				ImGui::EndCombo();
@@ -829,16 +832,44 @@ namespace SHG
 		ImGui::EndGroup();
 	}
 
-	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad)
+	void EmulatorWindow::RenderControllerAndKeyboardSettingsWindow(Joypad& joypad, InputManager& inputManager)
 	{
 		ImGui::BeginGroup();
 
 		if (ImGui::BeginChild("Controller/Keyboard Settings"))
 		{
-			ImGui::Text("Controller/Keyboard Mapping");
+			ImGui::Text("Controller/Keyboard");
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Spacing();
+
+
+			const std::vector<std::string>& controllerNames = inputManager.GetAllControllerNames();
+
+			if (controllerNames.size() > 0)
+			{
+				const std::string& selectedController = inputManager.GetCurrentControllerName();
+
+				// Render list of controllers.
+				ImGui::Text("Controller:");
+				ImGui::SameLine();
+
+				float minItemWidth = 50.0f;
+				ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
+				if (ImGui::BeginCombo("##Controllers", selectedController.c_str()))
+				{
+					for (const std::string& name : controllerNames)
+					{
+						// If the selectable is pressed, then set the selected controller as the input manager's controller.
+						if (BeginSelectable(name.c_str(), selectedController == name, ImGuiSelectableFlags_None))
+							inputManager.SetController(name);
+
+						EndSelectable(selectedController == name);
+					}
+
+					ImGui::EndCombo();
+				}
+			}
 
 			float initColumnWidth = 125;
 			int columnCount = 3;
@@ -847,12 +878,20 @@ namespace SHG
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors[ImGuiCol_TabActive]);
 			ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors[ImGuiCol_TabActive]);
 
-			if (ImGui::BeginTable("Test", columnCount, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y)))
+			ImGui::Spacing();
+			ImGui::Text("Button Mapping");
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::BeginTable("Input Mapping", columnCount, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y)))
 			{
 				ImGui::TableSetupColumn(" Game Boy", ImGuiTableColumnFlags_None, initColumnWidth);
 				ImGui::TableSetupColumn("Controller", ImGuiTableColumnFlags_None, initColumnWidth);
 				ImGui::TableSetupColumn("Keyboard", ImGuiTableColumnFlags_None, initColumnWidth);
 				ImGui::TableHeadersRow();
+
+				ImGui::PopStyleColor();
+				ImGui::PopStyleColor();
 
 				for (int r = 0; r < GBBUTTON_STRINGS.size(); r++)
 				{
@@ -896,9 +935,6 @@ namespace SHG
 
 				ImGui::EndTable();
 			}
-
-			ImGui::PopStyleColor();
-			ImGui::PopStyleColor();
 		}
 
 		ImGui::EndChild();
@@ -914,8 +950,10 @@ namespace SHG
 		{
 			for (const std::pair<ControllerButtonCode, std::string>& pair : CONTROLLER_BUTTON_STRINGS)
 			{
-				if (ImGui::Selectable(pair.second.c_str(), selectedButton == pair.first))
+				if (BeginSelectable(pair.second.c_str(), selectedButton == pair.first))
 					joypad.SetControllerButtonCode(gbButton, pair.first);
+
+				EndSelectable(selectedButton == pair.first);
 			}
 
 			ImGui::EndCombo();
@@ -931,8 +969,10 @@ namespace SHG
 		{
 			for (const std::pair<KeyCode, std::string>& pair : KEYCODE_STRINGS)
 			{
-				if (ImGui::Selectable(pair.second.c_str(), selectedKey == pair.first))
+				if (BeginSelectable(pair.second.c_str(), selectedKey == pair.first))
 					joypad.SetKeyCode(gbButton, pair.first);
+
+				EndSelectable(selectedKey == pair.first);
 			}
 
 			ImGui::EndCombo();
@@ -945,6 +985,11 @@ namespace SHG
 
 		if (ImGui::BeginChild("Saved Data Settings"))
 		{
+			ImGui::Text("Saved Data");
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
 			SavedDataSearchType currentSavedDataSearchType = cartridge.GetSavedDataSearchType();
 
 			ImGui::Text("Saved Data Location: ");
@@ -955,13 +1000,16 @@ namespace SHG
 			{
 				for (const std::pair<SavedDataSearchType, std::string>& pair : SAVED_DATA_SEARCH_TYPE_STRINGS)
 				{
-					if (ImGui::Selectable(pair.second.c_str(), pair.first == currentSavedDataSearchType))
+					bool isSelected = pair.first == currentSavedDataSearchType;
+					if (BeginSelectable(pair.second.c_str(), isSelected))
 					{
 						currentSavedDataSearchType = pair.first;
 
 						// Update the cartridge's saved data search type.
 						cartridge.SetSavedDataSearchType(currentSavedDataSearchType);
 					}
+
+					EndSelectable(isSelected);
 				}
 
 				ImGui::EndCombo();
@@ -1084,17 +1132,26 @@ namespace SHG
 		return resultPath;
 	}
 
+	bool EmulatorWindow::BeginSelectable(const std::string& label, bool isSelected, ImGuiSelectableFlags flags, const ImVec2& size)
+	{
+		if (isSelected)
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::GetStyle().Colors[ImGuiCol_TabActive]);
+
+		return ImGui::Selectable(label.c_str(), isSelected, flags, size);
+	}
+
+	void EmulatorWindow::EndSelectable(bool isSelected)
+	{
+		if (isSelected)
+			ImGui::PopStyleColor();
+	}
+
 	void EmulatorWindow::EndFrame()
 	{
 		ImGui::Render();
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
 		SDL_RenderPresent(sdlRenderer);
-	}
-
-	SDL_Window* EmulatorWindow::GetSDLWindow()
-	{
-		return sdlWindow;
 	}
 
 	void EmulatorWindow::SetPauseButtonLabel(const std::string& label)

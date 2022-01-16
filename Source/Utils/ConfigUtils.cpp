@@ -27,8 +27,9 @@ namespace SHG::Config
 	const std::string VOLUME_NODE_NAME = "Volume";
 	const std::string OUTPUT_DEVICE_NODE_NAME = "Output Device";
 	const std::string JOYPAD_NODE_NAME = "Joypad";
-	const std::string CONTROLLER_BUTTON_NODE_NAME = "Ctrl Button";
+	const std::string CONTROLLER_BUTTON_NODE_NAME = "Controller Button";
 	const std::string KEYCODE_NODE_NAME = "Key";
+	const std::string CONTROLLER_NODE_NAME = "Controller";
 	const std::string SAVED_DATA_NODE_NAME = "Saved Data Location";
 
 	const std::map<SavedDataSearchType, std::string> SAVED_DATA_LOCATION_STRINGS =
@@ -115,7 +116,7 @@ namespace SHG::Config
 		return true;
 	}
 
-	void SaveJoypadConfiguration(YAML::Node& node, const Joypad& joypad)
+	void SaveJoypadConfiguration(YAML::Node& node, const Joypad& joypad, const InputManager& inputManager)
 	{
 		std::map<GBButton, ButtonKeyPair> inputMapping = joypad.GetInputMapping();
 
@@ -124,12 +125,16 @@ namespace SHG::Config
 			node[JOYPAD_NODE_NAME][GBBUTTON_STRINGS.at(pair.first)][CONTROLLER_BUTTON_NODE_NAME] = CONTROLLER_BUTTON_STRINGS.at(pair.second.button);
 			node[JOYPAD_NODE_NAME][GBBUTTON_STRINGS.at(pair.first)][KEYCODE_NODE_NAME] = KEYCODE_STRINGS.at(pair.second.key);
 		}
+
+		node[CONTROLLER_NODE_NAME] = inputManager.GetCurrentControllerName();
 	}
 
-	bool LoadJoypadConfiguration(YAML::Node& node, Joypad& joypad)
+	bool LoadJoypadConfiguration(YAML::Node& node, Joypad& joypad, InputManager& inputManager)
 	{
 		try
 		{
+			inputManager.SetController(node[CONTROLLER_NODE_NAME].Scalar());
+
 			for (const std::pair<GBButton, std::string>& pair : GBBUTTON_STRINGS)
 			{
 				std::string controllerNodeValue = node[JOYPAD_NODE_NAME][GBBUTTON_STRINGS.at(pair.first)][CONTROLLER_BUTTON_NODE_NAME].Scalar();
@@ -241,7 +246,7 @@ namespace SHG::Config
 		return true;
 	}
 
-	bool Config::SaveConfiguration(const std::string& configFilePath, EmulatorWindow& window, const APU& apu, const PPU& ppu, const Joypad& joypad, const Cartridge& cartridge)
+	bool Config::SaveConfiguration(const std::string& configFilePath, EmulatorWindow& window, const APU& apu, const PPU& ppu, const Joypad& joypad, const InputManager& inputManager, const Cartridge& cartridge)
 	{
 		YAML::Node node;
 
@@ -249,7 +254,7 @@ namespace SHG::Config
 		SaveCartridgeConfiguration(node, cartridge);
 		SaveWindowConfiguration(node, window);
 		SaveVideoConfiguration(node, ppu);
-		SaveJoypadConfiguration(node, joypad);
+		SaveJoypadConfiguration(node, joypad, inputManager);
 
 		auto stream = std::ofstream(configFilePath);
 
@@ -260,7 +265,7 @@ namespace SHG::Config
 		return true;
 	}
 
-	bool Config::LoadConfiguration(const std::string& configFilePath, EmulatorWindow& window, APU& apu, PPU& ppu, Joypad& joypad, Cartridge& cartridge)
+	bool Config::LoadConfiguration(const std::string& configFilePath, EmulatorWindow& window, APU& apu, PPU& ppu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge)
 	{
 		if (!std::filesystem::exists(configFilePath))
 			return false;
@@ -283,7 +288,7 @@ namespace SHG::Config
 		if (!LoadVideoConfiguration(node, ppu))
 			success = false;
 
-		if (!LoadJoypadConfiguration(node, joypad))
+		if (!LoadJoypadConfiguration(node, joypad, inputManager))
 			success = false;
 
 		return success;

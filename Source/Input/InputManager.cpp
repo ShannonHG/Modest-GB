@@ -70,19 +70,78 @@ namespace SHG
 
 	void InputManager::Initialize()
 	{
-		for (int i = 0; i < SDL_NumJoysticks(); i++)
+		RefreshControllers();
+	}
+
+	const std::string& InputManager::GetCurrentControllerName() const
+	{
+		return currentControllerName;
+	}
+
+	const std::vector<std::string>& InputManager::GetAllControllerNames() const
+	{
+		return controllerNames;
+	}
+
+	void InputManager::RefreshControllers()
+	{
+		if (joystickCount != SDL_NumJoysticks())
 		{
-			if (SDL_IsGameController(i))
+			bool isCurrentControllerFound = false;
+			int controllerCount = 0;
+
+			controllerIndexes.clear();
+			controllerNames.clear();
+
+			for (int i = 0; i < SDL_NumJoysticks(); i++)
 			{
-				// TODO: Add support for selecting controller
-				SDL_GameControllerOpen(i);
-				return;
+				if (SDL_IsGameController(i))
+				{
+					std::string controllerName = SDL_GameControllerNameForIndex(i);
+					controllerIndexes[controllerName] = i;
+					controllerNames.push_back(controllerName);
+
+					if (currentControllerName == controllerName)
+						isCurrentControllerFound = true;
+				}
 			}
+
+			if (controllerIndexes.size() > 0 && !isCurrentControllerFound)
+				SetController(controllerIndexes.begin()->first);
+		}
+	}
+
+	void InputManager::SetController(const std::string& controllerName)
+	{
+		if (controllerName.empty())
+			return;
+
+		if (controllerIndexes.find(controllerName) != controllerIndexes.end())
+		{
+			if (SDL_GameControllerOpen(controllerIndexes[controllerName]) == nullptr)
+			{
+				Logger::WriteWarning("Failed to select controller: " + controllerName + ". Error: " + SDL_GetError());
+			}
+			else
+			{
+				// Close the existing controller, if any.
+				if (!currentControllerName.empty())
+					SDL_GameControllerClose(SDL_GameControllerFromInstanceID(controllerIndexes[currentControllerName]));
+
+				currentControllerName = controllerName;
+				Logger::WriteInfo("Selected controller: " + currentControllerName);
+			}
+		}
+		else
+		{
+			Logger::WriteWarning("Failed to select controller: " + controllerName);
 		}
 	}
 
 	void InputManager::Update()
 	{
+		RefreshControllers();
+
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
 		{

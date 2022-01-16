@@ -132,6 +132,9 @@ namespace SHG
 	public:
 		void Initialize();
 		void Update();
+		void SetController(const std::string& controllerName);
+		const std::vector<std::string>& GetAllControllerNames() const;
+		const std::string& GetCurrentControllerName() const;
 
 		void RegisterKeyPressedCallback(KeyInputEventCallback callback);
 		void RegisterKeyReleasedCallback(KeyInputEventCallback callback);
@@ -139,6 +142,11 @@ namespace SHG
 		void RegisterControllerButtonReleasedCallback(ControllerInputEventCallback callback);
 		void RegisterGenericInputEventCallback(GenericInputEventCallback callback);
 	private:
+		int joystickCount = 0;
+		std::map<std::string, int> controllerIndexes;
+		std::vector<std::string> controllerNames;
+		std::string currentControllerName;
+
 		std::vector<KeyInputEventCallback> keyPressedCallbacks;
 		std::vector<KeyInputEventCallback> keyReleasedCallbacks;
 		std::vector<ControllerInputEventCallback> controllerButtonPressedCallbacks;
@@ -147,5 +155,7 @@ namespace SHG
 
 		void InvokeKeyInputCallbacks(std::vector<KeyInputEventCallback>& callbacks, KeyCode keyCode);
 		void InvokeControllerInputCallbacks(std::vector<ControllerInputEventCallback>& callbacks, ControllerButtonCode buttonCode);
+
+		void RefreshControllers();
 	};
 }

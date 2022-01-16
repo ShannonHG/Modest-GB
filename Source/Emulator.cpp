@@ -8,8 +8,6 @@
 #include "Logger.hpp"
 #include "Utils/GBSpecs.hpp"
 #include "Utils/ConfigUtils.hpp"
-#include "yaml-cpp/yaml.h"
-#include "yaml-cpp/emitter.h"
 
 namespace SHG
 {
@@ -18,7 +16,7 @@ namespace SHG
 
 	Emulator::~Emulator()
 	{
-		Config::SaveConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, cartridge);
+		Config::SaveConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, inputManager, cartridge);
 	}
 
 	bool Emulator::Run()
@@ -44,7 +42,10 @@ namespace SHG
 		apu.Initialize();
 		inputManager.Initialize();
 
-		Config::LoadConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, cartridge);
+		Logger::WriteInfo("Loading configuration file...");
+		Config::LoadConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, inputManager, cartridge);
+		Logger::WriteInfo("Configuration file attributes applied.");
+
 		window.Show();
 
 		isRunning = true;
@@ -104,7 +105,7 @@ namespace SHG
 			{
 				apu.RefreshOutputDevices();
 				inputManager.Update();
-				window.Render(memoryMap, ppu, processor, apu, joypad, cartridge, timer, cyclesPerSecond, logEntries);
+				window.Render(memoryMap, ppu, processor, apu, joypad, inputManager, cartridge, timer, cyclesPerSecond, logEntries);
 				timeSinceLastFrame = 0;
 				cyclesSinceLastFrame = 0;
 			}
