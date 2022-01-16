@@ -27,7 +27,6 @@ namespace SHG
 		static void RegisterLogEntryAddedCallback(LogEntryEvent callback);
 
 	private:
-		static void InitLogFile();
 		static void WriteMessage(std::string heading, const std::string& message, bool writeToConsole, const std::string& customHeader, LogMessageType messageType);
 	};
 }

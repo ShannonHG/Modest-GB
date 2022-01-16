@@ -131,9 +131,6 @@ namespace SHG
 
 	void Emulator::AddLogEntry(const std::string& logEntry, LogMessageType messageType)
 	{
-		if (!window.shouldRenderLogWindow)
-			return;
-
 		if (messageType != LogMessageType::SystemEvent)
 			logEntries += logEntry + '\n';
 

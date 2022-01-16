@@ -23,6 +23,8 @@ namespace SHG
 		currentAudioSpec.channels = AUDIO_CHANNELS;
 		currentAudioSpec.samples = AUDIO_BUFFER_SIZE;
 
+		// By default, set the output device to the first available audio device.
+		SetOutputDevice(SDL_GetAudioDeviceName(0, SDL_FALSE));
 		RefreshAudioDeviceNames();
 
 		frameSequencerTimer.Restart(FRAME_SEQUENCER_PERIOD);
@@ -80,20 +82,17 @@ namespace SHG
 
 	void APU::SetOutputDevice(const std::string& audioDeviceName)
 	{
-		if (currentAudioDeviceName == audioDeviceName)
-			return;
-
-		// Close the existing audio device, if any.
-		if (currentAudioDeviceID > 0)
-			SDL_CloseAudioDevice(currentAudioDeviceID);
-
 		SDL_AudioDeviceID result = SDL_OpenAudioDevice(audioDeviceName.c_str(), SDL_FALSE, &currentAudioSpec, nullptr, 0);
 
 		if (result == 0)
 		{
-			Logger::WriteError("Failed to select output device: " + audioDeviceName, APU_MESSAGE_HEADER);
+			Logger::WriteWarning("Failed to select output device: " + audioDeviceName, APU_MESSAGE_HEADER);
 			return;
 		}
+
+		// Close the existing audio device, if any.
+		if (currentAudioDeviceID > 0)
+			SDL_CloseAudioDevice(currentAudioDeviceID);
 
 		currentAudioDeviceID = result;
 		currentAudioDeviceName = audioDeviceName;
