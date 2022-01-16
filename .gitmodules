@@ -1,0 +1,9 @@
+[submodule "Third-Party/imgui"]
+	path = Third-Party/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "Third-Party/nativefiledialog-extended"]
+	path = Third-Party/nativefiledialog-extended
+	url = https://github.com/btzy/nativefiledialog-extended
+[submodule "Third-Party/yaml-cpp"]
+	path = Third-Party/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
