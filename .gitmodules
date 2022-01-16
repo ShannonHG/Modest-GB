@@ -7,3 +7,6 @@
 [submodule "Third-Party/yaml-cpp"]
 	path = Third-Party/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "Third-Party/SDL"]
+	path = Third-Party/SDL
+	url = https://github.com/libsdl-org/SDL
