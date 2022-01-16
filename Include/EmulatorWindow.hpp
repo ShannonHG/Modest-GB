@@ -28,6 +28,7 @@ namespace SHG
 		bool shouldAutoScrollLogsToBottom = false;
 
 		bool Initialize();
+		void Quit();
 		SDL_Window* GetSDLWindow();
 		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
 	
@@ -94,7 +95,7 @@ namespace SHG
 
 		void ApplyTheme();
 
-		std::string GetPathFromFileBrowser(const std::string& filters);
+		std::string GetPathFromFileBrowser(const std::string& filterFriendlyName, const std::string& filters);
 
 		ImVec4 ConvertColorToImVec4(Color& color) const;
 		Color ConvertImVec4ToColor(ImVec4& vec) const;

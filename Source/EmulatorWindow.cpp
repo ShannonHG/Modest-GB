@@ -85,9 +85,22 @@ namespace SHG
 		ImGui_ImplSDL2_InitForSDLRenderer(sdlWindow);
 		ImGui_ImplSDLRenderer_Init(sdlRenderer);
 
+		if (NFD_Init() != NFD_OKAY)
+		{
+			Logger::WriteError("Failed to initialize NFD.");
+			return false;
+		}
+
 		ApplyTheme();
 
 		return true;
+	}
+
+	void EmulatorWindow::Quit()
+	{
+		NFD_Quit();
+		ImGui::DestroyContext();
+		SDL_Quit();
 	}
 
 	void EmulatorWindow::Show()
@@ -219,7 +232,7 @@ namespace SHG
 				{
 					if (ImGui::MenuItem("Load ROM"))
 					{
-						std::string path = GetPathFromFileBrowser("gb,rom");
+						std::string path = GetPathFromFileBrowser("Game Boy ROMs", "gb,rom");
 
 						if (!path.empty())
 							romFileSelectionCallback(path);
@@ -1110,11 +1123,12 @@ namespace SHG
 		colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.47f, 0.47f, 0.47f, 1.00f);
 	}
 
-	std::string EmulatorWindow::GetPathFromFileBrowser(const std::string& filters)
+	std::string EmulatorWindow::GetPathFromFileBrowser(const std::string& filterFriendlyName, const std::string& filters)
 	{
 		std::string resultPath = "";
 		nfdchar_t* outPath = nullptr;
-		nfdresult_t result = NFD_OpenDialog(filters.c_str(), nullptr, &outPath);
+		nfdfilteritem_t filterItem[1] = { {filterFriendlyName.c_str(), filters.c_str()} };
+		nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
 
 		switch (result)
 		{

@@ -19,7 +19,7 @@ namespace SHG
 	{
 	public:
 		~Emulator();
-		bool Run();
+		int Run();
 
 	private:
 		EmulatorWindow window;

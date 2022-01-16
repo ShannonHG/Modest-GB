@@ -19,14 +19,14 @@ namespace SHG
 		Config::SaveConfiguration((std::filesystem::current_path() / CONFIG_FILE_RELATIVE_PATH).string(), window, apu, ppu, joypad, inputManager, cartridge);
 	}
 
-	bool Emulator::Run()
+	int Emulator::Run()
 	{
 		Logger::RegisterLogEntryAddedCallback(std::bind(&Emulator::AddLogEntry, this, std::placeholders::_1, std::placeholders::_2));
 
 		if (!window.Initialize())
 		{
 			Logger::WriteError("Failed to initialize the window.");
-			return false;
+			return -1;
 		}
 
 		window.RegisterFileSelectionCallback(std::bind(&Emulator::OnFileSelected, this, std::placeholders::_1));
@@ -111,7 +111,8 @@ namespace SHG
 			}
 		}
 
-		return true;
+		window.Quit();
+		return 0;
 	}
 
 	void Emulator::SetupMemoryMap()
