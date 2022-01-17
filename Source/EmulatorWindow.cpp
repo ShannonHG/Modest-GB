@@ -811,11 +811,13 @@ namespace SHG
 			{
 				for (const std::string& name : outputDeviceNames)
 				{
+					bool isSelected = selectedOutputDevice == name;
+
 					// If the selectable is pressed, then set the selected device as the APU's output device.
-					if (BeginSelectable(name.c_str(), selectedOutputDevice == name, ImGuiSelectableFlags_None))
+					if (BeginSelectable(name.c_str(), isSelected, ImGuiSelectableFlags_None))
 						apu.SetOutputDevice(name);
 
-					EndSelectable(selectedOutputDevice == name);
+					EndSelectable(isSelected);
 				}
 
 				ImGui::EndCombo();
@@ -873,11 +875,13 @@ namespace SHG
 				{
 					for (const std::string& name : controllerNames)
 					{
+						bool isSelected = selectedController == name;
+
 						// If the selectable is pressed, then set the selected controller as the input manager's controller.
-						if (BeginSelectable(name.c_str(), selectedController == name, ImGuiSelectableFlags_None))
+						if (BeginSelectable(name.c_str(), isSelected, ImGuiSelectableFlags_None))
 							inputManager.SetController(name);
 
-						EndSelectable(selectedController == name);
+						EndSelectable(isSelected);
 					}
 
 					ImGui::EndCombo();
