@@ -30,7 +30,7 @@ namespace SHG
 		bool Initialize();
 		void Quit();
 		SDL_Window* GetSDLWindow();
-		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries);
+		void Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, const std::vector<std::string>& logEntries);
 	
 		void RegisterFileSelectionCallback(FileSelectionCallback callback);
 		void RegisterPauseButtonCallback(SimpleCallback callback);
@@ -74,7 +74,7 @@ namespace SHG
 		void RenderBackgroundTileMapDebugWindow(const PPU& ppu);
 		void RenderWindowTileMapDebugWindow(const PPU& ppu);
 		void RenderTimerDebugWindow(const Timer& timer);
-		void RenderLogWindow(const std::string& logEntries);
+		void RenderLogWindow(const std::vector<std::string>& logEntries);
 		
 		void RenderSettingsWindow(PPU& ppu, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge);
 		void RenderSettingsWindowSelectableItem(const std::string& label, int selectableID, int& selectedWindowID);
@@ -86,6 +86,9 @@ namespace SHG
 		void RenderKeyCodeComboBox(Joypad& joypad, GBButton gbButton, int row, float width);
 		void RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened);
 		void RenderSavedDataSettingsWindow(Cartridge& cartridge);
+
+		void RenderRegister8(const std::string& label, uint8_t data, float labelCursorPos, float dataSpacing);
+		void RenderRegister16(const std::string& label, uint16_t data, float labelCursorPos, float dataSpacing);
 
 		bool BeginSelectable(const std::string& label, bool isSelected, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2(0, 0));
 		void EndSelectable(bool isSelected);

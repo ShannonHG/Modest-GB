@@ -133,17 +133,7 @@ namespace SHG
 
 	void Emulator::AddLogEntry(const std::string& logEntry, LogMessageType messageType)
 	{
-		if (messageType != LogMessageType::SystemEvent)
-			logEntries += logEntry + '\n';
-
-		if (logEntries.size() >= MAX_LOG_ENTRY_STRING_SIZE)
-		{
-			std::string trimmed = logEntries.substr(logEntries.size() - MAX_LOG_ENTRY_STRING_SIZE);
-			size_t pos = trimmed.find_first_of('\n');
-
-			// Start on the first complete line
-			logEntries = trimmed.substr(pos + 1);
-		}
+		logEntries.push_back(logEntry);
 	}
 
 	void Emulator::OnInputEventReceived(SDL_Event e)

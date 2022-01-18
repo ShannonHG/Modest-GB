@@ -44,7 +44,7 @@ namespace SHG
 		bool isStepRequested = false;
 		uint32_t cyclesPerSecond = 0;
 
-		std::string logEntries;
+		std::vector<std::string> logEntries;
 
 		void OnInputEventReceived(SDL_Event e);
 		void OnPauseButtonPressed();

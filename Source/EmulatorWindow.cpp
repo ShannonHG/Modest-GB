@@ -130,7 +130,7 @@ namespace SHG
 		return sdlWindow;
 	}
 
-	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, std::string& logEntries)
+	void EmulatorWindow::Render(const MemoryMap& memoryMap, PPU& ppu, const CPU& processor, APU& apu, Joypad& joypad, InputManager& inputManager, Cartridge& cartridge, const Timer& timer, uint32_t cyclesPerSecond, const std::vector<std::string>& logEntries)
 	{
 		StartFrame();
 		ClearScreen();
@@ -238,7 +238,6 @@ namespace SHG
 							romFileSelectionCallback(path);
 					}
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("Settings"))
 						shouldRenderSettingsWindow = true;
 
@@ -253,42 +252,33 @@ namespace SHG
 						if (ImGui::MenuItem("Registers"))
 							shouldRenderVideoRegistersDebugWindow = true;
 
-						ImGui::Spacing();
 						if (ImGui::MenuItem("Tiles"))
 							shouldRenderTilesDebugWindow = true;
 
-						ImGui::Spacing();
 						if (ImGui::MenuItem("Sprites"))
 							shouldRenderSpritesDebugWindow = true;
 
-						ImGui::Spacing();
 						if (ImGui::MenuItem("Background Tile Map"))
 							shouldRenderBackgroundTileMapDebugWindow = true;
 
-						ImGui::Spacing();
 						if (ImGui::MenuItem("Window Tile Map"))
 							shouldRenderWindowTileMapDebugWindow = true;
 
 						ImGui::EndMenu();
 					}
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("CPU"))
 						shouldRenderCPUDebugWindow = true;
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("Sound"))
 						shouldRenderSoundDebugWindow = true;
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("Joypad"))
 						shouldRenderJoypadDebugWindow = true;
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("Timer"))
 						shouldRenderTimerDebugWindow = true;
 
-					ImGui::Spacing();
 					if (ImGui::MenuItem("Logs"))
 						shouldRenderLogWindow = true;
 
@@ -368,7 +358,7 @@ namespace SHG
 		{
 			ImGui::Text("Performance");
 			ImGui::Separator();
-			ImGui::Text(("Clock speed: " + std::to_string(cyclesPerSecond / 1000000.0) + " MHz").c_str());
+			ImGui::Text(("Clock speed:   " + std::to_string(cyclesPerSecond / 1000000.0) + " MHz").c_str());
 			ImGui::Spacing();
 			ImGui::Spacing();
 
@@ -394,25 +384,29 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			// Print register values 
-			ImGui::Text(("A: " + GetHexString8(processor.ReadRegisterA())).c_str());
-			ImGui::SameLine();
-			ImGui::Text(("F: " + GetHexString8(processor.ReadRegisterF())).c_str());
+			float dataSpacing = 38;
+			float startPos = ImGui::GetCursorPosX();
+			float registerOffset = 40;
+			float offsetPos = startPos + dataSpacing + registerOffset;
 
-			ImGui::Text(("B: " + GetHexString8(processor.ReadRegisterB())).c_str());
+			RenderRegister8("[ A ]", processor.ReadRegisterA(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("C: " + GetHexString8(processor.ReadRegisterC())).c_str());
+			RenderRegister8("[ F ]", processor.ReadRegisterF(), offsetPos, dataSpacing);
 
-			ImGui::Text(("D: " + GetHexString8(processor.ReadRegisterD())).c_str());
+			RenderRegister8("[ B ]", processor.ReadRegisterB(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("E: " + GetHexString8(processor.ReadRegisterE())).c_str());
+			RenderRegister8("[ C ]", processor.ReadRegisterC(), offsetPos, dataSpacing);
 
-			ImGui::Text(("H: " + GetHexString8(processor.ReadRegisterH())).c_str());
+			RenderRegister8("[ D ]", processor.ReadRegisterD(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("L: " + GetHexString8(processor.ReadRegisterL())).c_str());
+			RenderRegister8("[ E ]", processor.ReadRegisterE(), offsetPos, dataSpacing);
 
-			ImGui::Text(("PC: " + GetHexString16(processor.ReadProgramCounter())).c_str());
-			ImGui::Text(("SP: " + GetHexString16(processor.ReadStackPointer())).c_str());
+			RenderRegister8("[ H ]", processor.ReadRegisterH(), startPos, dataSpacing);
+			ImGui::SameLine();
+			RenderRegister8("[ L ]", processor.ReadRegisterL(), offsetPos, dataSpacing);
+
+			RenderRegister16("[ SP ]", processor.ReadStackPointer(), startPos, dataSpacing);
+			RenderRegister16("[ PC ]", processor.ReadProgramCounter(), startPos, dataSpacing);
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -420,11 +414,17 @@ namespace SHG
 			ImGui::Text("Interrupts");
 			ImGui::Separator();
 
-			ImGui::Text(("IF: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS))).c_str());
+			RenderRegister8("[ IF ]", memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("IE: " + GetHexString8(memoryMap.Read(GB_INTERRUPT_ENABLE_ADDRESS))).c_str());
+			RenderRegister8("[ IE ]", memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS), offsetPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("IME: " + std::to_string(processor.GetInterruptMasterEnableFlag())).c_str());
+
+			startPos = startPos + (dataSpacing + registerOffset) * 2;
+			ImGui::SetCursorPosX(startPos);
+			ImGui::Text("[ IME ]");
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(startPos + 45);
+			ImGui::Text(std::to_string(processor.GetInterruptMasterEnableFlag()).c_str());
 		}
 
 		EndWindow();
@@ -439,10 +439,18 @@ namespace SHG
 		{
 			ImGui::Text("Sound Control Registers");
 			ImGui::Separator();
-			// TODO: Revisit when NR50 and NR51 are implemented.
-			ImGui::Text(("NR50: " + GetHexString16(0)).c_str());
-			ImGui::Text(("NR51: " + GetHexString16(0)).c_str());
-			ImGui::Text(("NR52: " + GetHexString16(apu.ReadNR52())).c_str());
+
+			float dataSpacing = 54;
+			float startPos = ImGui::GetCursorPosX();
+			float registerOffset = 40;
+			float offsetPos = startPos + dataSpacing + registerOffset;
+			float offsetPos2 = startPos + (dataSpacing + registerOffset) * 2;
+
+			// Control registers
+			RenderRegister8("[ NR50 ]", apu.ReadNR50(), startPos, dataSpacing);
+			RenderRegister8("[ NR51 ]", apu.ReadNR51(), startPos, dataSpacing);
+			RenderRegister8("[ NR52 ]", apu.ReadNR52(), startPos, dataSpacing);
+
 			ImGui::Spacing();
 			ImGui::Spacing();
 
@@ -450,55 +458,72 @@ namespace SHG
 			ImGui::Checkbox("Channel 1", &isChannel1Connected);
 			apu.SetChannel1ConnectionStatus(isChannel1Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR10: " + GetHexString8(apu.ReadNR10())).c_str());
+
+			float offset = 32;
+
+			// Channel 1
+			RenderRegister8("[ NR10 ]", apu.ReadNR10(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR11: " + GetHexString8(apu.ReadNR11())).c_str());
-			ImGui::Text(("NR12: " + GetHexString8(apu.ReadNR12())).c_str());
+			RenderRegister8("[ NR11 ]", apu.ReadNR11(), offsetPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR13: " + GetHexString8(apu.ReadNR13())).c_str());
+			RenderRegister8("[ NR12 ]", apu.ReadNR12(), offsetPos2, dataSpacing);
+
+			RenderRegister8("[ NR13 ]", apu.ReadNR13(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR14: " + GetHexString8(apu.ReadNR14())).c_str());
+			RenderRegister8("[ NR14 ]", apu.ReadNR14(), offsetPos, dataSpacing);
+
 			ImGui::Spacing();
 			ImGui::Spacing();
 
+			// Channel 2
 			bool isChannel2Connected = apu.IsChannel2Connected();
 			ImGui::Checkbox("Channel 2", &isChannel2Connected);
 			apu.SetChannel2ConnectionStatus(isChannel2Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR21: " + GetHexString8(apu.ReadNR21())).c_str());
+
+			RenderRegister8("[ NR21 ]", apu.ReadNR21(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR22: " + GetHexString8(apu.ReadNR22())).c_str());
-			ImGui::Text(("NR23: " + GetHexString8(apu.ReadNR23())).c_str());
+			RenderRegister8("[ NR22 ]", apu.ReadNR22(), offsetPos, dataSpacing);
+
+			RenderRegister8("[ NR23 ]", apu.ReadNR23(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR24: " + GetHexString8(apu.ReadNR24())).c_str());
+			RenderRegister8("[ NR24 ]", apu.ReadNR24(), offsetPos, dataSpacing);
+
 			ImGui::Spacing();
 			ImGui::Spacing();
 
+			// Channel 3
 			bool isChannel3Connected = apu.IsChannel3Connected();
 			ImGui::Checkbox("Channel 3", &isChannel3Connected);
 			apu.SetChannel3ConnectionStatus(isChannel3Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR30: " + GetHexString8(apu.ReadNR30())).c_str());
+
+			RenderRegister8("[ NR30 ]", apu.ReadNR30(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR31: " + GetHexString8(apu.ReadNR31())).c_str());
+			RenderRegister8("[ NR31 ]", apu.ReadNR31(), offsetPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR32: " + GetHexString8(apu.ReadNR32())).c_str());
-			ImGui::Text(("NR33: " + GetHexString8(apu.ReadNR33())).c_str());
+			RenderRegister8("[ NR32 ]", apu.ReadNR32(), offsetPos2, dataSpacing);
+
+			RenderRegister8("[ NR33 ]", apu.ReadNR33(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR34: " + GetHexString8(apu.ReadNR34())).c_str());
+			RenderRegister8("[ NR34 ]", apu.ReadNR34(), offsetPos, dataSpacing);
+
 			ImGui::Spacing();
 			ImGui::Spacing();
 
+			// Channel 4
 			bool isChannel4Connected = apu.IsChannel4Connected();
 			ImGui::Checkbox("Channel 4", &isChannel4Connected);
 			apu.SetChannel4ConnectionStatus(isChannel4Connected);
 			ImGui::Separator();
-			ImGui::Text(("NR41: " + GetHexString8(apu.ReadNR41())).c_str());
+
+			RenderRegister8("[ NR41 ]", apu.ReadNR41(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR42: " + GetHexString8(apu.ReadNR42())).c_str());
-			ImGui::Text(("NR43: " + GetHexString8(apu.ReadNR43())).c_str());
+			RenderRegister8("[ NR42 ]", apu.ReadNR42(), offsetPos, dataSpacing);
+
+			RenderRegister8("[ NR43 ]", apu.ReadNR43(), startPos, dataSpacing);
 			ImGui::SameLine();
-			ImGui::Text(("NR44: " + GetHexString8(apu.ReadNR44())).c_str());
+			RenderRegister8("[ NR44 ]", apu.ReadNR44(), offsetPos, dataSpacing);
 		}
 
 		EndWindow();
@@ -511,7 +536,8 @@ namespace SHG
 
 		if (BeginWindow("Joypad", &shouldRenderJoypadDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
-			ImGui::Text(("JOYP: " + GetHexString8(joypad.Read())).c_str());
+			RenderRegister8("JOYP:", joypad.Read(), ImGui::GetCursorPosX(), 40);
+
 			ImGui::Separator();
 			ImGui::BeginDisabled();
 
@@ -542,14 +568,17 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			ImGui::Text(("LCDC: " + GetHexString8(ppu.ReadLCDC())).c_str());
-			ImGui::Text(("STAT: " + GetHexString8(ppu.ReadLCDSTAT())).c_str());
-			ImGui::Text(("LY:   " + GetHexString8(ppu.ReadLY())).c_str());
-			ImGui::Text(("LYC:  " + GetHexString8(ppu.ReadLYC())).c_str());
-			ImGui::Text(("SCY:  " + GetHexString8(ppu.ReadSCY())).c_str());
-			ImGui::Text(("SCX:  " + GetHexString8(ppu.ReadSCX())).c_str());
-			ImGui::Text(("WY:   " + GetHexString8(ppu.ReadWY())).c_str());
-			ImGui::Text(("WX:   " + GetHexString8(ppu.ReadWX())).c_str());
+			float spacing = 60;
+			float startPos = ImGui::GetCursorPosX();
+
+			RenderRegister8("[ LCDC ]", ppu.ReadLCDC(), startPos, spacing);
+			RenderRegister8("[ LY ]", ppu.ReadLY(), startPos, spacing);
+			RenderRegister8("[ STAT ]", ppu.ReadLCDSTAT(), startPos, spacing);
+			RenderRegister8("[ LYC ]", ppu.ReadLYC(), startPos, spacing);
+			RenderRegister8("[ SCY ]", ppu.ReadSCY(), startPos, spacing);
+			RenderRegister8("[ SCX ]", ppu.ReadSCX(), startPos, spacing);
+			RenderRegister8("[ WY ]", ppu.ReadWY(), startPos, spacing);
+			RenderRegister8("[ WX ]", ppu.ReadWX(), startPos, spacing);
 
 			ImGui::Separator();
 		}
@@ -603,10 +632,13 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			ImGui::Text(("DIV:  " + GetHexString8(timer.GetDividerRegister())).c_str());
-			ImGui::Text(("TIMA: " + GetHexString8(timer.GetTimerCounter())).c_str());
-			ImGui::Text(("TMA:  " + GetHexString8(timer.GetTimerModulo())).c_str());
-			ImGui::Text(("TAC:  " + GetHexString8(timer.GetTimerControlRegister())).c_str());
+			float spacing = 60;
+			float startPos = ImGui::GetCursorPosX();
+
+			RenderRegister8("[ DIV ]", timer.GetDividerRegister(), startPos, spacing);
+			RenderRegister8("[ TIMA ]", timer.GetTimerCounter(), startPos, spacing);
+			RenderRegister8("[ TMA ]", timer.GetTimerModulo(), startPos, spacing);
+			RenderRegister8("[ TAC ]", timer.GetTimerControlRegister(), startPos, spacing);
 
 			ImGui::Separator();
 		}
@@ -614,7 +646,7 @@ namespace SHG
 		EndWindow();
 	}
 
-	void EmulatorWindow::RenderLogWindow(const std::string& logEntries)
+	void EmulatorWindow::RenderLogWindow(const std::vector<std::string>& logEntries)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
@@ -631,9 +663,8 @@ namespace SHG
 
 			if (ImGui::BeginChild("Log Entries", size))
 			{
-				// TextUnformatted() is used here since the other text rendering functions
-				// seem to have a limit on the string's size.
-				ImGui::TextUnformatted(logEntries.c_str());
+				for (const std::string& entry : logEntries)
+					ImGui::Text(entry.c_str());
 
 				if (shouldAutoScrollLogsToBottom)
 					ImGui::SetScrollHereY(0.999f);
@@ -726,7 +757,7 @@ namespace SHG
 			ImGui::Text("Palette Tints");
 			ImGui::Separator();
 
-			ImGui::Text("Background (BGP): ");
+			ImGui::Text("Background (BGP):");
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "BGP 0", GB_BACKGROUND_PALETTE_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
@@ -736,7 +767,7 @@ namespace SHG
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "BGP 3", GB_BACKGROUND_PALETTE_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 0 (OBP0):  ");
+			ImGui::Text("Sprite 0 (OBP0):");
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP0 0", GB_SPRITE_PALETTE_0_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
@@ -746,7 +777,7 @@ namespace SHG
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP0 3", GB_SPRITE_PALETTE_0_ADDRESS, 3, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 
-			ImGui::Text("Sprite 1 (OBP1):  ");
+			ImGui::Text("Sprite 1 (OBP1):");
 			ImGui::SameLine();
 			RenderColorPaletteButton(ppu, "OBP1 0", GB_SPRITE_PALETTE_1_ADDRESS, 0, paletteAddress, colorIndex, selectedTintLabel, isPaletteTintEditorOpen);
 			ImGui::SameLine();
@@ -777,6 +808,7 @@ namespace SHG
 
 	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
 	{
+		ImGui::SetCursorPosX(110.0f + 30.0f * (colorIndex + 1));
 		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
 		{
@@ -801,9 +833,13 @@ namespace SHG
 			const std::vector<std::string>& outputDeviceNames = apu.GetAllOutputDeviceNames();
 			const std::string& selectedOutputDevice = apu.GetCurrentOutputDeviceName();
 
+			float cursorPos = 110;
+
 			// Render list of audio output devices.
 			ImGui::Text("Output Device:");
 			ImGui::SameLine();
+
+			ImGui::SetCursorPosX(cursorPos);
 
 			float minItemWidth = 50.0f;
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
@@ -823,22 +859,20 @@ namespace SHG
 				ImGui::EndCombo();
 			}
 
-			ImGui::Spacing();
-
 			// Render volume slider.
 			float volume = apu.GetMasterVolume() * MAX_VOLUME;
 			ImGui::Text("Volume:       ");
 			ImGui::SameLine();
+			ImGui::SetCursorPosX(cursorPos);
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
 			ImGui::SliderFloat("##Audio Settings Volume ", &volume, 0.0f, MAX_VOLUME, "%.0f", ImGuiSliderFlags_None);
 			apu.SetMasterVolume(volume / MAX_VOLUME);
-
-			ImGui::Spacing();
 
 			// Render mute button.
 			bool isMuted = apu.IsMuted();
 			ImGui::Text("Mute:         ");
 			ImGui::SameLine();
+			ImGui::SetCursorPosX(cursorPos);
 			ImGui::Checkbox("##Audio Settings Mute", &isMuted);
 			apu.Mute(isMuted);
 		}
@@ -857,7 +891,6 @@ namespace SHG
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Spacing();
-
 
 			const std::vector<std::string>& controllerNames = inputManager.GetAllControllerNames();
 
@@ -1012,6 +1045,7 @@ namespace SHG
 			ImGui::Text("Saved Data Location: ");
 			ImGui::SameLine();
 
+			ImGui::SetCursorPosX(150);
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, 50.0f));
 			if (ImGui::BeginCombo("##Saved Data Search Type", SAVED_DATA_SEARCH_TYPE_STRINGS.at(currentSavedDataSearchType).c_str()))
 			{
@@ -1041,6 +1075,7 @@ namespace SHG
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("Fonts/OpenSans/OpenSans-Regular.ttf", 17);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowMinSize.x = 225;
@@ -1162,6 +1197,24 @@ namespace SHG
 	{
 		if (isSelected)
 			ImGui::PopStyleColor();
+	}
+
+	void EmulatorWindow::RenderRegister8(const std::string& label, uint8_t data, float labelCursorPos, float dataSpacing)
+	{
+		ImGui::SetCursorPosX(labelCursorPos);
+		ImGui::Text(label.c_str());
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
+		ImGui::Text(GetHexString8(data).c_str());
+	}
+
+	void EmulatorWindow::RenderRegister16(const std::string& label, uint16_t data, float labelCursorPos, float dataSpacing)
+	{
+		ImGui::SetCursorPosX(labelCursorPos);
+		ImGui::Text(label.c_str());
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
+		ImGui::Text(GetHexString16(data).c_str());
 	}
 
 	void EmulatorWindow::EndFrame()
