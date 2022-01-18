@@ -160,9 +160,12 @@ namespace SHG
 			PrintRegisterInfo();
 
 		uint8_t opcode = Fetch8();
-		currentInstruction = Decode(opcode);
 
-		if (currentInstruction == nullptr)
+		try
+		{
+			currentInstruction = Decode(opcode);
+		}
+		catch (std::exception e)
 		{
 			Logger::WriteError("Invalid opcode encountered at " + GetHexString16(programCounter.Read()) + ": " + GetHexString8(opcode), CPU_MESSAGE_HEADER);
 			return 0;
@@ -206,18 +209,12 @@ namespace SHG
 		if (opcode == 0xCB)
 		{
 			opcode = Fetch8();
-			if (CBPrefixedInstructionSet.find(opcode) != CBPrefixedInstructionSet.end())
-			{
-				return &CBPrefixedInstructionSet.at(opcode);
-			}
-
-			return nullptr;
+			return &CBPrefixedInstructionSet.at(opcode);
 		}
-		else if (BasicInstructionSet.find(opcode) != BasicInstructionSet.end())
+		else
 		{
 			return &BasicInstructionSet[opcode];
 		}
-		else return nullptr;
 	}
 
 	Register8& CPU::GetRegisterA()

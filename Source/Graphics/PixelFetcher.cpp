@@ -34,6 +34,8 @@ namespace SHG
 	{
 		x = 0;
 		y = 0;
-		queuedPixels = std::queue<Pixel>();
+
+		if (!queuedPixels.empty())
+			queuedPixels = std::queue<Pixel>();
 	}
 }

@@ -106,7 +106,7 @@ namespace SHG
 		// Check if any audio devices were added or removed.
 		if (SDL_GetNumAudioDevices(SDL_FALSE) != audioDeviceNames.size())
 		{
-			Logger::WriteInfo("Output devices changed.", APU_MESSAGE_HEADER);
+			Logger::WriteInfo("New audio device detected.", APU_MESSAGE_HEADER);
 			RefreshAudioDeviceNames();
 		}
 	}

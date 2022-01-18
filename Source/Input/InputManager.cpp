@@ -87,8 +87,10 @@ namespace SHG
 	{
 		if (joystickCount != SDL_NumJoysticks())
 		{
+			Logger::WriteInfo("New input device detected.");
+
 			bool isCurrentControllerFound = false;
-			int controllerCount = 0;
+			joystickCount = SDL_NumJoysticks();
 
 			controllerIndexes.clear();
 			controllerNames.clear();

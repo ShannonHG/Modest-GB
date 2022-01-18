@@ -30,7 +30,6 @@ namespace SHG
 		PixelFetcher::Reset();
 		currentState = SpritePixelFetcherState::Idle;
 		spritesOnCurrentScanline.clear();
-		queuedPixels = std::queue<Pixel>();
 	}
 
 	void SpritePixelFetcher::Tick()
