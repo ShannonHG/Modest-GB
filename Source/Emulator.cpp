@@ -49,8 +49,8 @@ namespace SHG
 		window.Show();
 
 		isRunning = true;
-		double timeSinceLastFrame = 0;
-		double timeSinceLastCycleCount = 0;
+		double secondsSinceLastFrame = 0;
+		double secondsSinceLastCycleCount = 0;
 		uint32_t cyclesSinceLastFrame = 0;
 		uint32_t cyclesSinceLastCount = 0;
 
@@ -91,22 +91,22 @@ namespace SHG
 				isStepRequested = false;
 			}
 
-			timeSinceLastFrame += deltaTime;
-			timeSinceLastCycleCount += deltaTime;
+			secondsSinceLastFrame += deltaTime;
+			secondsSinceLastCycleCount += deltaTime;
 
-			if (timeSinceLastCycleCount >= 1)
+			if (secondsSinceLastCycleCount >= 1)
 			{
 				cyclesPerSecond = cyclesSinceLastCount;
 				cyclesSinceLastCount = 0;
-				timeSinceLastCycleCount = 0;
+				secondsSinceLastCycleCount = 0;
 			}
 
-			if (timeSinceLastFrame >= GB_SECONDS_PER_FRAME)
+			if (secondsSinceLastFrame >= GB_SECONDS_PER_FRAME)
 			{
 				apu.RefreshOutputDevices();
 				inputManager.Update();
 				window.Render(memoryMap, ppu, processor, apu, joypad, inputManager, cartridge, timer, cyclesPerSecond, logEntries);
-				timeSinceLastFrame = 0;
+				secondsSinceLastFrame = 0;
 				cyclesSinceLastFrame = 0;
 			}
 		}

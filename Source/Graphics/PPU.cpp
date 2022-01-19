@@ -302,7 +302,7 @@ namespace SHG
 			else
 				EnterOAMSearchMode();
 
-			// We only need enough cycles to reach 456, so any remaining cycles should be return.
+			// We only need enough cycles to reach 456, so any remaining cycles should be returned.
 			cycles = (newElapsedCycles - SCANLINE_DURATION_IN_CYCLES);
 			return;
 		}
