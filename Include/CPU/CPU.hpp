@@ -34,14 +34,10 @@ namespace SHG
 		void PrintRegisterInfo();
 		void Reset();
 
-		uint8_t ReadRegisterA() const;
-		uint8_t ReadRegisterF() const;
-		uint8_t ReadRegisterB() const;
-		uint8_t ReadRegisterC() const;
-		uint8_t ReadRegisterH() const;
-		uint8_t ReadRegisterL() const;
-		uint8_t ReadRegisterD() const;
-		uint8_t ReadRegisterE() const;
+		uint8_t ReadRegisterAF() const;
+		uint8_t ReadRegisterBC() const;
+		uint8_t ReadRegisterDE() const;
+		uint8_t ReadRegisterHL() const;
 
 		uint16_t ReadStackPointer() const;
 		uint16_t ReadProgramCounter() const;

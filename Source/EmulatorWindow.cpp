@@ -10,7 +10,7 @@ namespace SHG
 	const char* DEFAULT_WINDOW_TITLE = "Game Boy Emulator";
 	const uint16_t DEFAULT_SDL_WINDOW_WIDTH = 1024;
 	const uint16_t DEFAULT_SDL_WINDOW_HEIGHT = 576;
-	const uint16_t MINIMUM_SDL_WINDOW_WIDTH = 256;
+	const uint16_t MINIMUM_SDL_WINDOW_WIDTH = 512;
 	const uint16_t MINIMUM_SDL_WINDOW_HEIGHT = 144;
 
 	const uint8_t SETTINGS_VIDEO_WINDOW_ID = 0;
@@ -34,6 +34,8 @@ namespace SHG
 	const uint8_t SPRITE_2_PALETTE_TINT_ID_3 = 11;
 
 	const float MAX_VOLUME = 100.0f;
+
+	const float SETTINGS_ITEM_OFFSET = 150;
 
 	const std::map<SavedDataSearchType, std::string> SAVED_DATA_SEARCH_TYPE_STRINGS
 	{
@@ -307,7 +309,6 @@ namespace SHG
 		ImGui::End();
 	}
 
-	// TODO: Remove scrollbar
 	void EmulatorWindow::RenderGameView(const PPU& ppu)
 	{
 		// By default, force the window to be docked.
@@ -369,11 +370,11 @@ namespace SHG
 				pauseButtonPressedCallback();
 			}
 
-			ImGui::SameLine();
-
 			// "Stepping" only works when the emulator is paused.
 			if (isPaused)
 			{
+				ImGui::SameLine();
+
 				if (ImGui::Button("Step"))
 					stepButtonPressedCallback();
 			}
@@ -384,29 +385,30 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			float dataSpacing = 38;
-			float startPos = ImGui::GetCursorPosX();
-			float registerOffset = 40;
-			float offsetPos = startPos + dataSpacing + registerOffset;
+			if (ImGui::BeginTable("##CPU Registers", 4, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				float regColWidth = 35;
+				float valueColWidth = 45;
 
-			RenderRegister8("[ A ]", processor.ReadRegisterA(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ F ]", processor.ReadRegisterF(), offsetPos, dataSpacing);
+				ImGui::TableSetupColumn("##CPU Reg 1", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##CPU Value 1", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##CPU Reg 2", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##CPU Value 2", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			RenderRegister8("[ B ]", processor.ReadRegisterB(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ C ]", processor.ReadRegisterC(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister16("[ AF ]", processor.ReadRegisterAF(), 0);
+				RenderRegister16("[ BC ]", processor.ReadRegisterBC(), 2);
 
-			RenderRegister8("[ D ]", processor.ReadRegisterD(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ E ]", processor.ReadRegisterE(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister16("[ DE ]", processor.ReadRegisterDE(), 0);
+				RenderRegister16("[ HL ]", processor.ReadRegisterHL(), 2);
 
-			RenderRegister8("[ H ]", processor.ReadRegisterH(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ L ]", processor.ReadRegisterL(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister16("[ PC ]", processor.ReadProgramCounter(), 0);
+				RenderRegister16("[ SP ]", processor.ReadStackPointer(), 2);
 
-			RenderRegister16("[ SP ]", processor.ReadStackPointer(), startPos, dataSpacing);
-			RenderRegister16("[ PC ]", processor.ReadProgramCounter(), startPos, dataSpacing);
+				ImGui::EndTable();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -414,17 +416,31 @@ namespace SHG
 			ImGui::Text("Interrupts");
 			ImGui::Separator();
 
-			RenderRegister8("[ IF ]", memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ IE ]", memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS), offsetPos, dataSpacing);
-			ImGui::SameLine();
+			if (ImGui::BeginTable("##CPU Interrupts", 6, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				float regColWidth = 30;
+				float valueColWidth = 35;
 
-			startPos = startPos + (dataSpacing + registerOffset) * 2;
-			ImGui::SetCursorPosX(startPos);
-			ImGui::Text("[ IME ]");
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(startPos + 45);
-			ImGui::Text(std::to_string(processor.GetInterruptMasterEnableFlag()).c_str());
+				ImGui::TableSetupColumn("##IF Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##IF Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##IE Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##IE Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##IME Label", ImGuiTableColumnFlags_NoResize, 40);
+				ImGui::TableSetupColumn("##IME Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+
+				ImGui::TableNextRow();
+
+				RenderRegister8("[ IF ]", memoryMap.Read(GB_INTERRUPT_FLAG_ADDRESS), 0);
+				RenderRegister8("[ IE ]", memoryMap.Read(GB_INTERRUPT_ENABLE_ADDRESS), 2);
+
+				ImGui::TableSetColumnIndex(4);
+				ImGui::Text("[ IME ]");
+
+				ImGui::TableSetColumnIndex(5);
+				ImGui::Text(std::to_string(processor.GetInterruptMasterEnableFlag()).c_str());
+
+				ImGui::EndTable();
+			}
 		}
 
 		EndWindow();
@@ -437,40 +453,59 @@ namespace SHG
 
 		if (BeginWindow("Sound", &shouldRenderSoundDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
+			float regColWidth = 48;
+			float valueColWidth = 30;
+
 			ImGui::Text("Sound Control Registers");
 			ImGui::Separator();
 
-			float dataSpacing = 54;
-			float startPos = ImGui::GetCursorPosX();
-			float registerOffset = 40;
-			float offsetPos = startPos + dataSpacing + registerOffset;
-			float offsetPos2 = startPos + (dataSpacing + registerOffset) * 2;
+			if (ImGui::BeginTable("##Sound Control Registers Table", 6, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("##Sound Control Register 1 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Sound Control Register 1 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Sound Control Register 2 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Sound Control Register 2 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Sound Control Register 3 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Sound Control Register 3 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			// Control registers
-			RenderRegister8("[ NR50 ]", apu.ReadNR50(), startPos, dataSpacing);
-			RenderRegister8("[ NR51 ]", apu.ReadNR51(), startPos, dataSpacing);
-			RenderRegister8("[ NR52 ]", apu.ReadNR52(), startPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR50 ]", apu.ReadNR50(), 0);
+				RenderRegister8("[ NR51 ]", apu.ReadNR51(), 2);
+				RenderRegister8("[ NR52 ]", apu.ReadNR52(), 4);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
+
+
 
 			bool isChannel1Connected = apu.IsChannel1Connected();
 			ImGui::Checkbox("Channel 1", &isChannel1Connected);
 			apu.SetChannel1ConnectionStatus(isChannel1Connected);
 			ImGui::Separator();
 
-			float offset = 32;
+			if (ImGui::BeginTable("##Channel 1 Registers", 6, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("##Channel 1 Reg 1 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 1 Reg 1 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 1 Reg 2 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 1 Reg 2 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 1 Reg 3 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 1 Reg 3 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			// Channel 1
-			RenderRegister8("[ NR10 ]", apu.ReadNR10(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR11 ]", apu.ReadNR11(), offsetPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR12 ]", apu.ReadNR12(), offsetPos2, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR10 ]", apu.ReadNR10(), 0);
+				RenderRegister8("[ NR11 ]", apu.ReadNR11(), 2);
+				RenderRegister8("[ NR12 ]", apu.ReadNR12(), 4);
 
-			RenderRegister8("[ NR13 ]", apu.ReadNR13(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR14 ]", apu.ReadNR14(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR13 ]", apu.ReadNR13(), 0);
+				RenderRegister8("[ NR14 ]", apu.ReadNR14(), 2);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -481,13 +516,23 @@ namespace SHG
 			apu.SetChannel2ConnectionStatus(isChannel2Connected);
 			ImGui::Separator();
 
-			RenderRegister8("[ NR21 ]", apu.ReadNR21(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR22 ]", apu.ReadNR22(), offsetPos, dataSpacing);
+			if (ImGui::BeginTable("##Channel 2 Registers", 4, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("##Channel 2 Reg 1 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 2 Reg 1 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 2 Reg 2 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 2 Reg 2 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			RenderRegister8("[ NR23 ]", apu.ReadNR23(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR24 ]", apu.ReadNR24(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR21 ]", apu.ReadNR21(), 0);
+				RenderRegister8("[ NR22 ]", apu.ReadNR22(), 2);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR23 ]", apu.ReadNR23(), 0);
+				RenderRegister8("[ NR24 ]", apu.ReadNR24(), 2);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -498,15 +543,26 @@ namespace SHG
 			apu.SetChannel3ConnectionStatus(isChannel3Connected);
 			ImGui::Separator();
 
-			RenderRegister8("[ NR30 ]", apu.ReadNR30(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR31 ]", apu.ReadNR31(), offsetPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR32 ]", apu.ReadNR32(), offsetPos2, dataSpacing);
+			if (ImGui::BeginTable("##Channel 3 Registers", 6, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("##Channel 3 Reg 1 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 3 Reg 1 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 3 Reg 2 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 3 Reg 2 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 3 Reg 3 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 3 Reg 3 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			RenderRegister8("[ NR33 ]", apu.ReadNR33(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR34 ]", apu.ReadNR34(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR30 ]", apu.ReadNR30(), 0);
+				RenderRegister8("[ NR31 ]", apu.ReadNR31(), 2);
+				RenderRegister8("[ NR32 ]", apu.ReadNR32(), 4);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR33 ]", apu.ReadNR33(), 0);
+				RenderRegister8("[ NR34 ]", apu.ReadNR34(), 2);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
@@ -517,13 +573,23 @@ namespace SHG
 			apu.SetChannel4ConnectionStatus(isChannel4Connected);
 			ImGui::Separator();
 
-			RenderRegister8("[ NR41 ]", apu.ReadNR41(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR42 ]", apu.ReadNR42(), offsetPos, dataSpacing);
+			if (ImGui::BeginTable("##Channel 4 Registers", 4, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("##Channel 4 Reg 1 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 4 Reg 1 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+				ImGui::TableSetupColumn("##Channel 4 Reg 2 Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Channel 4 Reg 2 Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
-			RenderRegister8("[ NR43 ]", apu.ReadNR43(), startPos, dataSpacing);
-			ImGui::SameLine();
-			RenderRegister8("[ NR44 ]", apu.ReadNR44(), offsetPos, dataSpacing);
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR41 ]", apu.ReadNR41(), 0);
+				RenderRegister8("[ NR42 ]", apu.ReadNR42(), 2);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ NR43 ]", apu.ReadNR43(), 0);
+				RenderRegister8("[ NR44 ]", apu.ReadNR44(), 2);
+
+				ImGui::EndTable();
+			}
 		}
 
 		EndWindow();
@@ -536,9 +602,26 @@ namespace SHG
 
 		if (BeginWindow("Joypad", &shouldRenderJoypadDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
-			RenderRegister8("JOYP:", joypad.Read(), ImGui::GetCursorPosX(), 40);
-
+			ImGui::Text("Register");
 			ImGui::Separator();
+
+			if (ImGui::BeginTable("##Joypad Register", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				float regColWidth = 48;
+				float valueColWidth = 30;
+
+				ImGui::TableSetupColumn("##Joypad Reg Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Joypad Reg Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ JOYP ]", joypad.Read(), 0);
+
+				ImGui::EndTable();
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
 			ImGui::BeginDisabled();
 
 			bool isDownOrStartPressed = joypad.IsDownOrStartPressed();
@@ -552,6 +635,9 @@ namespace SHG
 			ImGui::Checkbox(" Right/A Pressed", &isRightOrAPressed);
 
 			ImGui::EndDisabled();
+
+			ImGui::Spacing();
+			ImGui::Separator();
 		}
 
 		EndWindow();
@@ -568,17 +654,40 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			float spacing = 60;
-			float startPos = ImGui::GetCursorPosX();
+			if (ImGui::BeginTable("##Video Registers", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				float regColWidth = 55;
+				float valueColWidth = 45;
 
-			RenderRegister8("[ LCDC ]", ppu.ReadLCDC(), startPos, spacing);
-			RenderRegister8("[ LY ]", ppu.ReadLY(), startPos, spacing);
-			RenderRegister8("[ STAT ]", ppu.ReadLCDSTAT(), startPos, spacing);
-			RenderRegister8("[ LYC ]", ppu.ReadLYC(), startPos, spacing);
-			RenderRegister8("[ SCY ]", ppu.ReadSCY(), startPos, spacing);
-			RenderRegister8("[ SCX ]", ppu.ReadSCX(), startPos, spacing);
-			RenderRegister8("[ WY ]", ppu.ReadWY(), startPos, spacing);
-			RenderRegister8("[ WX ]", ppu.ReadWX(), startPos, spacing);
+				ImGui::TableSetupColumn("##Video Reg Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Video Reg Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ LCDC ]", ppu.ReadLCDC(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ LY ]", ppu.ReadLY(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ STAT ]", ppu.ReadLCDSTAT(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ LYC ]", ppu.ReadLYC(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ SCY ]", ppu.ReadSCY(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ SCX ]", ppu.ReadSCX(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ WY ]", ppu.ReadWY(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ WX ]", ppu.ReadWX(), 0);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Separator();
 		}
@@ -632,13 +741,28 @@ namespace SHG
 			ImGui::Text("Registers");
 			ImGui::Separator();
 
-			float spacing = 60;
-			float startPos = ImGui::GetCursorPosX();
+			if (ImGui::BeginTable("##Sound Control Registers Table", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
+			{
+				float regColWidth = 55;
+				float valueColWidth = 45;
 
-			RenderRegister8("[ DIV ]", timer.GetDividerRegister(), startPos, spacing);
-			RenderRegister8("[ TIMA ]", timer.GetTimerCounter(), startPos, spacing);
-			RenderRegister8("[ TMA ]", timer.GetTimerModulo(), startPos, spacing);
-			RenderRegister8("[ TAC ]", timer.GetTimerControlRegister(), startPos, spacing);
+				ImGui::TableSetupColumn("##Timer Register Label", ImGuiTableColumnFlags_NoResize, regColWidth);
+				ImGui::TableSetupColumn("##Timer Register Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ DIV ]", timer.GetDividerRegister(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ TIMA ]", timer.GetTimerCounter(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ TMA ]", timer.GetTimerModulo(), 0);
+
+				ImGui::TableNextRow();
+				RenderRegister8("[ TAC ]", timer.GetTimerControlRegister(), 0);
+
+				ImGui::EndTable();
+			}
 
 			ImGui::Separator();
 		}
@@ -808,7 +932,7 @@ namespace SHG
 
 	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
 	{
-		ImGui::SetCursorPosX(110.0f + 30.0f * (colorIndex + 1));
+		ImGui::SetCursorPosX(SETTINGS_ITEM_OFFSET + 30.0f * (colorIndex + 1));
 		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
 		{
@@ -833,13 +957,9 @@ namespace SHG
 			const std::vector<std::string>& outputDeviceNames = apu.GetAllOutputDeviceNames();
 			const std::string& selectedOutputDevice = apu.GetCurrentOutputDeviceName();
 
-			float cursorPos = 110;
-
 			// Render list of audio output devices.
 			ImGui::Text("Output Device:");
-			ImGui::SameLine();
-
-			ImGui::SetCursorPosX(cursorPos);
+			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
 
 			float minItemWidth = 50.0f;
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
@@ -862,8 +982,7 @@ namespace SHG
 			// Render volume slider.
 			float volume = apu.GetMasterVolume() * MAX_VOLUME;
 			ImGui::Text("Volume:       ");
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(cursorPos);
+			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
 			ImGui::SliderFloat("##Audio Settings Volume ", &volume, 0.0f, MAX_VOLUME, "%.0f", ImGuiSliderFlags_None);
 			apu.SetMasterVolume(volume / MAX_VOLUME);
@@ -871,8 +990,7 @@ namespace SHG
 			// Render mute button.
 			bool isMuted = apu.IsMuted();
 			ImGui::Text("Mute:         ");
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(cursorPos);
+			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
 			ImGui::Checkbox("##Audio Settings Mute", &isMuted);
 			apu.Mute(isMuted);
 		}
@@ -1043,9 +1161,8 @@ namespace SHG
 			SavedDataSearchType currentSavedDataSearchType = cartridge.GetSavedDataSearchType();
 
 			ImGui::Text("Saved Data Location: ");
-			ImGui::SameLine();
+			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
 
-			ImGui::SetCursorPosX(150);
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, 50.0f));
 			if (ImGui::BeginCombo("##Saved Data Search Type", SAVED_DATA_SEARCH_TYPE_STRINGS.at(currentSavedDataSearchType).c_str()))
 			{
@@ -1199,21 +1316,22 @@ namespace SHG
 			ImGui::PopStyleColor();
 	}
 
-	void EmulatorWindow::RenderRegister8(const std::string& label, uint8_t data, float labelCursorPos, float dataSpacing)
+	void EmulatorWindow::RenderRegister8(const std::string& label, uint8_t data, int column)
 	{
-		ImGui::SetCursorPosX(labelCursorPos);
+		ImGui::TableSetColumnIndex(column);
+		//ImGui::SetCursorPosX(labelCursorPos);
 		ImGui::Text(label.c_str());
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
+		//ImGui::SameLine();
+		//ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
+		ImGui::TableSetColumnIndex(column + 1);
 		ImGui::Text(GetHexString8(data).c_str());
 	}
 
-	void EmulatorWindow::RenderRegister16(const std::string& label, uint16_t data, float labelCursorPos, float dataSpacing)
+	void EmulatorWindow::RenderRegister16(const std::string& label, uint16_t data, int column)
 	{
-		ImGui::SetCursorPosX(labelCursorPos);
+		ImGui::TableSetColumnIndex(column);
 		ImGui::Text(label.c_str());
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
+		ImGui::TableSetColumnIndex(column + 1);
 		ImGui::Text(GetHexString16(data).c_str());
 	}
 

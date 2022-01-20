@@ -96,44 +96,24 @@ namespace SHG
 		interruptMasterEnableFlag = false;
 	}
 
-	uint8_t CPU::ReadRegisterA() const
+	uint8_t CPU::ReadRegisterAF() const
 	{
-		return regAF.GetHighByte();
+		return regAF.Read();
 	}
 
-	uint8_t CPU::ReadRegisterF() const
+	uint8_t CPU::ReadRegisterBC() const
 	{
-		return regAF.GetLowByte();
+		return regBC.Read();
 	}
 
-	uint8_t CPU::ReadRegisterB() const
+	uint8_t CPU::ReadRegisterDE() const
 	{
-		return regBC.GetHighByte();
+		return regDE.Read();
 	}
 
-	uint8_t CPU::ReadRegisterC() const
+	uint8_t CPU::ReadRegisterHL() const
 	{
-		return regBC.GetLowByte();
-	}
-
-	uint8_t CPU::ReadRegisterH() const
-	{
-		return regHL.GetHighByte();
-	}
-
-	uint8_t CPU::ReadRegisterL() const
-	{
-		return regHL.GetLowByte();
-	}
-
-	uint8_t CPU::ReadRegisterD() const
-	{
-		return regDE.GetHighByte();
-	}
-
-	uint8_t CPU::ReadRegisterE() const
-	{
-		return regDE.GetLowByte();
+		return regHL.Read();
 	}
 
 	uint16_t CPU::ReadStackPointer() const

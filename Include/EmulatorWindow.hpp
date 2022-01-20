@@ -87,8 +87,8 @@ namespace SHG
 		void RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened);
 		void RenderSavedDataSettingsWindow(Cartridge& cartridge);
 
-		void RenderRegister8(const std::string& label, uint8_t data, float labelCursorPos, float dataSpacing);
-		void RenderRegister16(const std::string& label, uint16_t data, float labelCursorPos, float dataSpacing);
+		void RenderRegister8(const std::string& label, uint8_t data, int column);
+		void RenderRegister16(const std::string& label, uint16_t data, int column);
 
 		bool BeginSelectable(const std::string& label, bool isSelected, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2(0, 0));
 		void EndSelectable(bool isSelected);
