@@ -1192,7 +1192,7 @@ namespace SHG
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("Fonts/OpenSans/OpenSans-Regular.ttf", 17);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("Fonts/Noto_Sans_Display/NotoSansDisplay-Regular.ttf", 17);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowMinSize.x = 225;
