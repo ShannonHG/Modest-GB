@@ -1,7 +1,7 @@
 #include "Graphics/Framebuffer.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	Framebuffer::Framebuffer() {}
 

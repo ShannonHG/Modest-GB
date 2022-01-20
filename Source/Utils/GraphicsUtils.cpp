@@ -2,7 +2,7 @@
 #include "Utils/Arithmetic.hpp"
 #include "Utils/MemoryUtils.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	uint16_t GetTileIndexFromTileMaps(const Memory* vram, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress)
 	{

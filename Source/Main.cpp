@@ -5,5 +5,5 @@
 
 int main(int argc, char* argv[])
 {
-	return SHG::Emulator().Run();
+	return ModestGB::Emulator().Run();
 }

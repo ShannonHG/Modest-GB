@@ -1,7 +1,7 @@
 #include "Memory/Register8.hpp"
 #include "Memory/Register16.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	Register16::Register16()
 	{

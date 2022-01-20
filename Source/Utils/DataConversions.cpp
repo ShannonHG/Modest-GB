@@ -4,7 +4,7 @@
 #include <vector>
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB::Convert
 {
 	std::string ConvertToHexString(uint32_t data, uint8_t width)
 	{

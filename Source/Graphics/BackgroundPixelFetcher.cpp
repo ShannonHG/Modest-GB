@@ -5,7 +5,7 @@
 #include "Utils/MemoryUtils.hpp"
 #include "Utils/GBSpecs.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint8_t TILE_INDEX_FETCH_DURATION_IN_CYCLES = 2;
 	const uint8_t TILE_DATA_FETCH_DURATION_IN_CYCLES = 2;

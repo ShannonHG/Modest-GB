@@ -2,7 +2,7 @@
 #include "Audio/SoundChannel.hpp"
 #include "Memory/Register16.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class NoiseSoundChannel : public SoundChannel
 	{

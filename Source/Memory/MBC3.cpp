@@ -6,7 +6,7 @@
 #include "Utils/Arithmetic.hpp"
 #include "Utils/SystemTime.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t ROM_BANK_00_START_ADDR = 0x0000;
 	const uint16_t ROM_BANK_00_END_ADDR = 0x3FFF;
@@ -35,7 +35,6 @@ namespace SHG
 	const uint16_t RTC_LOWER_DAY_COUNTER_REGISTER_ADDR = 0x0B;
 	const uint16_t RTC_UPPER_DAY_COUNTER_REGISTER_ADDR = 0x0C;
 
-	// TODO: Does not handle 1MB multi-game carts.
 	MBC3::MBC3()
 	{
 		rtcRegisters =

@@ -5,7 +5,7 @@
 #include "Utils/DataConversions.hpp"
 #include "Utils/Interrupts.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::map<GBButton, ButtonKeyPair> DEFAULT_INPUT_MAPPING =
 	{
@@ -81,22 +81,23 @@ namespace SHG
 		if (isDirectionButtonsSelected)
 		{
 			// Opposing direction buttons cannot be pressed at the same time.
-			result = !(buttonStates.at(GBButton::RIGHT) && !buttonStates.at(GBButton::LEFT))
-				| (!(buttonStates.at(GBButton::LEFT) && !buttonStates.at(GBButton::RIGHT)) << 1)
-				| (!(buttonStates.at(GBButton::UP) && !buttonStates.at(GBButton::DOWN)) << 2)
-				| (!(buttonStates.at(GBButton::DOWN) && !buttonStates.at(GBButton::UP)) << 3);
+			result = 
+				static_cast<int>(!(buttonStates.at(GBButton::RIGHT) && !buttonStates.at(GBButton::LEFT))) |
+				static_cast<int>(!(buttonStates.at(GBButton::LEFT) && !buttonStates.at(GBButton::RIGHT)) << 1) |
+				static_cast<int>(!(buttonStates.at(GBButton::UP) && !buttonStates.at(GBButton::DOWN)) << 2) |
+				static_cast<int>(!(buttonStates.at(GBButton::DOWN) && !buttonStates.at(GBButton::UP)) << 3);
 		}
 		else if (isActionButtonsSelected)
 		{
 			result =
-				!buttonStates.at(GBButton::A)
-				| (!buttonStates.at(GBButton::B) << 1)
-				| (!buttonStates.at(GBButton::SELECT) << 2)
-				| (!buttonStates.at(GBButton::START) << 3);
+				static_cast<int>(!buttonStates.at(GBButton::A)) |
+				static_cast<int>(!buttonStates.at(GBButton::B) << 1) |
+				static_cast<int>(!buttonStates.at(GBButton::SELECT) << 2) |
+				static_cast<int>(!buttonStates.at(GBButton::START) << 3);
 		}
 
-		result |= !isDirectionButtonsSelected << 4;
-		result |= !isActionButtonsSelected << 5;
+		result |= static_cast<int>(!isDirectionButtonsSelected) << 4;
+		result |= static_cast<int>(!isActionButtonsSelected) << 5;
 
 		// The upper two bits are not used.
 		result |= 0b11000000;
@@ -213,11 +214,11 @@ namespace SHG
 			{
 				switch (button)
 				{
-				case SHG::GBButton::RIGHT:
-				case SHG::GBButton::LEFT:
-				case SHG::GBButton::UP:
-				case SHG::GBButton::DOWN:
-					RequestInterrupt(*memoryMap, InterruptType::Joypad);
+				case GBButton::RIGHT:
+				case GBButton::LEFT:
+				case GBButton::UP:
+				case GBButton::DOWN:
+					Interrupts::RequestInterrupt(*memoryMap, Interrupts::InterruptType::Joypad);
 					break;
 				}
 			}
@@ -225,11 +226,11 @@ namespace SHG
 			{
 				switch (button)
 				{
-				case SHG::GBButton::A:
-				case SHG::GBButton::B:
-				case SHG::GBButton::SELECT:
-				case SHG::GBButton::START:
-					RequestInterrupt(*memoryMap, InterruptType::Joypad);
+				case GBButton::A:
+				case GBButton::B:
+				case GBButton::SELECT:
+				case GBButton::START:
+					Interrupts::RequestInterrupt(*memoryMap, Interrupts::InterruptType::Joypad);
 					break;
 				}
 			}

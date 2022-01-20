@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string>
 
-namespace SHG
+namespace ModestGB::Convert
 {
 	std::string ConvertToHexString(uint32_t data, uint8_t width);
 	std::string GetHexString8(uint8_t data);

@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "Utils/MemoryUtils.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	Pixel PixelFetcher::PopPixel()
 	{
@@ -17,7 +17,7 @@ namespace SHG
 
 	uint8_t PixelFetcher::GetPixelQueueSize()
 	{
-		return queuedPixels.size();
+		return static_cast<uint8_t>(queuedPixels.size());
 	}
 
 	void PixelFetcher::SetX(int16_t x)

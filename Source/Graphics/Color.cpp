@@ -1,6 +1,6 @@
 #include "Graphics/Color.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	bool operator==(const Color& c1, const Color& c2)
 	{

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace SHG::SystemTime
+namespace ModestGB::SystemTime
 {
 	struct DateTime
 	{

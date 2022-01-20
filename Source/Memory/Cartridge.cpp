@@ -9,7 +9,7 @@
 #include "Memory/MBC3.hpp"
 #include "Memory/MBC5.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string CARTRIDGE_LOG_HEADER = "[CART]";
 
@@ -141,13 +141,12 @@ namespace SHG
 		if (romData.size() < HEADER_SIZE_IN_BYTES)
 			return false;
 
-		title.clear();
+		romTitle.clear();
 		for (uint32_t address = 0; address < romData.size(); address++)
 		{
 			if (address >= TITLE_START_ADDRESS && address <= TITLE_END_ADDRESS)
 			{
-				title += (char)romData[address];
-				// TODO: Account for CGB Flag
+				romTitle += (char)romData[address];
 			}
 			else if (address >= LOGO_START_ADDRESS && address <= LOGO_END_ADDRESS)
 			{
@@ -171,7 +170,7 @@ namespace SHG
 		}
 
 		rom = romData;
-		Logger::WriteInfo("ROM Title: " + std::string(title.c_str()), CARTRIDGE_LOG_HEADER);
+		Logger::WriteInfo("ROM Title: " + std::string(romTitle.c_str()), CARTRIDGE_LOG_HEADER);
 
 		// Attach ROM and RAM to the memory bank controller.
 		if (memoryBankController != nullptr)
@@ -207,9 +206,13 @@ namespace SHG
 
 		ram.clear();
 		rom.clear();
-		title.clear();
+		romTitle.clear();
 	}
 
+	const std::string& Cartridge::GetROMTitle() const
+	{
+		return romTitle;
+	}
 
 	void Cartridge::SetSavedDataSearchType(SavedDataSearchType searchType)
 	{
@@ -267,12 +270,12 @@ namespace SHG
 
 	uint32_t Cartridge::GetROMSize()
 	{
-		return rom.size();
+		return static_cast<uint32_t>(rom.size());
 	}
 
 	uint32_t Cartridge::GetRAMSize()
 	{
-		return ram.size();
+		return static_cast<uint32_t>(ram.size());
 	}
 
 	MemoryBankControllerType Cartridge::GetMemoryBankControllerType()
@@ -283,10 +286,10 @@ namespace SHG
 	void Cartridge::DecodeROMSize(uint8_t byte)
 	{
 		// Calculation reference: https://gbdev.io/pandocs/#the-cartridge-header
-		uint64_t romSize = (32 << byte) * KiB;
+		uint32_t romSize = (32 << byte) * KiB;
 
 		// Display the ROM size (in KiB) for debugging purposes
-		uint16_t romSizeKB = romSize / (float)KiB;
+		uint16_t romSizeKB = static_cast<uint16_t>(romSize / (float)KiB);
 		Logger::WriteInfo("Cartridge ROM available:  " + std::to_string(romSizeKB) + " KiB", CARTRIDGE_LOG_HEADER);
 	}
 
@@ -316,7 +319,7 @@ namespace SHG
 		ram = std::vector<uint8_t>(ramSize);
 
 		// Display the RAM size (in KiB) for debugging purposes.
-		uint16_t ramSizeKB = ramSize / (float)KiB;
+		uint16_t ramSizeKB = static_cast<uint16_t>(ramSize / (float)KiB);
 		Logger::WriteInfo("Cartridge RAM available: " + std::to_string(ramSizeKB) + " KiB", CARTRIDGE_LOG_HEADER);
 	}
 

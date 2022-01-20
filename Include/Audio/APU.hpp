@@ -8,7 +8,7 @@
 #include "Audio/NoiseSoundChannel.hpp"
 #include "Audio/AudioTimer.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class APU
 	{

@@ -3,7 +3,7 @@
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t ROM_BANK_X0_START_ADDR = 0x0000;
 	const uint16_t ROM_BANK_X0_END_ADDR = 0x3FFF;
@@ -83,9 +83,9 @@ namespace SHG
 		{
 			// Determine the number of bits required to address all of the ROM banks. 
 			// For example, a 256 KiB cartridge would require 4 bits to address all 16 of its banks.
-			uint8_t numBitsRequired = std::log2(rom->size() / ROM_BANK_SIZE);
+			uint8_t numBitsRequired = static_cast<uint8_t>(std::log2(rom->size() / ROM_BANK_SIZE));
 
-			uint8_t bitMask = std::pow(2, numBitsRequired) - 1;
+			uint8_t bitMask = static_cast<uint8_t>(std::pow(2, numBitsRequired) - 1);
 			romBankNumber = value & bitMask;
 
 			// When 0 is written to this address space, the ROM bank number should be incremented to 1 

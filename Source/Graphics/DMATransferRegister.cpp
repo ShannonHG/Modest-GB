@@ -1,6 +1,6 @@
 #include "Graphics/DMATransferRegister.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	bool DMATransferRegister::IsTransferPending() const
 	{

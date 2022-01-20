@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t KiB = 1024;
 	const uint32_t MiB = static_cast<uint32_t>(pow(1024, 2));

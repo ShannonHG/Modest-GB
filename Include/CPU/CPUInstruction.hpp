@@ -3,7 +3,7 @@
 #include <string>
 #include "Memory/Register16.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class CPU;
 	struct CPUInstruction

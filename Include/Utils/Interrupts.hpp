@@ -2,7 +2,7 @@
 #include <map>
 #include "Memory/Memory.hpp"
 
-namespace SHG
+namespace ModestGB::Interrupts
 {
 	enum class InterruptType
 	{

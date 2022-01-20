@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "Memory/Memory.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class Register8
 	{

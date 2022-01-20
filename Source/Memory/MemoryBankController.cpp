@@ -4,7 +4,7 @@
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t MemoryBankController::ROM_BANK_SIZE = 16 * KiB;
 	const uint16_t MemoryBankController::RAM_BANK_SIZE = 8 * KiB;
@@ -45,12 +45,12 @@ namespace SHG
 
 	void MemoryBankController::PrintInvalidROMAccessMessage(uint32_t address) const
 	{
-		Logger::WriteError("Attempted to access invalid ROM Address: " + GetHexString32(address));
+		Logger::WriteError("Attempted to access invalid ROM Address: " + Convert::GetHexString32(address));
 	}
 
 	void MemoryBankController::PrintInvalidRAMAccesMessage(uint32_t address) const
 	{
-		Logger::WriteError("Attempted to access invalid RAM Address: " + GetHexString32(address));
+		Logger::WriteError("Attempted to access invalid RAM Address: " + Convert::GetHexString32(address));
 	}
 
 	uint32_t MemoryBankController::CalculatePhysicalROMAddress(uint16_t romBankNumber, uint16_t virtualAddressRangeStart, uint16_t targetVirtualAddress)

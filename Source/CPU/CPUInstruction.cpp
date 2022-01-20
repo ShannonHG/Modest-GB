@@ -1,6 +1,6 @@
 #include "CPU/CPUInstruction.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	CPUInstruction::CPUInstruction() {}
 

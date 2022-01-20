@@ -1,7 +1,7 @@
 #pragma once
 #include "Audio/SoundChannel.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class ToneSoundChannel : public SoundChannel
 	{

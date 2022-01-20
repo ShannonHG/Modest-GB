@@ -1,7 +1,7 @@
 #include "Memory/Register8.hpp"
 #include "Utils/Arithmetic.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	void Register8::Write(uint8_t data)
 	{

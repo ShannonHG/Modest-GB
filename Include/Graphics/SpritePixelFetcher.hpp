@@ -5,7 +5,7 @@
 #include "Memory/Register8.hpp"
 #include "Graphics/BackgroundPixelFetcher.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	enum class SpritePixelFetcherState
 	{

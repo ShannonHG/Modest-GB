@@ -6,7 +6,7 @@
 #include "Input/InputManager.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::map<SDL_Keycode, KeyCode> KEY_MAP =
 	{

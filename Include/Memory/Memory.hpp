@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <functional>
 
-namespace SHG
+namespace ModestGB
 {
 	class Memory
 	{

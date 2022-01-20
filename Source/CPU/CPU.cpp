@@ -4,11 +4,10 @@
 #include "Utils/DataConversions.hpp"
 #include "CPU/CPU.hpp"
 #include "Logger.hpp"
-#include "InvalidOpcodeException.hpp"
 #include "Utils/Arithmetic.hpp"
 #include "Utils/Interrupts.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string CPU_MESSAGE_HEADER = "[CPU]";
 	const uint16_t REGISTER_AF_DEFAULT = 0x01B0;
@@ -31,48 +30,48 @@ namespace SHG
 			" (h) " + std::to_string((int)GetHalfCarryFlag()) +
 			" (c) " + std::to_string((int)GetCarryFlag()), CPU_MESSAGE_HEADER);
 
-		Logger::WriteSystemEvent("(A) " + ConvertToHexString(GetRegisterA().Read(), 2) +
-			" (F) " + ConvertToHexString(GetRegisterF().Read(), 2) +
-			" (B) " + ConvertToHexString(GetRegisterB().Read(), 2) +
-			" (C) " + ConvertToHexString(GetRegisterC().Read(), 2), CPU_MESSAGE_HEADER);
+		Logger::WriteSystemEvent("(A) " + Convert::ConvertToHexString(GetRegisterA().Read(), 2) +
+			" (F) " + Convert::ConvertToHexString(GetRegisterF().Read(), 2) +
+			" (B) " + Convert::ConvertToHexString(GetRegisterB().Read(), 2) +
+			" (C) " + Convert::ConvertToHexString(GetRegisterC().Read(), 2), CPU_MESSAGE_HEADER);
 
-		Logger::WriteSystemEvent("(D) " + ConvertToHexString(GetRegisterD().Read(), 2) +
-			" (E) " + ConvertToHexString(GetRegisterE().Read(), 2) +
-			" (H) " + ConvertToHexString(GetRegisterH().Read(), 2) +
-			" (L) " + ConvertToHexString(GetRegisterL().Read(), 2), CPU_MESSAGE_HEADER);
+		Logger::WriteSystemEvent("(D) " + Convert::ConvertToHexString(GetRegisterD().Read(), 2) +
+			" (E) " + Convert::ConvertToHexString(GetRegisterE().Read(), 2) +
+			" (H) " + Convert::ConvertToHexString(GetRegisterH().Read(), 2) +
+			" (L) " + Convert::ConvertToHexString(GetRegisterL().Read(), 2), CPU_MESSAGE_HEADER);
 
-		Logger::WriteSystemEvent("(PC) " + ConvertToHexString(programCounter.Read(), 4) +
-			" (SP) " + ConvertToHexString(stackPointer.Read(), 4), CPU_MESSAGE_HEADER);
+		Logger::WriteSystemEvent("(PC) " + Convert::ConvertToHexString(programCounter.Read(), 4) +
+			" (SP) " + Convert::ConvertToHexString(stackPointer.Read(), 4), CPU_MESSAGE_HEADER);
 	}
 
 	void CPU::HandleInterrupts()
 	{
-		uint8_t interruptFlag = memoryManagementUnit->Read(INTERRUPT_FLAG_ADDRESS);
-		uint8_t interruptEnable = memoryManagementUnit->Read(INTERRUPT_ENABLE_ADDRESS);
+		uint8_t interruptFlag = memoryManagementUnit->Read(Interrupts::INTERRUPT_FLAG_ADDRESS);
+		uint8_t interruptEnable = memoryManagementUnit->Read(Interrupts::INTERRUPT_ENABLE_ADDRESS);
 
 		if (Logger::IsSystemEventLoggingEnabled)
 		{
 			Logger::WriteSystemEvent("(IME) " + std::to_string((int)GetInterruptMasterEnableFlag()) +
-				" (IF) " + ConvertToHexString(interruptFlag, 2) +
-				" (IE) " + ConvertToHexString(interruptEnable, 2), CPU_MESSAGE_HEADER);
+				" (IF) " + Convert::ConvertToHexString(interruptFlag, 2) +
+				" (IE) " + Convert::ConvertToHexString(interruptEnable, 2), CPU_MESSAGE_HEADER);
 		}
 
-		for (int i = 0; i < INTERRUPT_OPERATIONS.size(); i++)
+		for (int i = 0; i < Interrupts::INTERRUPT_OPERATIONS.size(); i++)
 		{
 			// If the bit with the current index is set in both the flag and enable registers, 
 			// then perform the relevant operation, and reset all interrupt related registers.
 			if (((interruptFlag >> i) & 1) == 1 && ((interruptEnable >> i) & 1) == 1)
 			{
-				uint8_t interruptAddress = INTERRUPT_OPERATIONS.at(static_cast<InterruptType>(i));
+				uint8_t interruptAddress = Interrupts::INTERRUPT_OPERATIONS.at(static_cast<Interrupts::InterruptType>(i));
 
 				if (Logger::IsSystemEventLoggingEnabled)
-					Logger::WriteSystemEvent("(interrupt request) " + ConvertToHexString(interruptAddress, 2), CPU_MESSAGE_HEADER);
+					Logger::WriteSystemEvent("(interrupt request) " + Convert::ConvertToHexString(interruptAddress, 2), CPU_MESSAGE_HEADER);
 
 				if (interruptMasterEnableFlag)
 				{
 					CALL(interruptAddress);
 					interruptMasterEnableFlag = false;
-					memoryManagementUnit->ClearBit(INTERRUPT_FLAG_ADDRESS, i);
+					memoryManagementUnit->ClearBit(Interrupts::INTERRUPT_FLAG_ADDRESS, i);
 				}
 
 				isHalted = false;
@@ -96,22 +95,22 @@ namespace SHG
 		interruptMasterEnableFlag = false;
 	}
 
-	uint8_t CPU::ReadRegisterAF() const
+	uint16_t CPU::ReadRegisterAF() const
 	{
 		return regAF.Read();
 	}
 
-	uint8_t CPU::ReadRegisterBC() const
+	uint16_t CPU::ReadRegisterBC() const
 	{
 		return regBC.Read();
 	}
 
-	uint8_t CPU::ReadRegisterDE() const
+	uint16_t CPU::ReadRegisterDE() const
 	{
 		return regDE.Read();
 	}
 
-	uint8_t CPU::ReadRegisterHL() const
+	uint16_t CPU::ReadRegisterHL() const
 	{
 		return regHL.Read();
 	}
@@ -147,7 +146,7 @@ namespace SHG
 		}
 		catch (std::exception e)
 		{
-			Logger::WriteError("Invalid opcode encountered at " + GetHexString16(programCounter.Read()) + ": " + GetHexString8(opcode), CPU_MESSAGE_HEADER);
+			Logger::WriteError("Invalid opcode encountered at " + Convert::GetHexString16(programCounter.Read()) + ": " + Convert::GetHexString8(opcode), CPU_MESSAGE_HEADER);
 			return 0;
 		}
 
@@ -171,7 +170,7 @@ namespace SHG
 		uint8_t result = memoryManagementUnit->Read(address);
 
 		if (Logger::IsSystemEventLoggingEnabled)
-			Logger::WriteSystemEvent("(fetch) " + ConvertToHexString(result, 2), CPU_MESSAGE_HEADER);
+			Logger::WriteSystemEvent("(fetch) " + Convert::ConvertToHexString(result, 2), CPU_MESSAGE_HEADER);
 
 		return result;
 	}

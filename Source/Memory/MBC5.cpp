@@ -3,7 +3,7 @@
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t ROM_BANK_00_START_ADDR = 0x0000;
 	const uint16_t ROM_BANK_00_END_ADDR = 0x3FFF;

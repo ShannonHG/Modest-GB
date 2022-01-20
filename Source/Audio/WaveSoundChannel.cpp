@@ -2,7 +2,7 @@
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t WAVE_PATTERN_RAM_START_ADDRESS = 0xFF30;
 	const uint16_t WAVE_PATTERN_RAM_END_ADDRESS = 0xFF3F;
@@ -32,7 +32,7 @@ namespace SHG
 	{
 		if (address < WAVE_PATTERN_RAM_START_ADDRESS || address > WAVE_PATTERN_RAM_END_ADDRESS)
 		{
-			Logger::WriteError("Wave pattern RAM address is out of bounds: " + GetHexString16(address));
+			Logger::WriteError("Wave pattern RAM address is out of bounds: " + Convert::GetHexString16(address));
 			return;
 		}
 

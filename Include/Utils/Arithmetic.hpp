@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 
-namespace SHG::Arithmetic
+namespace ModestGB::Arithmetic
 {
 	bool Is8BitOverflow(int num);
 	bool Is16BitOverflow(int num);

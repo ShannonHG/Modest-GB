@@ -4,7 +4,7 @@
 #include "Audio/AudioTimer.hpp"
 #include "Memory/Register8.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class SoundChannel
 	{

@@ -13,7 +13,7 @@
 #include "Input/InputManager.hpp"
 #include "Utils/MemoryUtils.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class Emulator
 	{

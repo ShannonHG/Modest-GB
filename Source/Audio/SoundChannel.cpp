@@ -3,7 +3,7 @@
 #include "Utils/GBSpecs.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const float MAX_UNSCALED_VOLUME = 15.0f;
 	const uint8_t ENVELOPE_TIMER_PERIOD = 8;

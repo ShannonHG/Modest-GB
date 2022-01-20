@@ -8,7 +8,7 @@
 #include "Utils/Arithmetic.hpp"
 #include "Utils/DataConversions.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string PPU_MESSAGE_HEADER = "[PPU]";
 
@@ -202,7 +202,7 @@ namespace SHG
 	{
 		if (paletteTints.find(paletteAddress) == paletteTints.end())
 		{
-			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
+			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
 			return;
 		}
 
@@ -219,7 +219,7 @@ namespace SHG
 	{
 		if (paletteTints.find(paletteAddress) == paletteTints.end())
 		{
-			Logger::WriteError("Invalid palette address: " + GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
+			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
 			return RGBA_WHITE;
 		}
 
@@ -317,7 +317,7 @@ namespace SHG
 		SetCurrentMode(Mode::VBlank);
 		ChangeStatInterruptLineBit(STAT_VBLANK_INTERRUPT_SOURCE_BIT_INDEX, true);
 
-		RequestInterrupt(*memoryMap, InterruptType::VBlank);
+		Interrupts::RequestInterrupt(*memoryMap, Interrupts::InterruptType::VBlank);
 
 		// Causes the window to render the most up to date version of the framebuffer.
 		primaryFramebuffer.UploadData();
@@ -338,7 +338,6 @@ namespace SHG
 			ly.Increment();
 			if (ly.Read() == VBLANK_END_LINE)
 			{
-				// TODO: Is this correct?
 				backgroundPixelFetcher.Reset();
 				spritePixelFetcher.Reset();
 				ly.Write(0);
@@ -504,7 +503,7 @@ namespace SHG
 				{
 					selectedPixel = backgroundPixelFetcher.PopPixel();
 
-					// TODO: Add explanation
+					// Depending on the value of SCX at the beginning of the OAM search mode, a certain number of pixels at the start of the scanline should be ignored.
 					if (backgroundPixelFetcher.GetCurrentMode() == BackgroundPixelFetcherMode::Background && ignoredPixels < numberOfPixelsToIgnore)
 					{
 						ignoredPixels++;
@@ -588,7 +587,7 @@ namespace SHG
 		// states logically OR'ed into the STAT interrupt line. If a source sets its bit to 1,
 		// and the STAT interrupt line is currently 0, then a STAT interrupt will be triggered.
 		if (!statInterruptLine.Read() && value)
-			RequestInterrupt(*memoryMap, InterruptType::LCDStat);
+			Interrupts::RequestInterrupt(*memoryMap, Interrupts::InterruptType::LCDStat);
 
 		statInterruptLine.ChangeBit(bitIndex, value);
 	}

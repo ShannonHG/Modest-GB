@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace SHG
+namespace ModestGB
 {
 	const uint32_t GB_CLOCK_SPEED = 4194304;
 	const double GB_FRAMES_PER_SECOND = 59.7;

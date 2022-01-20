@@ -4,7 +4,7 @@
 #include "Memory/Register8.hpp"
 #include "Graphics/Color.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	// PPU Mode Durations
 	// ------------------------------

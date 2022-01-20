@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
-project(GameBoyEmulator)
+project(Modest-GB)
 
 set(CMAKE_CXX_STANDARD 20)
 set(THIRD_PARTY_DIR Third-Party/)

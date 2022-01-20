@@ -13,7 +13,7 @@
 #include "Audio/APU.hpp"
 #include "Input/Joypad.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	using MemoryMapWriteCallback = std::function<void(uint16_t address, uint8_t value)>;
 

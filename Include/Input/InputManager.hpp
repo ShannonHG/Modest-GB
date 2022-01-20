@@ -1,7 +1,7 @@
 #pragma once
-#include "Utils/Events.hpp"
+#include "Utils/Callbacks.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	enum class KeyCode
 	{

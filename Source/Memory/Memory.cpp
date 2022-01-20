@@ -1,7 +1,7 @@
 #include "Memory/Memory.hpp"
 #include "Utils/Arithmetic.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	bool Memory::Read(uint16_t address, uint8_t bitNum) const
 	{

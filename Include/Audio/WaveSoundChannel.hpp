@@ -3,7 +3,7 @@
 #include <vector>
 #include "Audio/SoundChannel.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class WaveSoundChannel : public SoundChannel
 	{

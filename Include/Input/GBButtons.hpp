@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 
-namespace SHG
+namespace ModestGB
 {
 	enum class GBButton
 	{

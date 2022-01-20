@@ -2,7 +2,7 @@
 #include <vector>
 #include "Memory/Memory.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class BasicMemory : public Memory
 	{

@@ -5,7 +5,7 @@
 #include "Utils/GBSpecs.hpp"
 #include "Utils/Arithmetic.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string APU_MESSAGE_HEADER = "[APU]";
 	const uint8_t AUDIO_CHANNELS = 2;

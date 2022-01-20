@@ -6,7 +6,7 @@
 #include "Utils/Arithmetic.hpp"
 #include "Memory/MemoryBankController.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	enum class SavedDataSearchType
 	{
@@ -37,6 +37,7 @@ namespace SHG
 		uint32_t GetROMSize();
 		uint32_t GetRAMSize();
 		bool IsROMLoaded();
+		const std::string& GetROMTitle() const;
 
 		void SetSavedDataSearchType(SavedDataSearchType searchType);
 		SavedDataSearchType GetSavedDataSearchType() const;
@@ -56,7 +57,7 @@ namespace SHG
 
 		std::vector<uint8_t> ram;
 		std::vector<uint8_t> rom;
-		std::string title;
+		std::string romTitle;
 
 		bool Load(const std::vector<uint8_t>& romData);
 

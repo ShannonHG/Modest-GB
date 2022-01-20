@@ -9,7 +9,7 @@
 #include "Memory/Memory.hpp"
 #include "Memory/Register16.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class CPU
 	{
@@ -34,10 +34,10 @@ namespace SHG
 		void PrintRegisterInfo();
 		void Reset();
 
-		uint8_t ReadRegisterAF() const;
-		uint8_t ReadRegisterBC() const;
-		uint8_t ReadRegisterDE() const;
-		uint8_t ReadRegisterHL() const;
+		uint16_t ReadRegisterAF() const;
+		uint16_t ReadRegisterBC() const;
+		uint16_t ReadRegisterDE() const;
+		uint16_t ReadRegisterHL() const;
 
 		uint16_t ReadStackPointer() const;
 		uint16_t ReadProgramCounter() const;

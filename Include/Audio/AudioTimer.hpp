@@ -1,13 +1,12 @@
 #pragma once
 #include <cstdint>
 
-namespace SHG
+namespace ModestGB
 {
 	class AudioTimer
 	{
 	public:
 		bool Tick();
-		void SetPeriod(uint16_t duration);
 		void Restart(uint16_t period);
 		bool IsStopped();
 		void Disable();

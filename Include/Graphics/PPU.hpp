@@ -12,7 +12,7 @@
 #include "Graphics/DMATransferRegister.hpp"
 #include "Memory/BasicMemory.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class PPU
 	{

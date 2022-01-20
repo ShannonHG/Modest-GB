@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "Utils/GBSpecs.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string TIMER_MESSAGE_HEADER = "[TIMER]";
 	const uint8_t TIMER_OVERFLOW_DELAY_IN_CYCLES = 4;
@@ -25,7 +25,6 @@ namespace SHG
 	// FF06: TIMA - Timer Counter (R/W)
 	// FF07: TAC - Timer Control (R/W)
 
-	// TODO: Handle additional obscure behavior.
 	Timer::Timer(Memory& memoryMap) : memoryMap(memoryMap)
 	{
 
@@ -44,7 +43,7 @@ namespace SHG
 				{
 					timerCounter = timerModulo;
 					wasCounterReloaded = true;
-					RequestInterrupt(memoryMap, InterruptType::Timer);
+					Interrupts::RequestInterrupt(memoryMap, Interrupts::InterruptType::Timer);
 				}
 			}
 
@@ -169,9 +168,9 @@ namespace SHG
 
 	void Timer::PrintStatus() const
 	{
-		Logger::WriteSystemEvent("(DIV) " + GetHexString8(static_cast<uint8_t>(std::floor(GetDividerRegister()))) +
-			" (TIMA) " + GetHexString8(static_cast<uint8_t>(std::floor(timerCounter))) +
-			" (TMA) " + GetHexString8(timerModulo) +
-			" (TAC) " + GetHexString8(GetTimerControlRegister()), TIMER_MESSAGE_HEADER);
+		Logger::WriteSystemEvent("(DIV) " + Convert::GetHexString8(static_cast<uint8_t>(std::floor(GetDividerRegister()))) +
+			" (TIMA) " + Convert::GetHexString8(static_cast<uint8_t>(std::floor(timerCounter))) +
+			" (TMA) " + Convert::GetHexString8(timerModulo) +
+			" (TAC) " + Convert::GetHexString8(GetTimerControlRegister()), TIMER_MESSAGE_HEADER);
 	}
 }

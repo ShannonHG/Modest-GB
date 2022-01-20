@@ -7,7 +7,7 @@
 #include "Utils/MemoryUtils.hpp"
 #include "Memory/Memory.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	using RAMWriteCallback = std::function<void(uint16_t, uint8_t)>;
 

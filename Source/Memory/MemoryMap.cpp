@@ -2,10 +2,9 @@
 #include "Memory/MemoryMap.hpp"
 #include "Logger.hpp"
 #include "Utils/DataConversions.hpp"
-#include "InvalidOpcodeException.hpp"
 #include "Utils/MemoryUtils.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string MEMORY_MAP_LOG_HEADER = "[Memory Map]";
 

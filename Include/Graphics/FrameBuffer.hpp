@@ -3,7 +3,7 @@
 #include "SDL.h"
 #include "Graphics/Color.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class Framebuffer
 	{

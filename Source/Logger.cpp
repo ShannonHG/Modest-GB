@@ -7,7 +7,7 @@
 #include "Logger.hpp"
 #include "Utils/SystemTime.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::string INFO_MESSAGE_HEADER = "[INFO]";
 	const std::string WARNING_MESSAGE_HEADER = "[WARNING]";

@@ -1,6 +1,6 @@
 #include "Audio/AudioTimer.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	bool AudioTimer::Tick()
 	{

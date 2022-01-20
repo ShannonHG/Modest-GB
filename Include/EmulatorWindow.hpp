@@ -7,9 +7,9 @@
 #include "Graphics/PPU.hpp"
 #include "CPU/CPU.hpp"
 #include "Memory/MemoryMap.hpp"
-#include "Utils/Events.hpp"
+#include "Utils/Callbacks.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class EmulatorWindow
 	{
@@ -63,7 +63,7 @@ namespace SHG
 		void ClearScreen();
 		void EndFrame();
 		void RenderMainWindow();
-		void RenderGameView(const PPU& ppu);
+		void RenderGameView(const PPU& ppu, const Cartridge& cartridge);
 		void RenderWindowWithFramebuffer(const std::string& title, const Framebuffer& framebuffer, bool* isOpen = nullptr);
 		void RenderCPUDebugWindow(const CPU& processor, const MemoryMap& memoryMap, uint32_t cyclesPerSecond);
 		void RenderSoundDebugWindow(APU& apu);

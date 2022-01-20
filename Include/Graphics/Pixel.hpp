@@ -4,7 +4,7 @@
 #include "Utils/GraphicsUtils.hpp"
 #include "Utils/MemoryUtils.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	struct Pixel
 	{

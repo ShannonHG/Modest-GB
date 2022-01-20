@@ -3,7 +3,7 @@
 #include "Memory/Register8.hpp"
 #include "Graphics/Pixel.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class PixelFetcher
 	{

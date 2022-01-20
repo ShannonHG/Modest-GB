@@ -2,7 +2,7 @@
 #include "Memory/BasicMemory.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	BasicMemory::BasicMemory(uint32_t size)
 	{

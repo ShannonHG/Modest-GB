@@ -5,7 +5,7 @@
 #include "Input/GBButtons.hpp"
 #include "Memory/Memory.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	struct ButtonKeyPair
 	{

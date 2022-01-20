@@ -3,7 +3,7 @@
 #include "Utils/GBSpecs.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const uint16_t MAX_FREQUENCY = 2047;
 

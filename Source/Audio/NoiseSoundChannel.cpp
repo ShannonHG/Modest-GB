@@ -2,7 +2,7 @@
 #include "Audio/NoiseSoundChannel.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	NoiseSoundChannel::NoiseSoundChannel() : SoundChannel()
 	{

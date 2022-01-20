@@ -4,7 +4,7 @@
 #include <array>
 #include <functional>
 
-namespace SHG
+namespace ModestGB
 {
 	enum class LogMessageType
 	{

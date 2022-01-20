@@ -3,9 +3,9 @@
 #include <chrono>
 #include "Utils/SystemTime.hpp"
 
-namespace SHG::SystemTime
+namespace ModestGB::SystemTime
 {
-	DateTime SHG::SystemTime::GetCurrentTime()
+	DateTime ModestGB::SystemTime::GetCurrentTime()
 	{
 		std::time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 		std::tm dateTime{};

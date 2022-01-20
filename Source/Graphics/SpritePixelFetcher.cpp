@@ -6,9 +6,8 @@
 #include "Logger.hpp"
 #include "Utils/Arithmetic.hpp"
 
-namespace SHG
+namespace ModestGB
 {
-	// TODO: Improve timing accuracy.
 	SpritePixelFetcher::SpritePixelFetcher(Memory& vram, Register8& lcdc, BackgroundPixelFetcher& backgroundPixelFetcher)
 		: vram(&vram), lcdc(&lcdc), backgroundPixelFetcher(&backgroundPixelFetcher)
 	{

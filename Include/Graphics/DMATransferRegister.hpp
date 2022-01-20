@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace SHG
+namespace ModestGB
 {
 	class DMATransferRegister
 	{

@@ -4,10 +4,11 @@
 #include "Utils/DataConversions.hpp"
 #include "Utils/GBSpecs.hpp"
 #include "Utils/MemoryUtils.hpp"
+#include "EmbeddedFont.hpp"
 
-namespace SHG
+namespace ModestGB
 {
-	const char* DEFAULT_WINDOW_TITLE = "Game Boy Emulator";
+	const char* DEFAULT_WINDOW_TITLE = "Modest GB";
 	const uint16_t DEFAULT_SDL_WINDOW_WIDTH = 1024;
 	const uint16_t DEFAULT_SDL_WINDOW_HEIGHT = 576;
 	const uint16_t MINIMUM_SDL_WINDOW_WIDTH = 512;
@@ -34,8 +35,6 @@ namespace SHG
 	const uint8_t SPRITE_2_PALETTE_TINT_ID_3 = 11;
 
 	const float MAX_VOLUME = 100.0f;
-
-	const float SETTINGS_ITEM_OFFSET = 150;
 
 	const std::map<SavedDataSearchType, std::string> SAVED_DATA_SEARCH_TYPE_STRINGS
 	{
@@ -138,7 +137,7 @@ namespace SHG
 		ClearScreen();
 
 		RenderMainWindow();
-		RenderGameView(ppu);
+		RenderGameView(ppu, cartridge);
 
 		if (shouldRenderCPUDebugWindow)
 			RenderCPUDebugWindow(processor, memoryMap, cyclesPerSecond);
@@ -309,13 +308,15 @@ namespace SHG
 		ImGui::End();
 	}
 
-	void EmulatorWindow::RenderGameView(const PPU& ppu)
+	void EmulatorWindow::RenderGameView(const PPU& ppu, const Cartridge& cartridge)
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
 
+		std::string romTitle = cartridge.GetROMTitle().c_str();
+
 		// Window containing the currently loaded game, if any.
-		RenderWindowWithFramebuffer("Game", ppu.GetPrimaryFramebuffer());
+		RenderWindowWithFramebuffer(romTitle.empty() ? "Game" : romTitle.c_str(), ppu.GetPrimaryFramebuffer());
 	}
 
 	void EmulatorWindow::RenderWindowWithFramebuffer(const std::string& title, const Framebuffer& framebuffer, bool* isOpen)
@@ -339,9 +340,11 @@ namespace SHG
 
 			ImVec2 windowSize = ImGui::GetWindowSize();
 
-			// Position the game view in the center of the window.
+			// Center the game view horizontally.
 			ImGui::SetCursorPosX(((contentRegionSize.x - imageSize.x) + (windowSize.x - contentRegionSize.x)) * 0.5f);
-			ImGui::SetCursorPosY(((contentRegionSize.y - imageSize.y) + (windowSize.y - contentRegionSize.y)) * 0.5f + 10);
+
+			// Center the game view vertically. An additional offset is applied since the original formula does not position the game view as expected.
+			ImGui::SetCursorPosY(((contentRegionSize.y - imageSize.y) + (windowSize.y - contentRegionSize.y)) * 0.5f + (ImGui::GetFontSize() * 0.85f));
 
 			ImGui::Image((void*)framebuffer.GetTexture(), imageSize);
 		}
@@ -387,8 +390,8 @@ namespace SHG
 
 			if (ImGui::BeginTable("##CPU Registers", 4, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
 			{
-				float regColWidth = 35;
-				float valueColWidth = 45;
+				float regColWidth = ImGui::GetFontSize() * 2.0f;
+				float valueColWidth = ImGui::GetFontSize() * 2.5f;
 
 				ImGui::TableSetupColumn("##CPU Reg 1", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##CPU Value 1", ImGuiTableColumnFlags_NoResize, valueColWidth);
@@ -418,14 +421,14 @@ namespace SHG
 
 			if (ImGui::BeginTable("##CPU Interrupts", 6, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
 			{
-				float regColWidth = 30;
-				float valueColWidth = 35;
+				float regColWidth = ImGui::GetFontSize() * 1.75f;
+				float valueColWidth = ImGui::GetFontSize() * 2.0f;
 
 				ImGui::TableSetupColumn("##IF Label", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##IF Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 				ImGui::TableSetupColumn("##IE Label", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##IE Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
-				ImGui::TableSetupColumn("##IME Label", ImGuiTableColumnFlags_NoResize, 40);
+				ImGui::TableSetupColumn("##IME Label", ImGuiTableColumnFlags_NoResize, ImGui::GetFontSize() * 2.2f);
 				ImGui::TableSetupColumn("##IME Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
 
 				ImGui::TableNextRow();
@@ -453,8 +456,8 @@ namespace SHG
 
 		if (BeginWindow("Sound", &shouldRenderSoundDebugWindow, GENERAL_WINDOW_FLAGS))
 		{
-			float regColWidth = 48;
-			float valueColWidth = 30;
+			float regColWidth = ImGui::GetFontSize() * 2.8f;
+			float valueColWidth = ImGui::GetFontSize() * 1.75f;
 
 			ImGui::Text("Sound Control Registers");
 			ImGui::Separator();
@@ -607,8 +610,8 @@ namespace SHG
 
 			if (ImGui::BeginTable("##Joypad Register", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
 			{
-				float regColWidth = 48;
-				float valueColWidth = 30;
+				float regColWidth = ImGui::GetFontSize() * 2.8f;
+				float valueColWidth = ImGui::GetFontSize() * 1.75f;
 
 				ImGui::TableSetupColumn("##Joypad Reg Label", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##Joypad Reg Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
@@ -656,8 +659,8 @@ namespace SHG
 
 			if (ImGui::BeginTable("##Video Registers", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
 			{
-				float regColWidth = 55;
-				float valueColWidth = 45;
+				float regColWidth = ImGui::GetFontSize() * 3.1f;
+				float valueColWidth = ImGui::GetFontSize() * 2.5f;
 
 				ImGui::TableSetupColumn("##Video Reg Label", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##Video Reg Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
@@ -743,8 +746,8 @@ namespace SHG
 
 			if (ImGui::BeginTable("##Sound Control Registers Table", 2, ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedFit))
 			{
-				float regColWidth = 55;
-				float valueColWidth = 45;
+				float regColWidth = ImGui::GetFontSize() * 3.1f;
+				float valueColWidth = ImGui::GetFontSize() * 2.5f;
 
 				ImGui::TableSetupColumn("##Timer Register Label", ImGuiTableColumnFlags_NoResize, regColWidth);
 				ImGui::TableSetupColumn("##Timer Register Value", ImGuiTableColumnFlags_NoResize, valueColWidth);
@@ -783,7 +786,9 @@ namespace SHG
 			ImGui::Separator();
 
 			ImVec2 size = ImGui::GetContentRegionAvail();
-			size.y -= 25;
+
+			// Leave space for the "clear" button.
+			size.y -= ImGui::GetFontSize() * 1.85f;
 
 			if (ImGui::BeginChild("Log Entries", size))
 			{
@@ -807,13 +812,12 @@ namespace SHG
 	{
 		// By default, force the window to be docked.
 		ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(610, 541), ImGuiCond_FirstUseEver);
 
 		if (BeginWindow("Settings", &shouldRenderSettingsWindow, GENERAL_WINDOW_FLAGS))
 		{
 			static int selectedWindow = SETTINGS_VIDEO_WINDOW_ID;
 
-			if (ImGui::BeginChild("Settings Left", ImVec2(175, 0), true))
+			if (ImGui::BeginChild("Settings Left", ImVec2(ImGui::GetFontSize() * 10.3f, 0), true))
 			{
 				RenderSettingsWindowSelectableItem("Video", SETTINGS_VIDEO_WINDOW_ID, selectedWindow);
 				RenderSettingsWindowSelectableItem("Audio", SETTINGS_AUDIO_WINDOW_ID, selectedWindow);
@@ -917,7 +921,8 @@ namespace SHG
 
 		if (isPaletteTintEditorOpen)
 		{
-			ImGui::SetNextWindowSize(ImVec2(250, 250));
+			float size = ImGui::GetFontSize() * 14.7f;
+			ImGui::SetNextWindowSize(ImVec2(size, size));
 			if (BeginWindow("Palette Editor", &isPaletteTintEditorOpen, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
 			{
 				Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
@@ -932,7 +937,8 @@ namespace SHG
 
 	void EmulatorWindow::RenderColorPaletteButton(PPU& ppu, const std::string& label, uint16_t paletteAddress, uint8_t colorIndex, uint16_t& outPaletteAddress, uint8_t& outColorIndex, std::string& outLabel, bool& isColorPickerOpened)
 	{
-		ImGui::SetCursorPosX(SETTINGS_ITEM_OFFSET + 30.0f * (colorIndex + 1));
+		float initialOffset = ImGui::GetFontSize() * 8.2f;
+		ImGui::SetCursorPosX(initialOffset + (ImGui::GetFontSize() * 1.85f) * (colorIndex + 1));
 		Color rawTint = ppu.GetPaletteTint(paletteAddress, colorIndex);
 		if (ImGui::ColorButton(label.c_str(), ConvertColorToImVec4(rawTint), ImGuiColorEditFlags_PickerHueWheel))
 		{
@@ -957,11 +963,13 @@ namespace SHG
 			const std::vector<std::string>& outputDeviceNames = apu.GetAllOutputDeviceNames();
 			const std::string& selectedOutputDevice = apu.GetCurrentOutputDeviceName();
 
+			float itemOffset = ImGui::GetFontSize() * 8.75f;
+
 			// Render list of audio output devices.
 			ImGui::Text("Output Device:");
-			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
+			ImGui::SameLine(itemOffset);
 
-			float minItemWidth = 50.0f;
+			float minItemWidth = ImGui::GetFontSize() * 2.95f;
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
 			if (ImGui::BeginCombo("##Audio Output Device", selectedOutputDevice.c_str()))
 			{
@@ -982,7 +990,7 @@ namespace SHG
 			// Render volume slider.
 			float volume = apu.GetMasterVolume() * MAX_VOLUME;
 			ImGui::Text("Volume:       ");
-			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
+			ImGui::SameLine(itemOffset);
 			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
 			ImGui::SliderFloat("##Audio Settings Volume ", &volume, 0.0f, MAX_VOLUME, "%.0f", ImGuiSliderFlags_None);
 			apu.SetMasterVolume(volume / MAX_VOLUME);
@@ -990,7 +998,7 @@ namespace SHG
 			// Render mute button.
 			bool isMuted = apu.IsMuted();
 			ImGui::Text("Mute:         ");
-			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
+			ImGui::SameLine(itemOffset);
 			ImGui::Checkbox("##Audio Settings Mute", &isMuted);
 			apu.Mute(isMuted);
 		}
@@ -1020,7 +1028,7 @@ namespace SHG
 				ImGui::Text("Controller:");
 				ImGui::SameLine();
 
-				float minItemWidth = 50.0f;
+				float minItemWidth = ImGui::GetFontSize() * 2.95f;
 				ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, minItemWidth));
 				if (ImGui::BeginCombo("##Controllers", selectedController.c_str()))
 				{
@@ -1039,7 +1047,7 @@ namespace SHG
 				}
 			}
 
-			float initColumnWidth = 125;
+			float initColumnWidth = ImGui::GetFontSize() * 7.35f;
 			int columnCount = 3;
 
 			auto& colors = ImGui::GetStyle().Colors;
@@ -1161,9 +1169,9 @@ namespace SHG
 			SavedDataSearchType currentSavedDataSearchType = cartridge.GetSavedDataSearchType();
 
 			ImGui::Text("Saved Data Location: ");
-			ImGui::SameLine(SETTINGS_ITEM_OFFSET);
+			ImGui::SameLine(ImGui::GetFontSize() * 8.75f);
 
-			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, 50.0f));
+			ImGui::SetNextItemWidth(std::max(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize() * 2.95f));
 			if (ImGui::BeginCombo("##Saved Data Search Type", SAVED_DATA_SEARCH_TYPE_STRINGS.at(currentSavedDataSearchType).c_str()))
 			{
 				for (const std::pair<SavedDataSearchType, std::string>& pair : SAVED_DATA_SEARCH_TYPE_STRINGS)
@@ -1192,7 +1200,7 @@ namespace SHG
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("Fonts/Noto_Sans_Display/NotoSansDisplay-Regular.ttf", 17);
+		io.FontDefault = io.Fonts->AddFontFromMemoryCompressedBase85TTF(NotoSansDisplayRegularEmbedded, 17);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowMinSize.x = 225;
@@ -1319,12 +1327,9 @@ namespace SHG
 	void EmulatorWindow::RenderRegister8(const std::string& label, uint8_t data, int column)
 	{
 		ImGui::TableSetColumnIndex(column);
-		//ImGui::SetCursorPosX(labelCursorPos);
 		ImGui::Text(label.c_str());
-		//ImGui::SameLine();
-		//ImGui::SetCursorPosX(labelCursorPos + dataSpacing);
 		ImGui::TableSetColumnIndex(column + 1);
-		ImGui::Text(GetHexString8(data).c_str());
+		ImGui::Text(Convert::GetHexString8(data).c_str());
 	}
 
 	void EmulatorWindow::RenderRegister16(const std::string& label, uint16_t data, int column)
@@ -1332,7 +1337,7 @@ namespace SHG
 		ImGui::TableSetColumnIndex(column);
 		ImGui::Text(label.c_str());
 		ImGui::TableSetColumnIndex(column + 1);
-		ImGui::Text(GetHexString16(data).c_str());
+		ImGui::Text(Convert::GetHexString16(data).c_str());
 	}
 
 	void EmulatorWindow::EndFrame()

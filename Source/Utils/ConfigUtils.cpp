@@ -6,7 +6,7 @@
 #include "yaml-cpp/yaml.h"
 #include "yaml-cpp/emitter.h"
 
-namespace SHG::Config
+namespace ModestGB::Config
 {
 	const std::string MAIN_WINDOW_MAXIMIZED_NODE_NAME = "Maximized";
 	const std::string CPU_WINDOW_CONFIG_NODE_NAME = "CPU Debug Window Open";

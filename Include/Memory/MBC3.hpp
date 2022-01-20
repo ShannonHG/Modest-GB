@@ -4,7 +4,7 @@
 #include "Memory/MemoryBankController.hpp"
 #include "Memory/Register8.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	class MBC3 : public MemoryBankController
 	{

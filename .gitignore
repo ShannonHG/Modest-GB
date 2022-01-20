@@ -355,6 +355,9 @@ MigrationBackup/
 # Visual Studio Solution Files
 *.sln
 
+# Visual Studio Filter Files
+*.filters
+
 # NuGet Package File 
 packages.config
 

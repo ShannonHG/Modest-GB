@@ -2,7 +2,7 @@
 #include "Graphics/PixelFetcher.hpp"
 #include "Memory/Register8.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	enum class BackgroundPixelFetcherMode
 	{

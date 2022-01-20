@@ -3,7 +3,7 @@
 #include "Audio/ToneSoundChannel.hpp"
 #include "Logger.hpp"
 
-namespace SHG
+namespace ModestGB
 {
 	const std::map<uint8_t, std::vector<bool>> WAVEFORMS =
 	{
@@ -91,7 +91,6 @@ namespace SHG
 
 	void ToneSoundChannel::OnTrigger() 
 	{
-		// TODO: The low 2 bits of the frequency timer should not be modified.
 		SoundChannel::OnTrigger();
 
 		waveformPosition = 0;
