@@ -4,6 +4,7 @@
 [submodule "Third-Party/nativefiledialog-extended"]
 	path = Third-Party/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended
+	ignore = untracked
 [submodule "Third-Party/yaml-cpp"]
 	path = Third-Party/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
