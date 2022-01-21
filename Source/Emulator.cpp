@@ -11,8 +11,7 @@
 
 namespace ModestGB
 {
-	const std::string CONFIG_FILE_RELATIVE_PATH = "emulator.config";
-	const uint32_t MAX_LOG_ENTRY_STRING_SIZE = 50000;
+	const std::string CONFIG_FILE_RELATIVE_PATH = "Modest-GB.config";
 
 	Emulator::~Emulator()
 	{
