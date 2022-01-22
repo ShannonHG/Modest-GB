@@ -22,10 +22,10 @@ namespace ModestGB
 		void Tick(uint32_t cycles);
 		void Reset();
 		void InitializeFramebuffer(SDL_Window* window);
-		void DebugDrawBackgroundTileMap();
-		void DebugDrawWindowTileMap();
-		void DebugDrawSprites();
-		void DebugDrawTiles();
+		void DebugDrawBackgroundTileMap(uint32_t cycles);
+		void DebugDrawWindowTileMap(uint32_t cycles);
+		void DebugDrawSprites(uint32_t cycles);
+		void DebugDrawTiles(uint32_t cycles);
 
 		void SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color);
 		Color GetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex) const;
@@ -114,15 +114,6 @@ namespace ModestGB
 		bool wasWXConditionTriggered = false;
 		uint8_t windowLineCounter = 0;
 
-		uint8_t debugBackgroundMapScanlineX = 0;
-		uint8_t debugBackgroundMapScanlineY = 0;
-		uint8_t debugWindowMapScanlineX = 0;
-		uint8_t debugWindowMapScanlineY = 0;
-		uint8_t debugCurrentSpriteIndex = 0;
-		uint8_t debugSpriteScanline = 0;
-		uint8_t debugTileScanline = 0;
-		uint16_t debugTileIndex = 0;
-
 		void SetCurrentMode(Mode mode);
 		void ChangeStatInterruptLineBit(uint8_t bitIndex, bool value);
 
@@ -147,6 +138,6 @@ namespace ModestGB
 		uint8_t NormalizedReadFromOAM(uint16_t address) const;
 		void NormalizedWriteToOAM(uint16_t address, uint8_t value);
 
-		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType);
+		void DebugDrawTileMap(uint32_t cycles, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType, uint32_t& elapsedCycles);
 	};
 }

@@ -686,144 +686,184 @@ namespace ModestGB
 		return windowDebugFramebuffer;
 	}
 
-	void PPU::DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType)
+	void PPU::DebugDrawTileMap(uint32_t cycles, Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType, uint32_t& elapsedCycles)
 	{
-		uint16_t tileIndex = GetTileIndexFromTileMaps(&vram, static_cast<uint8_t>(scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS)), static_cast<uint8_t>(scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS)), useAlternateTileMapAddress);
-		uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
+		elapsedCycles += cycles;
 
-		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
-		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
+		// Draw 8 pixels roughly every 8 cycles.
+		if (elapsedCycles > TILE_WIDTH_IN_PIXELS)
 		{
-			// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
-			// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
-			uint8_t colorIndex = GetColorIndexFromTileData(px, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
+			elapsedCycles = 0;
 
-			Pixel pixel =
+			uint16_t tileIndex = GetTileIndexFromTileMaps(&vram, static_cast<uint8_t>(scanlineX / static_cast<float>(TILE_WIDTH_IN_PIXELS)), static_cast<uint8_t>(scanlineY / static_cast<float>(TILE_HEIGHT_IN_PIXELS)), useAlternateTileMapAddress);
+			uint16_t tileAddress = GetTileAddress(tileIndex, scanlineY, lcdc.Read(LCDC_BG_WINDOW_ADDRESSING_MODE_BIT_INDEX));
+
+			// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
+			for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 			{
-				.colorIndex = colorIndex,
-				.paletteAddress = GB_BACKGROUND_PALETTE_ADDRESS
-			};
+				// The bit (with the same index as this pixel) in currentLowTileData specifies the least significant bit of 
+				// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
+				uint8_t colorIndex = GetColorIndexFromTileData(scanlineX % TILE_WIDTH_IN_PIXELS, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
 
-			RenderPixel(framebuffer, pixel, scanlineX, scanlineY);
-
-			// HBlank
-			if (scanlineX == TILE_MAP_WIDTH_IN_PIXELS - 1)
-			{
-				scanlineX = 0;
-
-				// VBlank
-				if (scanlineY == TILE_MAP_HEIGHT_IN_PIXELS - 1)
+				Pixel pixel =
 				{
-					scanlineY = 0;
-					framebuffer.UploadData();
-					framebuffer.Clear();
+					.colorIndex = colorIndex,
+					.paletteAddress = GB_BACKGROUND_PALETTE_ADDRESS
+				};
+
+				RenderPixel(framebuffer, pixel, scanlineX, scanlineY);
+
+				// HBlank
+				if (scanlineX == TILE_MAP_WIDTH_IN_PIXELS - 1)
+				{
+					scanlineX = 0;
+
+					// VBlank
+					if (scanlineY == TILE_MAP_HEIGHT_IN_PIXELS - 1)
+					{
+						scanlineY = 0;
+						framebuffer.UploadData();
+						framebuffer.Clear();
+					}
+					else
+					{
+						scanlineY++;
+					}
 				}
 				else
 				{
-					scanlineY++;
+					scanlineX++;
 				}
 			}
-			else
+		}
+	}
+
+	void PPU::DebugDrawBackgroundTileMap(uint32_t cycles)
+	{
+		static uint8_t scanlineX = 0;
+		static uint8_t scanlineY = 0;
+		static uint32_t elapsedCycles = 0;
+
+		DebugDrawTileMap(cycles, backgroundDebugFramebuffer, scanlineX, scanlineY, lcdc.Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX), TileMapType::Background, elapsedCycles);
+	}
+
+	void PPU::DebugDrawWindowTileMap(uint32_t cycles)
+	{
+		static uint8_t scanlineX = 0;
+		static uint8_t scanlineY = 0;
+		static uint32_t elapsedCycles = 0;
+
+		DebugDrawTileMap(cycles, windowDebugFramebuffer, scanlineX, scanlineY, lcdc.Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX), TileMapType::Window, elapsedCycles);
+	}
+
+	void PPU::DebugDrawSprites(uint32_t cycles)
+	{
+		static uint32_t elapsedCycles = 0;
+		static uint8_t spriteIndex = 0;
+		static uint8_t spriteScanline = 0;
+
+		elapsedCycles += cycles;
+
+		// Draw 8 pixels roughly every 8 cycles.
+		if (elapsedCycles >= TILE_WIDTH_IN_PIXELS)
+		{
+			elapsedCycles = 0;
+
+			Sprite sprite;
+			GetSpriteAtIndex(spriteIndex, sprite);
+
+			uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
+			uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
+
+			uint8_t tileX = static_cast<uint8_t>(spriteIndex % MAX_SPRITES_PER_SCANLINE);
+			uint8_t tileY = static_cast<uint8_t>(std::floor(spriteIndex / static_cast<float>(MAX_SPRITES_PER_SCANLINE)));
+			uint8_t xSpacing = TILE_WIDTH_IN_PIXELS + 1;
+			uint8_t ySpacing = TILE_HEIGHT_IN_PIXELS * spriteSizeInTiles + 1;
+
+			uint8_t tile = static_cast<uint8_t>(std::floor(spriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
+			uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - spriteScanline : spriteScanline) % TILE_HEIGHT_IN_PIXELS;
+
+			uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
+			uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true) + 1);
+
+			uint8_t y = (tileY * ySpacing) + spriteScanline;
+
+			for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 			{
-				scanlineX++;
+				uint8_t x = (tileX * xSpacing) + (sprite.xFlip ? 7 - px : px);
+
+				uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
+
+				Pixel pixel =
+				{
+					.colorIndex = colorIndex,
+					.paletteAddress = sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS
+				};
+
+				RenderPixel(spriteDebugFramebuffer, pixel, x, y);
+			}
+
+			spriteScanline++;
+
+			if (spriteScanline >= spriteSizeInPixels)
+			{
+				spriteScanline = 0;
+				spriteIndex++;
+				if (spriteIndex >= MAX_SPRITE_COUNT)
+				{
+					spriteIndex = 0;
+					spriteDebugFramebuffer.UploadData();
+					spriteDebugFramebuffer.Clear(RGBA_BLACK);
+				}
 			}
 		}
 	}
 
-	void PPU::DebugDrawBackgroundTileMap()
+	void PPU::DebugDrawTiles(uint32_t cycles)
 	{
-		DebugDrawTileMap(backgroundDebugFramebuffer, debugBackgroundMapScanlineX, debugBackgroundMapScanlineY, lcdc.Read(LCDC_BG_TILE_MAP_AREA_BIT_INDEX), TileMapType::Background);
-	}
+		static uint32_t elapsedCycles = 0;
+		static uint16_t tileIndex = 0;
+		static uint8_t tileScanline = 0;
 
-	void PPU::DebugDrawWindowTileMap()
-	{
-		DebugDrawTileMap(windowDebugFramebuffer, debugWindowMapScanlineX, debugWindowMapScanlineY, lcdc.Read(LCDC_WINDOW_TILE_MAP_AREA_BIT_INDEX), TileMapType::Window);
-	}
+		elapsedCycles += cycles;
 
-	void PPU::DebugDrawSprites()
-	{
-		Sprite sprite;
-		GetSpriteAtIndex(debugCurrentSpriteIndex, sprite);
-
-		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
-		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
-
-		uint8_t tileX = static_cast<uint8_t>(debugCurrentSpriteIndex % MAX_SPRITES_PER_SCANLINE);
-		uint8_t tileY = static_cast<uint8_t>(std::floor(debugCurrentSpriteIndex / static_cast<float>(MAX_SPRITES_PER_SCANLINE)));
-		uint8_t xSpacing = TILE_WIDTH_IN_PIXELS + 1;
-		uint8_t ySpacing = TILE_HEIGHT_IN_PIXELS * spriteSizeInTiles + 1;
-
-		uint8_t tile = static_cast<uint8_t>(std::floor(debugSpriteScanline / static_cast<float>(TILE_HEIGHT_IN_PIXELS)));
-		uint8_t tileScanline = (sprite.yFlip ? (spriteSizeInPixels - 1) - debugSpriteScanline : debugSpriteScanline) % TILE_HEIGHT_IN_PIXELS;
-
-		uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true));
-		uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(sprite.tileIndex + tile, tileScanline, true) + 1);
-
-		uint8_t y = (tileY * ySpacing) + debugSpriteScanline;
-
-		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
+		// Draw 8 pixels roughly every 8 cycles.
+		if (elapsedCycles >= TILE_WIDTH_IN_PIXELS)
 		{
-			uint8_t x = (tileX * xSpacing) + (sprite.xFlip ? 7 - px : px);
+			elapsedCycles = 0;
 
-			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
+			uint8_t palette = memoryMap->Read(GB_BACKGROUND_PALETTE_ADDRESS);
+			uint8_t tileX = tileIndex % TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES;
+			uint8_t tileY = static_cast<uint8_t>(std::floor(tileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES)));
+			uint8_t spacing = TILE_WIDTH_IN_PIXELS + 1;
 
-			Pixel pixel =
+			uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(tileIndex, tileScanline, true));
+			uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(tileIndex, tileScanline, true) + 1);
+
+			uint8_t y = (tileY * spacing) + tileScanline;
+
+			for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 			{
-				.colorIndex = colorIndex,
-				.paletteAddress = sprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS
-			};
+				uint8_t x = (tileX * spacing) + px;
+				uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
 
-			RenderPixel(spriteDebugFramebuffer, pixel, x, y);
-		}
-
-		debugSpriteScanline++;
-
-		if (debugSpriteScanline >= spriteSizeInPixels)
-		{
-			debugSpriteScanline = 0;
-			debugCurrentSpriteIndex++;
-			if (debugCurrentSpriteIndex >= MAX_SPRITE_COUNT)
-			{
-				debugCurrentSpriteIndex = 0;
-				spriteDebugFramebuffer.UploadData();
-				spriteDebugFramebuffer.Clear(RGBA_BLACK);
+				Color color;
+				GetColorFromColorIndex(colorIndex, palette, color);
+				tileDebugFramebuffer.SetPixel(x, y, color);
 			}
-		}
-	}
 
-	void PPU::DebugDrawTiles()
-	{
-		uint8_t palette = memoryMap->Read(GB_BACKGROUND_PALETTE_ADDRESS);
-		uint8_t tileX = debugTileIndex % TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES;
-		uint8_t tileY = static_cast<uint8_t>(std::floor(debugTileIndex / static_cast<float>(TILE_DEBUG_FRAMEBUFFER_WIDTH_IN_TILES)));
-		uint8_t spacing = TILE_WIDTH_IN_PIXELS + 1;
+			tileScanline++;
 
-		uint8_t lowTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(debugTileIndex, debugTileScanline, true));
-		uint8_t highTileData = NormalizedReadFromVRAM(&vram, GetTileAddress(debugTileIndex, debugTileScanline, true) + 1);
-
-		uint8_t y = (tileY * spacing) + debugTileScanline;
-
-		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
-		{
-			uint8_t x = (tileX * spacing) + px;
-			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
-
-			Color color;
-			GetColorFromColorIndex(colorIndex, palette, color);
-			tileDebugFramebuffer.SetPixel(x, y, color);
-		}
-
-		debugTileScanline++;
-
-		if (debugTileScanline >= TILE_HEIGHT_IN_PIXELS)
-		{
-			debugTileScanline = 0;
-			debugTileIndex++;
-			if (debugTileIndex >= MAX_TILE_COUNT)
+			if (tileScanline >= TILE_HEIGHT_IN_PIXELS)
 			{
-				debugTileIndex = 0;
-				tileDebugFramebuffer.UploadData();
-				tileDebugFramebuffer.Clear(RGBA_BLACK);
+				tileScanline = 0;
+				tileIndex++;
+				if (tileIndex >= MAX_TILE_COUNT)
+				{
+					tileIndex = 0;
+					tileDebugFramebuffer.UploadData();
+					tileDebugFramebuffer.Clear(RGBA_BLACK);
+				}
 			}
 		}
 	}

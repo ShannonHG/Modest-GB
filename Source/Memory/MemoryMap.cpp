@@ -10,21 +10,21 @@ namespace ModestGB
 
 	uint8_t MemoryMap::Read(uint16_t address) const
 	{
-		if (Arithmetic::IsInRange(address, GB_ROM_BANK_00_START_ADDRESS, GB_ROM_BANK_00_END_ADDRESS))
+		if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
 		{
-			return cartridge->Read(address);
+			return ReadIO(address);
 		}
-		else if (Arithmetic::IsInRange(address, GB_SWITCHABLE_ROM_BANK_START_ADDRESS, GB_SWITCHABLE_ROM_BANK_END_ADDRESS))
+		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
 		{
-			return cartridge->Read(address);
+			return ppu->ReadOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
+		}
+		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
+		{
+			return hram->Read(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS));
 		}
 		else if (Arithmetic::IsInRange(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS))
 		{
 			return ppu->ReadVRAM(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS));
-		}
-		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
-		{
-			return cartridge->Read(address);
 		}
 		else if (Arithmetic::IsInRange(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS))
 		{
@@ -34,25 +34,25 @@ namespace ModestGB
 		{
 			return echoRam->Read(Arithmetic::NormalizeAddress(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS));
 		}
-		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
+		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
 		{
-			return ppu->ReadOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
+			return interruptEnableRegister->Read();
+		}
+		else if (Arithmetic::IsInRange(address, GB_ROM_BANK_00_START_ADDRESS, GB_ROM_BANK_00_END_ADDRESS))
+		{
+			return cartridge->Read(address);
+		}
+		else if (Arithmetic::IsInRange(address, GB_SWITCHABLE_ROM_BANK_START_ADDRESS, GB_SWITCHABLE_ROM_BANK_END_ADDRESS))
+		{
+			return cartridge->Read(address);
+		}
+		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
+		{
+			return cartridge->Read(address);
 		}
 		else if (Arithmetic::IsInRange(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS))
 		{
 			return restrictedMemory->Read(Arithmetic::NormalizeAddress(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS));
-		}
-		else if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
-		{
-			return ReadIO(address);
-		}
-		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
-		{
-			return hram->Read(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS));
-		}
-		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
-		{
-			return interruptEnableRegister->Read();
 		}
 		else
 		{
@@ -63,22 +63,23 @@ namespace ModestGB
 
 	void MemoryMap::Write(uint16_t address, uint8_t value)
 	{
-		if (Arithmetic::IsInRange(address, GB_ROM_BANK_00_START_ADDRESS, GB_ROM_BANK_00_END_ADDRESS))
+		if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
 		{
-			cartridge->Write(address, value);
+			WriteIO(address, value);
 		}
-		else if (Arithmetic::IsInRange(address, GB_SWITCHABLE_ROM_BANK_START_ADDRESS, GB_SWITCHABLE_ROM_BANK_END_ADDRESS))
+		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
 		{
-			cartridge->Write(address, value);
+			ppu->WriteToOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS), value);
+		}
+		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
+		{
+			hram->Write(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS), value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS))
 		{
 			ppu->WriteToVRAM(Arithmetic::NormalizeAddress(address, GB_VRAM_START_ADDRESS, GB_VRAM_END_ADDRESS), value);
 		}
-		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
-		{
-			cartridge->Write(address, value);
-		}
+
 		else if (Arithmetic::IsInRange(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS))
 		{
 			wram->Write(Arithmetic::NormalizeAddress(address, GB_WORK_RAM_START_ADDRESS, GB_WORK_RAM_END_ADDRESS), value);
@@ -87,25 +88,25 @@ namespace ModestGB
 		{
 			echoRam->Write(Arithmetic::NormalizeAddress(address, GB_ECHO_RAM_START_ADDRESS, GB_ECHO_RAM_END_ADDRESS), value);
 		}
-		else if (Arithmetic::IsInRange(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS))
+		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
 		{
-			ppu->WriteToOAM(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS), value);
+			interruptEnableRegister->Write(value);
+		}
+		else if (Arithmetic::IsInRange(address, GB_ROM_BANK_00_START_ADDRESS, GB_ROM_BANK_00_END_ADDRESS))
+		{
+			cartridge->Write(address, value);
+		}
+		else if (Arithmetic::IsInRange(address, GB_SWITCHABLE_ROM_BANK_START_ADDRESS, GB_SWITCHABLE_ROM_BANK_END_ADDRESS))
+		{
+			cartridge->Write(address, value);
+		}
+		else if (Arithmetic::IsInRange(address, GB_EXTERNAL_RAM_START_ADDRESS, GB_EXTERNAL_RAM_END_ADDRESS))
+		{
+			cartridge->Write(address, value);
 		}
 		else if (Arithmetic::IsInRange(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS))
 		{
 			restrictedMemory->Write(Arithmetic::NormalizeAddress(address, GB_UNUSABLE_MEMORY_START_ADDRESS, GB_UNUSABLE_MEMORY_END_ADDRESS), value);
-		}
-		else if (Arithmetic::IsInRange(address, GB_IO_REGISTERS_START_ADDRESS, GB_IO_REGISTERS_END_ADDRESS))
-		{
-			WriteIO(address, value);
-		}
-		else if (Arithmetic::IsInRange(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS))
-		{
-			hram->Write(Arithmetic::NormalizeAddress(address, GB_HIGH_RAM_START_ADDRESS, GB_HIGH_RAM_END_ADDRESS), value);
-		}
-		else if (address == GB_INTERRUPT_ENABLE_ADDRESS)
-		{
-			interruptEnableRegister->Write(value);
 		}
 		else
 		{

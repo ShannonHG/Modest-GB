@@ -75,16 +75,16 @@ namespace ModestGB
 				apu.Tick(cycles);
 
 				if (window.shouldRenderTilesDebugWindow)
-					ppu.DebugDrawTiles();
+					ppu.DebugDrawTiles(cycles);
 
 				if (window.shouldRenderSpritesDebugWindow)
-					ppu.DebugDrawSprites();
+					ppu.DebugDrawSprites(cycles);
 
 				if (window.shouldRenderBackgroundTileMapDebugWindow)
-					ppu.DebugDrawBackgroundTileMap();
+					ppu.DebugDrawBackgroundTileMap(cycles);
 
 				if (window.shouldRenderWindowTileMapDebugWindow)
-					ppu.DebugDrawWindowTileMap();
+					ppu.DebugDrawWindowTileMap(cycles);
 
 				if (cycles > 0)
 					processor.HandleInterrupts();
