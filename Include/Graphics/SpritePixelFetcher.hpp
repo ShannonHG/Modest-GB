@@ -26,7 +26,7 @@ namespace ModestGB
 
 	private:
 		SpritePixelFetcherState currentState = SpritePixelFetcherState::Idle;
-		Sprite currentSprite;
+		Sprite* currentSprite = nullptr;
 		int currentSpriteIndex = 0;
 		uint8_t currentLowTileData = 0;
 		Memory* vram = nullptr;
@@ -40,6 +40,6 @@ namespace ModestGB
 		void UpdatePixelPushState();
 
 		uint16_t GetCurrentSpriteTileAddress() const;
-		bool ShouldRenderSprite(const Sprite& sprite) const;
+		bool ShouldRenderCurrentSprite() const;
 	};
 }

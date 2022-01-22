@@ -26,7 +26,7 @@ namespace ModestGB::Arithmetic
 		return num < std::numeric_limits<uint16_t>::min() || num > std::numeric_limits<uint16_t>::max();
 	}
 
-	bool ModestGB::Arithmetic::Is8BitHalfCarryRequired(std::vector<uint8_t> operands, bool isSubtraction)
+	bool ModestGB::Arithmetic::Is8BitHalfCarryRequired(const std::vector<uint8_t>& operands, bool isSubtraction)
 	{
 		int sum = 0;
 
@@ -42,7 +42,7 @@ namespace ModestGB::Arithmetic
 		return (sum & 0xF0) != 0;
 	}
 
-	bool ModestGB::Arithmetic::Is16BitHalfCarryRequired(std::vector<uint16_t> operands, bool isSubtraction)
+	bool ModestGB::Arithmetic::Is16BitHalfCarryRequired(const std::vector<uint16_t>& operands, bool isSubtraction)
 	{
 		int sum = 0;
 
@@ -93,6 +93,9 @@ namespace ModestGB::Arithmetic
 
 	uint16_t Arithmetic::NormalizeAddress(uint16_t address, uint16_t lowerBound, uint16_t upperBound)
 	{
-		return std::clamp(address - lowerBound, 0, static_cast<int>(upperBound));
+		int32_t result = address - lowerBound;
+
+		// std::clamp could be used here, but doing this calculation manually appears to be a bit faster.
+		return result < 0 ? 0 : result > upperBound ? upperBound : result;
 	}
 }

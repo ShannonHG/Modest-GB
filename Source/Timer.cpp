@@ -11,12 +11,21 @@ namespace ModestGB
 	const std::string TIMER_MESSAGE_HEADER = "[TIMER]";
 	const uint8_t TIMER_OVERFLOW_DELAY_IN_CYCLES = 4;
 
-	const std::map <TimerControlMode, uint8_t> TIMER_CONTROL_MODE_BIT_INDEXES =
+	// CPU Clock / 16
+	const uint8_t CONTROL_MODE_16_BIT_INDEX = 3;
+	// CPU Clock / 64
+	const uint8_t CONTROL_MODE_64_BIT_INDEX = 5;
+	// CPU Clock / 256
+	const uint8_t CONTROL_MODE_256_BIT_INDEX = 7;
+	// CPU Clock / 1024
+	const uint8_t CONTROL_MODE_1024_BIT_INDEX = 9;
+
+	const std::array<uint8_t, 4> TIMER_CONTROL_MODE_BIT_INDEXES =
 	{
-		{TimerControlMode::TIMER_CONTROL_MODE_16, 3},
-		{TimerControlMode::TIMER_CONTROL_MODE_64, 5},
-		{TimerControlMode::TIMER_CONTROL_MODE_256, 7},
-		{TimerControlMode::TIMER_CONTROL_MODE_1024, 9},
+		CONTROL_MODE_1024_BIT_INDEX,
+		CONTROL_MODE_16_BIT_INDEX, 
+		CONTROL_MODE_64_BIT_INDEX, 
+		CONTROL_MODE_256_BIT_INDEX
 	};
 
 	// Timer Registers
@@ -133,7 +142,8 @@ namespace ModestGB
 
 	bool Timer::GetCurrentTimerControlBit() const
 	{
-		return (internalCounter >> TIMER_CONTROL_MODE_BIT_INDEXES.at(currentTimerControlMode)) & 1;
+		// Returns the bit in the internal counter that is responsible for determining when to increment the timer counter (TIMA).
+		return (internalCounter >> TIMER_CONTROL_MODE_BIT_INDEXES[static_cast<uint8_t>(currentTimerControlMode)]) & 1;
 	}
 
 	void Timer::SetInternalCounter(uint16_t value)

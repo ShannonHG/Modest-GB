@@ -10,7 +10,7 @@ namespace ModestGB
 {
 	Pixel PixelFetcher::PopPixel()
 	{
-		Pixel p = queuedPixels.front();
+		const Pixel& p = queuedPixels.front();
 		queuedPixels.pop();
 		return p;
 	}
@@ -35,7 +35,7 @@ namespace ModestGB
 		x = 0;
 		y = 0;
 
-		if (!queuedPixels.empty())
-			queuedPixels = std::queue<Pixel>();
+		// Clear the pixel queue.
+		std::queue<Pixel>().swap(queuedPixels);
 	}
 }

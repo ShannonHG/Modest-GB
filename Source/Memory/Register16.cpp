@@ -21,11 +21,8 @@ namespace ModestGB
 
 	void Register16::Write(uint16_t data)
 	{
-		uint8_t highByte = data >> 8;
-		uint8_t lowByte = data & 0x00FF;
-
-		highRegister.Write(highByte);
-		lowRegister.Write(lowByte);
+		highRegister.Write(data >> 8);
+		lowRegister.Write(data & 0x00FF);
 	}
 
 	uint16_t Register16::Read() const

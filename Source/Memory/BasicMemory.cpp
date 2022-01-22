@@ -6,6 +6,7 @@ namespace ModestGB
 {
 	BasicMemory::BasicMemory(uint32_t size)
 	{
+		this->size = size;
 		data = std::vector<uint8_t>(size);
 	}
 
@@ -30,7 +31,7 @@ namespace ModestGB
 
 	bool BasicMemory::IsAddressAvailable(uint16_t address) const
 	{
-		return address < data.size();
+		return address < size;
 	}
 
 	void BasicMemory::Reset()

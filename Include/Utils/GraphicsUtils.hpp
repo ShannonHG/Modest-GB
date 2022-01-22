@@ -103,7 +103,7 @@ namespace ModestGB
 	uint16_t GetTileIndexFromTileMaps(const Memory* vram, uint8_t tileX, uint8_t tileY, bool useAlternateTileMapAddress);
 	int32_t GetTileAddress(uint16_t tileIndex, uint8_t scanline, bool useUnsignedAddressingMode);
 	uint8_t GetColorIndexFromTileData(uint8_t pixelIndex, uint8_t lowTileData, uint8_t highTileData);
-	Color GetColorFromColorIndex(uint8_t colorIndex, uint8_t palette);
+	void GetColorFromColorIndex(uint8_t colorIndex, uint8_t palette, Color& color);
 	uint8_t NormalizedReadFromVRAM(const Memory* vram, uint16_t address);
 	void NormalizedWriteToVRAM(Memory* vram, uint16_t address, uint8_t value);
 }

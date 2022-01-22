@@ -192,7 +192,7 @@ namespace ModestGB
 		}
 		else
 		{
-			return &BasicInstructionSet[opcode];
+			return &BasicInstructionSet.at(opcode);
 		}
 	}
 

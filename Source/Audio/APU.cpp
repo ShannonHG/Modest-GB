@@ -62,7 +62,10 @@ namespace ModestGB
 		isMuted = value;
 
 		if (isMuted)
+		{
 			samples.clear();
+			SDL_ClearQueuedAudio(currentAudioDeviceID);
+		}
 	}
 
 	bool APU::IsMuted() const

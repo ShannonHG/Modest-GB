@@ -400,7 +400,9 @@ namespace ModestGB
 				// dividing the scanline's elapsed cycles by 2.
 				uint8_t spriteIndex = cycle / 2;
 
-				Sprite sprite = GetSpriteAtIndex(spriteIndex);
+				Sprite sprite;
+				GetSpriteAtIndex(spriteIndex, sprite);
+
 				uint8_t spriteSize = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
 
 				// If the sprite is on the current scanline, then added it to the list.
@@ -419,32 +421,27 @@ namespace ModestGB
 		}
 	}
 
-	Sprite PPU::GetSpriteAtIndex(uint8_t index)
+	void PPU::GetSpriteAtIndex(uint8_t index, Sprite& sprite) const
 	{
 		// Each sprite has 4-bytes of attribute data in OAM.
 		uint16_t attributeAddress = GB_OAM_START_ADDRESS + (index * SPRITE_ATTRIBUTE_BYTE_COUNT);
 		uint8_t flags = NormalizedReadFromOAM(attributeAddress + 3);
 
-		Sprite sprite =
-		{
-			// OAM contains the sprite's X position plus 8, so to get the true X position we need to subtract 8.
-			.x = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress + 1) - TILE_WIDTH_IN_PIXELS),
+		// OAM contains the sprite's X position plus 8, so to get the true X position we need to subtract 8.
+		sprite.x = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress + 1) - TILE_WIDTH_IN_PIXELS);
 
-			// OAM contains the sprite's 16 position plus 16, so to get the true Y position we need to subtract 16.
-			.y = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress) - MAX_SPRITE_HEIGHT_IN_PIXELS),
+		// OAM contains the sprite's 16 position plus 16, so to get the true Y position we need to subtract 16.
+		sprite.y = static_cast<int16_t>(NormalizedReadFromOAM(attributeAddress) - MAX_SPRITE_HEIGHT_IN_PIXELS);
 
-			// In 8x16 mode, the least significant bit of the tile index should be ignored to ensure that it points to the first/top tile of the sprite.
-			.tileIndex = static_cast<uint8_t>(lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? NormalizedReadFromOAM(attributeAddress + 2) & 0xFE : NormalizedReadFromOAM(attributeAddress + 2)),
+		// In 8x16 mode, the least significant bit of the tile index should be ignored to ensure that it points to the first/top tile of the sprite.
+		sprite.tileIndex = static_cast<uint8_t>(lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) ? NormalizedReadFromOAM(attributeAddress + 2) & 0xFE : NormalizedReadFromOAM(attributeAddress + 2));
 
-			// Flags 
-			.xFlip = static_cast<bool>((flags >> 5) & 1),
-			.yFlip = static_cast<bool>((flags >> 6) & 1),
-			.palette = static_cast<uint8_t>((flags >> 4) & 1),
-			.backgroundOverSprite = static_cast<bool>((flags >> 7) & 1),
-			.oamIndex = index
-		};
-
-		return sprite;
+		// Flags 
+		sprite.xFlip = static_cast<bool>((flags >> 5) & 1);
+		sprite.yFlip = static_cast<bool>((flags >> 6) & 1);
+		sprite.palette = static_cast<uint8_t>((flags >> 4) & 1);
+		sprite.backgroundOverSprite = static_cast<bool>((flags >> 7) & 1);
+		sprite.oamIndex = index;
 	}
 
 	void PPU::EnterLCDTransferMode()
@@ -559,7 +556,8 @@ namespace ModestGB
 
 	void PPU::RenderPixel(Framebuffer& framebuffer, const Pixel& pixel, uint16_t scanlineX, uint16_t scanlineY)
 	{
-		Color color = GetColorFromColorIndex(pixel.colorIndex, memoryMap->Read(pixel.paletteAddress));
+		Color color;
+		GetColorFromColorIndex(pixel.colorIndex, memoryMap->Read(pixel.paletteAddress), color);
 
 		// Convert color components to the 0 - 1 range so they can be 
 		// multiplied with the palette tint's components to produce the final color.
@@ -653,7 +651,7 @@ namespace ModestGB
 		}
 	}
 
-	uint8_t PPU::NormalizedReadFromOAM(uint16_t address)
+	uint8_t PPU::NormalizedReadFromOAM(uint16_t address) const
 	{
 		return oam.Read(Arithmetic::NormalizeAddress(address, GB_OAM_START_ADDRESS, GB_OAM_END_ADDRESS));
 	}
@@ -700,7 +698,7 @@ namespace ModestGB
 			// the pixel's color index, and the bit in currentHighTileData specifies the most significant bit of the color index.
 			uint8_t colorIndex = GetColorIndexFromTileData(px, NormalizedReadFromVRAM(&vram, tileAddress), NormalizedReadFromVRAM(&vram, tileAddress + 1));
 
-			Pixel pixel = 
+			Pixel pixel =
 			{
 				.colorIndex = colorIndex,
 				.paletteAddress = GB_BACKGROUND_PALETTE_ADDRESS
@@ -744,7 +742,8 @@ namespace ModestGB
 
 	void PPU::DebugDrawSprites()
 	{
-		Sprite sprite = GetSpriteAtIndex(debugCurrentSpriteIndex);
+		Sprite sprite;
+		GetSpriteAtIndex(debugCurrentSpriteIndex, sprite);
 
 		uint8_t spriteSizeInTiles = lcdc.Read(LCDC_OBJ_SIZE_BIT_INDEX) + 1;
 		uint8_t spriteSizeInPixels = spriteSizeInTiles * MIN_SPRITE_HEIGHT_IN_PIXELS;
@@ -808,7 +807,10 @@ namespace ModestGB
 		{
 			uint8_t x = (tileX * spacing) + px;
 			uint8_t colorIndex = GetColorIndexFromTileData(px, lowTileData, highTileData);
-			tileDebugFramebuffer.SetPixel(x, y, GetColorFromColorIndex(colorIndex, palette));
+
+			Color color;
+			GetColorFromColorIndex(colorIndex, palette, color);
+			tileDebugFramebuffer.SetPixel(x, y, color);
 		}
 
 		debugTileScanline++;

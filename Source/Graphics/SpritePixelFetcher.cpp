@@ -54,8 +54,8 @@ namespace ModestGB
 	{
 		for (currentSpriteIndex = 0; currentSpriteIndex < spritesOnCurrentScanline.size(); currentSpriteIndex++)
 		{
-			currentSprite = spritesOnCurrentScanline[currentSpriteIndex];
-			if (ShouldRenderSprite(currentSprite))
+			currentSprite = &spritesOnCurrentScanline[currentSpriteIndex];
+			if (ShouldRenderCurrentSprite())
 			{
 				// Advance the background pixel fetcher until at least 8 pixels are in its queue.
 				if (backgroundPixelFetcher->GetPixelQueueSize() < TILE_WIDTH_IN_PIXELS)
@@ -118,11 +118,11 @@ namespace ModestGB
 
 			Pixel newPixel =
 			{
-				.colorIndex = GetColorIndexFromTileData(currentSprite.xFlip ? 7 - px : px, currentLowTileData, highTileData),
-				.paletteAddress = currentSprite.palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS,
-				.backgroundOverSprite = currentSprite.backgroundOverSprite,
-				.spriteX = currentSprite.x,
-				.spriteOAMIndex = currentSprite.oamIndex
+				.colorIndex = GetColorIndexFromTileData(currentSprite->xFlip ? 7 - px : px, currentLowTileData, highTileData),
+				.paletteAddress = currentSprite->palette == 0 ? GB_SPRITE_PALETTE_0_ADDRESS : GB_SPRITE_PALETTE_1_ADDRESS,
+				.backgroundOverSprite = currentSprite->backgroundOverSprite,
+				.spriteX = currentSprite->x,
+				.spriteOAMIndex = currentSprite->oamIndex
 			};
 
 			Pixel existingPixel = PopPixel();
@@ -148,15 +148,15 @@ namespace ModestGB
 
 	uint16_t SpritePixelFetcher::GetCurrentSpriteTileAddress() const
 	{
-		uint8_t tileIndex = currentSprite.tileIndex;
+		uint8_t tileIndex = currentSprite->tileIndex;
 
 		// Get the tile-space scanline (a value between 0 and 7 for 8x8 sprites, or 0 and 15 for 8x16 sprites) based on the fetcher's Y position. 
-		uint8_t scanline = y - currentSprite.y;
+		uint8_t scanline = y - currentSprite->y;
 
 		// Determine the sprite's height (8 or 16).
 		uint8_t spriteHeight = lcdc->Read(LCDC_OBJ_SIZE_BIT_INDEX) ? MAX_SPRITE_HEIGHT_IN_PIXELS : MIN_SPRITE_HEIGHT_IN_PIXELS;
 
-		if (currentSprite.yFlip)
+		if (currentSprite->yFlip)
 			scanline = (spriteHeight - 1) - scanline;
 
 		// If the scanline belongs to the sprite's bottom tile, then increase the tile index so that it points to the bottom tile.
@@ -166,13 +166,14 @@ namespace ModestGB
 		return GetTileAddress(tileIndex, scanline % TILE_HEIGHT_IN_PIXELS, true);
 	}
 
-	bool SpritePixelFetcher::ShouldRenderSprite(const Sprite& sprite) const
+	bool SpritePixelFetcher::ShouldRenderCurrentSprite() const
 	{
 		return 
+			currentSprite != nullptr &&
 			// A sprite should only be drawn if the fetcher's X position is less than 160 and equal to the sprite's X position,
 			// or the fetcher's x position is 0 and the sprite's X position is less than 0 (some off-screen pixels), 
 			// but greater than -8 (not completely hidden).
-			(x < GB_SCREEN_WIDTH && x >= 0 && sprite.x == x) ||
-			(x == 0 && (sprite.x < 0 && sprite.x > -TILE_WIDTH_IN_PIXELS));
+			(x < GB_SCREEN_WIDTH && x >= 0 && currentSprite->x == x) ||
+			(x == 0 && (currentSprite->x < 0 && currentSprite->x > -TILE_WIDTH_IN_PIXELS));
 	}
 }

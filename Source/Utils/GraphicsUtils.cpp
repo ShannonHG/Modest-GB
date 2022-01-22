@@ -27,7 +27,7 @@ namespace ModestGB
 		return (highBit << 1) | lowBit;
 	}
 
-	Color GetColorFromColorIndex(uint8_t colorIndex, uint8_t palette)
+	void GetColorFromColorIndex(uint8_t colorIndex, uint8_t palette, Color& color)
 	{
 		// Isolate the bits associated with the color index.
 		uint8_t colorIndexBits = (palette >> (colorIndex * 2)) & 0b11;
@@ -35,7 +35,8 @@ namespace ModestGB
 		// Construct the 8-bit color.
 		uint8_t rawColor = 255 - ((colorIndexBits << 6) | (colorIndexBits << 4) | (colorIndexBits << 2) | colorIndexBits);
 
-		return Color{ rawColor, rawColor, rawColor, 255 };
+		color.r = color.g = color.b = rawColor;
+		color.a = 255;
 	}
 
 	uint8_t NormalizedReadFromVRAM(const Memory* vram, uint16_t address)

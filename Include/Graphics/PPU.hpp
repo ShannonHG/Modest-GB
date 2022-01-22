@@ -138,12 +138,12 @@ namespace ModestGB
 		void UpdateLCDTransferMode(uint32_t& cycles);
 
 		void RefreshLYCFlag();
-		Sprite GetSpriteAtIndex(uint8_t index);
+		void GetSpriteAtIndex(uint8_t index, Sprite& sprite) const;
 
 		void UpdateDMATransferProcess(uint32_t cycles);
 		void RenderPixel(Framebuffer& framebuffer, const Pixel& pixel, uint16_t scanlineX, uint16_t scanlineY);
 		
-		uint8_t NormalizedReadFromOAM(uint16_t address);
+		uint8_t NormalizedReadFromOAM(uint16_t address) const;
 		void NormalizedWriteToOAM(uint16_t address, uint8_t value);
 
 		void DebugDrawTileMap(Framebuffer& framebuffer, uint8_t& scanlineX, uint8_t& scanlineY, bool useAlternateTileMapAddress, TileMapType tileMapType);
