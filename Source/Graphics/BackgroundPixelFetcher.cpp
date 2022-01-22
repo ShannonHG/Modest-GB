@@ -115,7 +115,7 @@ namespace ModestGB
 	void BackgroundPixelFetcher::UpdatePixelPushState()
 	{
 		// Pixels can only be pushed to the queue if there are less than 9 pixels already in the queue.
-		if (queuedPixels.size() > TILE_WIDTH_IN_PIXELS)
+		if (GetPixelQueueSize() > TILE_WIDTH_IN_PIXELS)
 			return;
 
 		// For background and window pixels, the most significant bits/pixels are pushed to the queue first.
@@ -127,7 +127,7 @@ namespace ModestGB
 				.paletteAddress = GB_BACKGROUND_PALETTE_ADDRESS
 			};
 
-			queuedPixels.push(pixel);
+			PushPixel(pixel);
 			x++;
 		}
 

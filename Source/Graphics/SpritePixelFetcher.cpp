@@ -104,8 +104,8 @@ namespace ModestGB
 		uint8_t highTileData = NormalizedReadFromVRAM(vram, GetCurrentSpriteTileAddress() + 1);
 
 		// Add transparent pixels with the lowest priority to the queue. 
-		while (queuedPixels.size() < TILE_WIDTH_IN_PIXELS)
-			queuedPixels.push(Pixel());
+		while (GetPixelQueueSize() < TILE_WIDTH_IN_PIXELS)
+			PushPixel(Pixel());
 
 		for (int8_t px = TILE_WIDTH_IN_PIXELS - 1; px >= 0; px--)
 		{
@@ -133,11 +133,11 @@ namespace ModestGB
 				(newPixel.spriteX < existingPixel.spriteX ||
 				(newPixel.spriteX == existingPixel.spriteX && (newPixel.spriteOAMIndex < existingPixel.spriteOAMIndex))))
 			{
-				queuedPixels.push(newPixel);
+				PushPixel(newPixel);
 			}
 			else
 			{
-				queuedPixels.push(existingPixel);
+				PushPixel(existingPixel);
 			}
 		}
 

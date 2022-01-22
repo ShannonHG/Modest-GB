@@ -8,16 +8,31 @@
 
 namespace ModestGB
 {
-	Pixel PixelFetcher::PopPixel()
+	const Pixel& PixelFetcher::PopPixel()
 	{
-		const Pixel& p = queuedPixels.front();
-		queuedPixels.pop();
-		return p;
+		if (pixelQueueSize == 0)
+			throw std::out_of_range("Attempted to pop pixel from an empty queue.");
+
+		const Pixel& result = pixelQueue[frontPixelIndex];
+		frontPixelIndex = (frontPixelIndex + 1) % PIXEL_FETCHER_QUEUE_SIZE;
+		pixelQueueSize--;
+
+		return result;
+	}
+
+	void PixelFetcher::PushPixel(const Pixel& pixel)
+	{
+		if (pixelQueueSize == PIXEL_FETCHER_QUEUE_SIZE)
+			return;
+
+		pixelQueueSize++;
+		pixelQueue[lastPixelIndex] = pixel;
+		lastPixelIndex = (lastPixelIndex + 1) % PIXEL_FETCHER_QUEUE_SIZE;
 	}
 
 	uint8_t PixelFetcher::GetPixelQueueSize()
 	{
-		return static_cast<uint8_t>(queuedPixels.size());
+		return pixelQueueSize;
 	}
 
 	void PixelFetcher::SetX(int16_t x)
@@ -35,7 +50,8 @@ namespace ModestGB
 		x = 0;
 		y = 0;
 
-		// Clear the pixel queue.
-		std::queue<Pixel>().swap(queuedPixels);
+		frontPixelIndex = 0;
+		lastPixelIndex = 0;
+		pixelQueueSize = 0;
 	}
 }

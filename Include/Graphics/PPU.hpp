@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <queue>
 #include <array>
 #include "SDL.h"
 #include "Graphics/Framebuffer.hpp"
