@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <map>
+#include <array>
 #include "SDL.h"
 #include "Graphics/Framebuffer.hpp"
 #include "Memory/Memory.hpp"
@@ -74,7 +74,9 @@ namespace ModestGB
 			InProgress
 		};
 
-		std::map<uint16_t, std::array<Color, 4>> paletteTints;
+		std::array<Color, 4> backgroundPaletteTints;
+		std::array<Color, 4> spritePalette0Tints;
+		std::array<Color, 4> spritePalette1Tints;
 
 		Mode currentMode = Mode::SearchingOAM;
 		uint32_t currentScanlineElapsedCycles = 0;

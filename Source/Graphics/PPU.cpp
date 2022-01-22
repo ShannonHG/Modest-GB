@@ -27,12 +27,9 @@ namespace ModestGB
 		backgroundPixelFetcher(vram, lcdc, scx, scy, wx, wy),
 		spritePixelFetcher(vram, lcdc, backgroundPixelFetcher)
 	{
-		paletteTints =
-		{
-			{ GB_BACKGROUND_PALETTE_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
-			{ GB_SPRITE_PALETTE_0_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
-			{ GB_SPRITE_PALETTE_1_ADDRESS, {RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE}},
-		};
+		backgroundPaletteTints = { RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE };
+		spritePalette0Tints = { RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE };
+		spritePalette1Tints = { RGBA_WHITE, RGBA_WHITE, RGBA_WHITE, RGBA_WHITE };
 	}
 
 	void PPU::InitializeFramebuffer(SDL_Window* window)
@@ -200,36 +197,49 @@ namespace ModestGB
 
 	void PPU::SetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex, Color color)
 	{
-		if (paletteTints.find(paletteAddress) == paletteTints.end())
-		{
-			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
-			return;
-		}
-
 		if (colorIndex > 3)
 		{
 			Logger::WriteError("Invalid color index: " + std::to_string(colorIndex), PPU_MESSAGE_HEADER);
 			return;
 		}
 
-		paletteTints[paletteAddress][colorIndex] = color;
+		switch (paletteAddress)
+		{
+		case GB_BACKGROUND_PALETTE_ADDRESS:
+			backgroundPaletteTints[colorIndex] = color;
+			break;
+		case GB_SPRITE_PALETTE_0_ADDRESS:
+			spritePalette0Tints[colorIndex] = color;
+			break;
+		case GB_SPRITE_PALETTE_1_ADDRESS:
+			spritePalette1Tints[colorIndex] = color;
+			break;
+		default:
+			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
+			break;
+		}
 	}
 
 	Color PPU::GetPaletteTint(uint16_t paletteAddress, uint8_t colorIndex) const
 	{
-		if (paletteTints.find(paletteAddress) == paletteTints.end())
-		{
-			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
-			return RGBA_WHITE;
-		}
-
 		if (colorIndex > 3)
 		{
 			Logger::WriteError("Invalid color index: " + std::to_string(colorIndex), PPU_MESSAGE_HEADER);
 			return RGBA_WHITE;
 		}
 
-		return paletteTints.at(paletteAddress)[colorIndex];
+		switch (paletteAddress)
+		{
+		case GB_BACKGROUND_PALETTE_ADDRESS:
+			return backgroundPaletteTints[colorIndex];
+		case GB_SPRITE_PALETTE_0_ADDRESS:
+			return spritePalette0Tints[colorIndex];
+		case GB_SPRITE_PALETTE_1_ADDRESS:
+			return spritePalette1Tints[colorIndex];
+		default:
+			Logger::WriteError("Invalid palette address: " + Convert::GetHexString16(paletteAddress), PPU_MESSAGE_HEADER);
+			return RGBA_WHITE;
+		}
 	}
 
 	void PPU::Tick(uint32_t cycles)
@@ -557,9 +567,22 @@ namespace ModestGB
 		float floatGreen = color.g / 255.0f;
 		float floatBlue = color.b / 255.0f;
 
-		color.r = static_cast<uint8_t>(floatRed * paletteTints[pixel.paletteAddress][pixel.colorIndex].r);
-		color.g = static_cast<uint8_t>(floatGreen * paletteTints[pixel.paletteAddress][pixel.colorIndex].g);
-		color.b = static_cast<uint8_t>(floatBlue * paletteTints[pixel.paletteAddress][pixel.colorIndex].b);
+		switch (pixel.paletteAddress)
+		{
+		case GB_BACKGROUND_PALETTE_ADDRESS:
+			color = backgroundPaletteTints[pixel.colorIndex];
+			break;
+		case GB_SPRITE_PALETTE_0_ADDRESS:
+			color = spritePalette0Tints[pixel.colorIndex];
+			break;
+		case GB_SPRITE_PALETTE_1_ADDRESS:
+			color = spritePalette1Tints[pixel.colorIndex];
+			break;
+		}
+
+		color.r = static_cast<uint8_t>(floatRed * color.r);
+		color.g = static_cast<uint8_t>(floatGreen * color.g);
+		color.b = static_cast<uint8_t>(floatBlue * color.b);
 
 		framebuffer.SetPixel(scanlineX, scanlineY, color);
 	}

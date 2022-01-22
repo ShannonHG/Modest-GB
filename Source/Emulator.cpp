@@ -53,12 +53,14 @@ namespace ModestGB
 		uint32_t cyclesSinceLastFrame = 0;
 		uint32_t cyclesSinceLastCount = 0;
 
-		auto prevTime = std::chrono::system_clock::now();
+		std::chrono::steady_clock::time_point prevTime = std::chrono::steady_clock::now();
+		std::chrono::steady_clock::time_point currentTime;
+		double deltaTimeInSeconds = 0;
 
 		while (isRunning)
 		{
-			auto currentTime = std::chrono::system_clock::now();
-			auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime).count();
+			currentTime = std::chrono::steady_clock::now();
+			deltaTimeInSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - prevTime).count();
 			prevTime = currentTime;
 
 			if (cartridge.IsROMLoaded() && (!isPaused || isStepRequested) && cyclesSinceLastFrame < GB_CYCLES_PER_FRAME)
@@ -90,8 +92,8 @@ namespace ModestGB
 				isStepRequested = false;
 			}
 
-			secondsSinceLastFrame += deltaTime;
-			secondsSinceLastCycleCount += deltaTime;
+			secondsSinceLastFrame += deltaTimeInSeconds;
+			secondsSinceLastCycleCount += deltaTimeInSeconds;
 
 			if (secondsSinceLastCycleCount >= 1)
 			{

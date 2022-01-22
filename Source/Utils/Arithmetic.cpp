@@ -93,6 +93,6 @@ namespace ModestGB::Arithmetic
 
 	uint16_t Arithmetic::NormalizeAddress(uint16_t address, uint16_t lowerBound, uint16_t upperBound)
 	{
-		return std::clamp(address - lowerBound, 0, (int)upperBound);
+		return std::clamp(address - lowerBound, 0, static_cast<int>(upperBound));
 	}
 }
