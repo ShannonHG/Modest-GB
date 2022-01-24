@@ -24,5 +24,6 @@ namespace ModestGB
 		uint8_t ramBankNumber = 0;
 
 		uint8_t GetAdjustedROMBankNumber(uint8_t romBankNumber) const;
+		bool IsRAMBankingEnabled() const;
 	};
 }

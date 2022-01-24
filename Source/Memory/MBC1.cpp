@@ -41,25 +41,23 @@ namespace ModestGB
 	{
 		if (address >= ROM_BANK_X0_START_ADDR && address <= ROM_BANK_X0_END_ADDR)
 		{
-			// For 1 MiB cartridges, the RAM bank number is used as the upper 2 bits of the ROM bank number.
-			uint8_t selectedROMBank = GetAdjustedROMBankNumber(0);
-
+			// If simple ROM banking mode is enabled, then only bank $00 can be accessed here, 
+			// otherwise, banks $00, $29, $40, and $60 can be accessed.
+			uint8_t selectedROMBank = isSimpleBankingModeEnabled ? 0 : GetAdjustedROMBankNumber(0);
 			return ReadFromROM(address + (ROM_BANK_SIZE * selectedROMBank));
 		}
 		else if (address >= ROM_SWITCHABLE_BANK_START_ADDR && address <= ROM_SWITCHABLE_BANK_END_ADDR)
 		{
-			// For 1 MiB cartridges, the RAM bank number is used as the upper 2 bits of the ROM bank number.
-			uint8_t selectedROMBank = GetAdjustedROMBankNumber(romBankNumber);
-
 			// The actual ROM address is dependent on the current rom bank number.
-			return ReadFromROM((address - ROM_SWITCHABLE_BANK_START_ADDR) + (ROM_BANK_SIZE * selectedROMBank));
+			return ReadFromROM((address - ROM_SWITCHABLE_BANK_START_ADDR) + (ROM_BANK_SIZE * GetAdjustedROMBankNumber(romBankNumber)));
 		}
 		else if (address >= RAM_SWITCHABLE_BANK_START_ADDR && address <= RAM_SWITCHABLE_BANK_END_ADDR)
 		{
 			if (ram == nullptr || !isRamEnabled)
-				return 0;
+				return 0xFF;
 
-			return ReadFromRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + (RAM_BANK_SIZE * ramBankNumber));
+			uint16_t offset = IsRAMBankingEnabled() ? (RAM_BANK_SIZE * ramBankNumber) : 0;
+			return ReadFromRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + offset);
 		}
 
 		return 0;
@@ -77,21 +75,14 @@ namespace ModestGB
 			if (ram == nullptr || !isRamEnabled)
 				return;
 
-			WriteToRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + (RAM_BANK_SIZE * ramBankNumber), value);
+			uint16_t offset = IsRAMBankingEnabled() ? (RAM_BANK_SIZE * ramBankNumber) : 0;
+			WriteToRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + offset, value);
 		}
 		else if (address >= ROM_BANK_NUMBER_START_ADDR && address <= ROM_BANK_NUMBER_END_ADDR)
 		{
-			// Determine the number of bits required to address all of the ROM banks. 
-			// For example, a 256 KiB cartridge would require 4 bits to address all 16 of its banks.
-			uint8_t numBitsRequired = static_cast<uint8_t>(std::log2(rom->size() / ROM_BANK_SIZE));
-
-			uint8_t bitMask = static_cast<uint8_t>(std::pow(2, numBitsRequired) - 1);
-			romBankNumber = value & bitMask;
-
-			// When 0 is written to this address space, the ROM bank number should be incremented to 1 
-			// since ROM bank 0 cannot be selected.
-			if (romBankNumber == 0)
-				romBankNumber++;
+			// The ROM bank register is 5 bits wide. When 0b00000 is written to this address space, 
+			// the ROM bank number is automatically set to 1.
+			romBankNumber = std::max(value & 0b11111, 1);
 		}
 		else if (address >= RAM_BANK_NUMBER_START_ADDR && address <= RAM_BANK_NUMBER_END_ADDR)
 		{
@@ -101,13 +92,29 @@ namespace ModestGB
 		else if (address >= BANK_MODE_SELECT_START_ADDR && address <= BANK_MODE_SELECT_END_ADDR)
 		{
 			// The banking mode select register is only 1 bit wide.
-			isSimpleBankingModeEnabled = value & 1;
+			// Simple ROM banking mode is enabled when a 0 is written, and 
+			// RAM banking / Advanced ROM banking mode is enable when a 1 is written.
+			isSimpleBankingModeEnabled = (value & 1) == 0;
 		}
 	}
 
 	uint8_t MBC1::GetAdjustedROMBankNumber(uint8_t romBankNumber) const
 	{
-		return isSimpleBankingModeEnabled ? romBankNumber : romBankNumber | (ramBankNumber << 5);
+		// For 1 MiB or greater cartridges, the RAM bank number is used as the upper 2 bits of the ROM bank number.
+		if (rom->size() >= MiB)
+			romBankNumber |= (ramBankNumber << 5);
+
+		// Determine the number of bits required to address all of the ROM banks. 
+		// For example, a 256 KiB cartridge would require 4 bits to address all 16 of its banks.
+		uint8_t numBitsRequired = static_cast<uint8_t>(std::log2(rom->size() / ROM_BANK_SIZE));
+
+		uint8_t bitMask = static_cast<uint8_t>(std::pow(2, numBitsRequired) - 1);
+		return romBankNumber &= bitMask;
+	}
+
+	bool MBC1::IsRAMBankingEnabled() const
+	{
+		return ram->size() == 32 * KiB && !isSimpleBankingModeEnabled;
 	}
 
 	void MBC1::Reset()
@@ -117,6 +124,7 @@ namespace ModestGB
 		// The ROM bank number defaults to 1;
 		romBankNumber = 1;
 		ramBankNumber = 0;
-		isSimpleBankingModeEnabled = false;
+		isSimpleBankingModeEnabled = true;
+		isRamEnabled = false;
 	}
 }

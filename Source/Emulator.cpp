@@ -186,8 +186,6 @@ namespace ModestGB
 
 	bool Emulator::LoadROM(const std::string& romFilePath)
 	{
-		memoryMap.Reset();
-
 		if (!cartridge.Load(romFilePath))
 		{
 			Logger::WriteError("Invalid ROM file provided");
@@ -197,8 +195,8 @@ namespace ModestGB
 		processor.Reset();
 		ppu.Reset();
 		timer.Reset();
-		memoryMap.Reset();
 		apu.Reset();
+		memoryMap.Reset();
 
 		return true;
 	}

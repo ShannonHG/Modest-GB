@@ -50,7 +50,7 @@ namespace ModestGB
 		else if (address >= RAM_SWITCHABLE_BANK_START_ADDR && address <= RAM_SWITCHABLE_BANK_END_ADDR)
 		{
 			if (ram == nullptr || !isRamEnabled)
-				return 0;
+				return 0xFF;
 
 			return ReadFromRAM((address - RAM_SWITCHABLE_BANK_START_ADDR) + (RAM_BANK_SIZE * ramBankNumber));
 		}
@@ -80,7 +80,7 @@ namespace ModestGB
 		else if (address >= ROM_BANK_NUMBER_UPPER_START_ADDR && address <= ROM_BANK_NUMBER_UPPER_END_ADDR)
 		{
 			// The 9th bit of the ROM bank number is written to this address range.
-			romBankNumber = (romBankNumber & 0x0FF) | (value & 1) << 8;
+			romBankNumber = (romBankNumber & 0x0FF) | ((value & 1) << 8);
 		}
 		else if (address >= RAM_BANK_NUMBER_START_ADDR && address <= RAM_BANK_NUMBER_END_ADDR)
 		{
@@ -96,5 +96,6 @@ namespace ModestGB
 
 		romBankNumber = 0;
 		ramBankNumber = 0;
+		isRamEnabled = false;
 	}
 }
