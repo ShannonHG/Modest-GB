@@ -13,8 +13,8 @@ namespace ModestGB
 		{GBButton::LEFT, {ControllerButtonCode::DPAD_LEFT, KeyCode::A}},
 		{GBButton::UP, {ControllerButtonCode::DPAD_UP, KeyCode::W}},
 		{GBButton::DOWN, {ControllerButtonCode::DPAD_DOWN, KeyCode::S}},
-		{GBButton::A, {ControllerButtonCode::ACTION_0, KeyCode::J}},
-		{GBButton::B, {ControllerButtonCode::ACTION_1, KeyCode::K}},
+		{GBButton::A, {ControllerButtonCode::ACTION_0, KeyCode::K}},
+		{GBButton::B, {ControllerButtonCode::ACTION_1, KeyCode::J}},
 		{GBButton::START, {ControllerButtonCode::START, KeyCode::P}},
 		{GBButton::SELECT, {ControllerButtonCode::MENU, KeyCode::O}}
 	};
