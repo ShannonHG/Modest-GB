@@ -6,20 +6,26 @@
 ![All Windows](./Screenshots/All-Windows.png)
 
 ## Building
-#### 1. Install **CMake** 3.21 or greater - https://cmake.org/download/
-#### 2. Clone the repo and its dependencies:
-```
-git clone --recurse-submodules https://github.com/ShannonHG/Modest-GB <target-directory>
-```
-#### 3. Build using **CMake**:
-```
-cd ../Modest-GB
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
-```
-#### 4. The build can be found in *../Modest-GB/build/Release*
+In theory, the emulator should be cross platform, but it has only been tested on Windows.
+
+1. Install **CMake** 3.21 or greater - https://cmake.org/download/
+
+2. Clone the repo and its dependencies:
+    ```
+    git clone --recurse-submodules https://github.com/ShannonHG/Modest-GB <target-directory>
+    ```
+
+3. Build using **CMake**:
+
+    ```
+    cd ../Modest-GB
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build . --config Release
+    ```
+
+4. The build can be found in *../Modest-GB/build/Release*
 
 ## Controller/Keyboard Mapping 
 The button mapping can be modified in *File -> Settings -> Controller/Keyboard*, but the default configuration is listed below. In theory, any standard controller should be supported, but the controller button names are based on an Xbox controller's layout.
