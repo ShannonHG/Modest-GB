@@ -50,7 +50,7 @@ namespace ModestGB
 		std::fstream savedDataStream;
 		std::string savedDataPath;
 		bool isROMLoaded = false;
-		SavedDataSearchType savedDataSearchType = SavedDataSearchType::ROM_DIRECTORY;
+		SavedDataSearchType savedDataSearchType = SavedDataSearchType::EMULATOR_DIRECTORY;
 
 		std::unique_ptr<MemoryBankController> memoryBankController;
 		MemoryBankControllerType memoryBankControllerType;
