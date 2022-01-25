@@ -28,14 +28,14 @@ In theory, the emulator should be cross platform, but it has only been tested on
 4. The build can be found in *../Modest-GB/build/Release*
 
 ## Controller/Keyboard Mapping 
-The button mapping can be modified in *File -> Settings -> Controller/Keyboard*, but the default configuration is listed below. In theory, any standard controller should be supported, but the controller button names are based on an Xbox controller's layout.
+The button mapping can be modified in *File -> Settings -> Controller/Keyboard*, but the default configuration is listed below. 
 
 | Game Boy | Controller | Keyboard |
 |----------|------------|----------|
 |A         |A           |K         |
 |B         |B           |J         |
 |Start     |Start       |P         |
-|Select    |Menu        |O         |
+|Select    |Select      |O         |
 |Right     |D-pad Right |D         |
 |Left      |D-pad Left  |A         |
 |Up        |D-pad Up    |W         |

@@ -104,7 +104,7 @@ namespace ModestGB
 		RIGHT_SHOULDER,
 		LEFT_SHOULDER,
 		START, 
-		MENU,
+		SELECT,
 	};
 
 	const std::map<ControllerButtonCode, std::string> CONTROLLER_BUTTON_STRINGS
@@ -120,7 +120,7 @@ namespace ModestGB
 		{ ControllerButtonCode::RIGHT_SHOULDER, "RIGHT SHOULDER" },
 		{ ControllerButtonCode::LEFT_SHOULDER, "LEFT SHOULDER" },
 		{ ControllerButtonCode::START, "START" },
-		{ ControllerButtonCode::MENU, "MENU" }
+		{ ControllerButtonCode::SELECT, "SELECT" }
 	};
 
 	using KeyInputEventCallback = std::function<void(KeyCode)>;

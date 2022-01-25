@@ -63,7 +63,7 @@ namespace ModestGB
 		{14, ControllerButtonCode::DPAD_RIGHT},
 		{13, ControllerButtonCode::DPAD_LEFT},
 		{6, ControllerButtonCode::START},
-		{4, ControllerButtonCode::MENU},
+		{4, ControllerButtonCode::SELECT},
 		{10, ControllerButtonCode::RIGHT_SHOULDER},
 		{9, ControllerButtonCode::LEFT_SHOULDER},
 	};
