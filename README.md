@@ -50,7 +50,7 @@ Listed below are all of the cartridge types that are currently supported. Attemp
 * MBC5
 
 ## Audio
-When the emulator is opened, it will attempt to select the audio output device saved in the *Modest-GB.config* file. However, if the configuration file does net exist yet, or the selected output device is not currently connected, then the first available output device will be used instead. The output device can be changed at any time by navigating to *File -> Settings -> Audio*, and changing the **Output Device** setting.
+When the emulator is opened, it will attempt to select the audio output device saved in the *Modest-GB.config* file. However, if the configuration file does not exist yet, or the selected output device is not currently connected, then the first available output device will be used instead. The output device can be changed at any time by navigating to *File -> Settings -> Audio*, and changing the **Output Device** setting.
 
 ## Saved Data
 By default, saved data is stored in */Modest-GB/Saved-Data/*. However, the emulator can also be configured to store saved data in the same folder as the ROM file. This can be done by navigating to *File -> Settings -> Saved Data*, and changing **Saved Data Location** to **ROM Directory**.
