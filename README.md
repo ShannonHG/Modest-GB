@@ -12,20 +12,20 @@ In theory, the emulator should be cross platform, but it has only been tested on
 
 2. Clone the repo and its dependencies:
     ```
-    git clone --recurse-submodules https://github.com/ShannonHG/Modest-GB <target-directory>
+    git clone --recurse-submodules https://github.com/ShannonHG/Modest-GB ./Modest-GB
     ```
 
 3. Build using **CMake**:
 
     ```
-    cd ../Modest-GB
+    cd ./Modest-GB
     mkdir build
     cd build
     cmake ..
     cmake --build . --config Release
     ```
 
-4. The build can be found in *../Modest-GB/build/Release*
+4. The build can be found in */Modest-GB/build/Release/*
 
 ## Controller/Keyboard Mapping 
 The button mapping can be modified in *File -> Settings -> Controller/Keyboard*, but the default configuration is listed below. 
@@ -50,10 +50,10 @@ Listed below are all of the cartridge types that are currently supported. Attemp
 * MBC5
 
 ## Audio
-When the emulator is opened, it will attempt to select the audio output device saved in the *Modest-GB.config* file. However, if the configuration file does net exist yet, or the selected output device is not currently connected, then the first available output device will be used instead. The ouput device can be changed at any time by navigating to *File -> Settings -> Audio*, and changing the **Output Device** setting.
+When the emulator is opened, it will attempt to select the audio output device saved in the *Modest-GB.config* file. However, if the configuration file does net exist yet, or the selected output device is not currently connected, then the first available output device will be used instead. The output device can be changed at any time by navigating to *File -> Settings -> Audio*, and changing the **Output Device** setting.
 
 ## Saved Data
-By default, saved data is stored in *../Modest-GB/Saved-Data*. However, the emulator can also be configured to store saved data in the same folder as the ROM file. This can be done by navigating to *File -> Settings -> Saved Data*, and changing **Saved Data Location** to **ROM Directory**.
+By default, saved data is stored in */Modest-GB/Saved-Data/*. However, the emulator can also be configured to store saved data in the same folder as the ROM file. This can be done by navigating to *File -> Settings -> Saved Data*, and changing **Saved Data Location** to **ROM Directory**.
 
 ## Dependencies
 * SDL - https://www.libsdl.org/
