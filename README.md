@@ -41,6 +41,14 @@ The button mapping can be modified in *File -> Settings -> Controller/Keyboard*,
 |Up        |D-pad Up    |W         |
 |Down      |D-pad Down  |S         |
 
+## Cartridges
+Listed below are all of the cartridge types that are currently supported. Attempting to load a ROM that uses an unimplemented memory bank controller, will cause the emulator to default to using MBC1.
+
+* ROM only
+* MBC1
+* MBC3
+* MBC5
+
 ## Audio
 When the emulator is opened, it will attempt to select the audio output device saved in the *Modest-GB.config* file. However, if the configuration file does net exist yet, or the selected output device is not currently connected, then the first available output device will be used instead. The ouput device can be changed at any time by navigating to *File -> Settings -> Audio*, and changing the **Output Device** setting.
 
