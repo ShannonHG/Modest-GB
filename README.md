@@ -32,8 +32,8 @@ The button mapping can be modified in *File -> Settings -> Controller/Keyboard*,
 
 | Game Boy | Controller | Keyboard |
 |----------|------------|----------|
-|A         |A           |K         |
-|B         |B           |J         |
+|A         |A           |J         |
+|B         |B           |K         |
 |Start     |Start       |P         |
 |Select    |Select      |O         |
 |Right     |D-pad Right |D         |

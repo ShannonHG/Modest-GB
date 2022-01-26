@@ -10,7 +10,7 @@ namespace ModestGB
 	const std::string APU_MESSAGE_HEADER = "[APU]";
 	const uint8_t AUDIO_CHANNELS = 2;
 	const int SAMPLE_FREQUENCY = 44100;
-	const uint16_t AUDIO_BUFFER_SIZE = 4096;
+	const uint16_t MAX_SAMPLES_BUFFER_SIZE = 4096;
 	const uint32_t FRAME_SEQUENCER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / 512.0f));
 	const uint32_t SAMPLE_COLLECTION_TIMER_PERIOD = static_cast<uint32_t>(std::floor(GB_CLOCK_SPEED / static_cast<float>(SAMPLE_FREQUENCY)));
 	const float MASTER_VOLUME_MULTIPLIER = 0.075f;
@@ -21,7 +21,7 @@ namespace ModestGB
 		currentAudioSpec.freq = SAMPLE_FREQUENCY;
 		currentAudioSpec.format = AUDIO_F32;
 		currentAudioSpec.channels = AUDIO_CHANNELS;
-		currentAudioSpec.samples = AUDIO_BUFFER_SIZE;
+		currentAudioSpec.samples = MAX_SAMPLES_BUFFER_SIZE;
 
 		// By default, set the output device to the first available audio device.
 		SetOutputDevice(SDL_GetAudioDeviceName(0, SDL_FALSE));
@@ -179,8 +179,11 @@ namespace ModestGB
 				MixChannels();
 			}
 
-			if (samples.size() >= AUDIO_BUFFER_SIZE)
+			if (samples.size() >= MAX_SAMPLES_BUFFER_SIZE)
 			{
+				// Prevents the audio queue from getting too large, which would cause the audio playback to become out of sync with the video playback.
+				while (SDL_GetQueuedAudioSize(currentAudioDeviceID) > MAX_SAMPLES_BUFFER_SIZE * sizeof(float)) {}
+
 				if (SDL_QueueAudio(currentAudioDeviceID, samples.data(), static_cast<uint32_t>(samples.size() * sizeof(float))) < 0)
 					Logger::WriteError("SDL failed to play audio. Error: " + std::string(SDL_GetError()), APU_MESSAGE_HEADER);
 
