@@ -1,9 +1,8 @@
 # Modest GB
 **Modest GB** is a **Game Boy** Emulator (DMG only) written in **C++**. 
 
-![Main Window](./Screenshots/Main-Window.png)
-
-![All Windows](./Screenshots/All-Windows.png)
+<img src="./Screenshots/Main-Window.png" width=720>
+<img src="./Screenshots/All-Windows.png" width=720>
 
 ## Building
 In theory, the emulator should be cross platform, but it has only been tested on Windows.
