@@ -349,15 +349,6 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# Visual Studio Project Files 
-*.vcxproj*
-
-# Visual Studio Solution Files
-*.sln
-
-# Visual Studio Filter Files
-*.filters
-
 # NuGet Package File 
 packages.config
 
@@ -371,4 +362,5 @@ Saved-Data/
 *.ini
 *.config
 
+# Builds
 build/

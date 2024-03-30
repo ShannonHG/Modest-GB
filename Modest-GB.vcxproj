@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Audio\APU.cpp" />
+    <ClCompile Include="Source\Audio\NoiseSoundChannel.cpp" />
+    <ClCompile Include="Source\Audio\WaveSoundChannel.cpp" />
+    <ClCompile Include="Source\Audio\ToneSoundChannel.cpp" />
+    <ClCompile Include="Source\Audio\SweepSoundChannel.cpp" />
+    <ClCompile Include="Source\Audio\SoundChannel.cpp" />
+    <ClCompile Include="Source\Audio\AudioTimer.cpp" />
+    <ClCompile Include="Source\Graphics\BackgroundPixelFetcher.cpp" />
+    <ClCompile Include="Source\Graphics\Color.cpp" />
+    <ClCompile Include="Source\Memory\MBC3.cpp" />
+    <ClCompile Include="Source\Memory\MBC5.cpp" />
+    <ClCompile Include="Source\Timer.cpp" />
+    <ClCompile Include="Source\Utils\ConfigUtils.cpp" />
+    <ClCompile Include="Source\Utils\GraphicsUtils.cpp" />
+    <ClCompile Include="Source\Graphics\PixelFetcher.cpp" />
+    <ClCompile Include="Source\Graphics\PPU.cpp" />
+    <ClCompile Include="Source\Graphics\SpritePixelFetcher.cpp" />
+    <ClCompile Include="Source\Input\InputManager.cpp" />
+    <ClCompile Include="Source\Input\Joypad.cpp" />
+    <ClCompile Include="Source\Utils\Arithmetic.cpp" />
+    <ClCompile Include="Source\CPU\CPUInstruction.cpp" />
+    <ClCompile Include="Source\Utils\Interrupts.cpp" />
+    <ClCompile Include="Source\Emulator.cpp" />
+    <ClCompile Include="Source\EmulatorWindow.cpp" />
+    <ClCompile Include="Source\Graphics\DMATransferRegister.cpp" />
+    <ClCompile Include="Source\Graphics\Framebuffer.cpp" />
+    <ClCompile Include="Source\Memory\Memory.cpp" />
+    <ClCompile Include="Source\Memory\BasicMemory.cpp" />
+    <ClCompile Include="Source\Memory\MemoryMap.cpp" />
+    <ClCompile Include="Source\Memory\Register16.cpp" />
+    <ClCompile Include="Source\Memory\Cartridge.cpp" />
+    <ClCompile Include="Source\CPU\CPU.cpp" />
+    <ClCompile Include="Source\Utils\DataConversions.cpp" />
+    <ClCompile Include="Source\Logger.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Memory\MBC1.cpp" />
+    <ClCompile Include="Source\Memory\MemoryBankController.cpp" />
+    <ClCompile Include="Source\Memory\Register8.cpp" />
+    <ClCompile Include="Source\Utils\SystemTime.cpp" />
+    <ClCompile Include="Third-Party\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="Third-Party\imgui\backends\imgui_impl_sdlrenderer.cpp" />
+    <ClCompile Include="Third-Party\imgui\imgui.cpp" />
+    <ClCompile Include="Third-Party\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Third-Party\imgui\imgui_tables.cpp" />
+    <ClCompile Include="Third-Party\imgui\imgui_widgets.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\Audio\APU.hpp" />
+    <ClInclude Include="Include\Audio\NoiseSoundChannel.hpp" />
+    <ClInclude Include="Include\Audio\ToneSoundChannel.hpp" />
+    <ClInclude Include="Include\Audio\SweepSoundChannel.hpp" />
+    <ClInclude Include="Include\Audio\SoundChannel.hpp" />
+    <ClInclude Include="Include\Audio\AudioTimer.hpp" />
+    <ClInclude Include="Include\Audio\WaveSoundChannel.hpp" />
+    <ClInclude Include="Include\EmbeddedFont.hpp" />
+    <ClInclude Include="Include\Graphics\BackgroundPixelFetcher.hpp" />
+    <ClInclude Include="Include\Graphics\Color.hpp" />
+    <ClInclude Include="Include\Memory\MBC3.hpp" />
+    <ClInclude Include="Include\Memory\MBC5.hpp" />
+    <ClInclude Include="Include\Utils\ConfigUtils.hpp" />
+    <ClInclude Include="Include\Utils\GraphicsUtils.hpp" />
+    <ClInclude Include="Include\Graphics\Pixel.hpp" />
+    <ClInclude Include="Include\Graphics\PixelFetcher.hpp" />
+    <ClInclude Include="Include\Graphics\PPU.hpp" />
+    <ClInclude Include="Include\Graphics\Sprite.hpp" />
+    <ClInclude Include="Include\Graphics\SpritePixelFetcher.hpp" />
+    <ClInclude Include="Include\Input\GBButtons.hpp" />
+    <ClInclude Include="Include\Input\InputManager.hpp" />
+    <ClInclude Include="Include\Input\Joypad.hpp" />
+    <ClInclude Include="Include\Utils\Arithmetic.hpp" />
+    <ClInclude Include="Include\Utils\Callbacks.hpp" />
+    <ClInclude Include="Include\Utils\MemoryUtils.hpp" />
+    <ClInclude Include="Include\Utils\GBSpecs.hpp" />
+    <ClInclude Include="Include\Utils\Interrupts.hpp" />
+    <ClInclude Include="Include\Emulator.hpp" />
+    <ClInclude Include="Include\EmulatorWindow.hpp" />
+    <ClInclude Include="Include\Graphics\DMATransferRegister.hpp" />
+    <ClInclude Include="Include\Graphics\Framebuffer.hpp" />
+    <ClInclude Include="Include\Memory\MemoryMap.hpp" />
+    <ClInclude Include="Include\Memory\Register16.hpp" />
+    <ClInclude Include="Include\Memory\Register8.hpp" />
+    <ClInclude Include="Include\Memory\Cartridge.hpp" />
+    <ClInclude Include="Include\CPU\CPU.hpp" />
+    <ClInclude Include="Include\CPU\CPUInstruction.hpp" />
+    <ClInclude Include="Include\Utils\DataConversions.hpp" />
+    <ClInclude Include="Include\Logger.hpp" />
+    <ClInclude Include="Include\Memory\MBC1.hpp" />
+    <ClInclude Include="Include\Memory\MemoryBankController.hpp" />
+    <ClInclude Include="Include\Memory\Memory.hpp" />
+    <ClInclude Include="Include\Memory\BasicMemory.hpp" />
+    <ClInclude Include="Include\Timer.hpp" />
+    <ClInclude Include="Include\Utils\SystemTime.hpp" />
+    <ClInclude Include="Third-Party\imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="Third-Party\imgui\backends\imgui_impl_sdlrenderer.h" />
+    <ClInclude Include="Third-Party\imgui\imgui.h" />
+    <ClInclude Include="ThirdParty\imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="ThirdParty\imgui\backends\imgui_impl_sdlrenderer.h" />
+    <ClInclude Include="ThirdParty\imgui\imconfig.h" />
+    <ClInclude Include="ThirdParty\imgui\imgui.h" />
+    <ClInclude Include="ThirdParty\imgui\imgui_internal.h" />
+    <ClInclude Include="ThirdParty\imgui\imstb_rectpack.h" />
+    <ClInclude Include="ThirdParty\imgui\imstb_textedit.h" />
+    <ClInclude Include="ThirdParty\imgui\imstb_truetype.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{b9ab9ca9-b47e-4289-948f-4e922b4f9201}</ProjectGuid>
+    <RootNamespace>ModestGB</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Modest-GB</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)/ThirdParty/SDL-2.0.17/include;$(IncludePath);$(ProjectDir)/Include;$(ProjectDir)ThirdParty\imgui;$(ProjectDir)ThirdParty\imgui\backends\;$(ProjectDir)ThirdParty/nativefiledialog/src;$(ProjectDir)ThirdParty/nativefiledialog/src/include</IncludePath>
+    <LibraryPath>$(LibraryPath);$(ProjectDir)/ThirdParty/SDL2/lib/x64</LibraryPath>
+    <SourcePath>$(VC_SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(ProjectDir)/ThirdParty/SDL-2.0.17/include;$(ProjectDir)/Include;$(ProjectDir)ThirdParty\imgui;$(ProjectDir)ThirdParty\imgui\backends;$(ProjectDir)ThirdParty/nativefiledialog/src;$(ProjectDir)ThirdParty/nativefiledialog/src/include</IncludePath>
+    <SourcePath>$(SourcePath)</SourcePath>
+    <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)ThirdParty\SDL-2.0.17\VisualC\Win32\Release;$(ProjectDir)ThirdParty\nativefiledialog\build\lib\Release\x86</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)/ThirdParty/SDL-2.0.17/include;$(IncludePath);$(ProjectDir)/Include;$(ProjectDir)ThirdParty\imgui;$(ProjectDir)ThirdParty\imgui\backends\;$(ProjectDir)ThirdParty\nativefiledialog\src\include;$(ProjectDir)ThirdParty\nativefiledialog\src</IncludePath>
+    <LibraryPath>$(LibraryPath);$(ProjectDir)/ThirdParty/SDL-2.0.17\VisualC\x64\Debug;$(ProjectDir)ThirdParty\nativefiledialog\build\lib\Debug\x64</LibraryPath>
+    <SourcePath>$(VC_SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(ProjectDir)/Third-Party/SDL/include;$(ProjectDir)/Include;$(ProjectDir)Third-Party\imgui;$(ProjectDir)Third-Party\imgui\backends;$(ProjectDir)Third-Party\nativefiledialog-extended\src;$(ProjectDir)Third-Party\nativefiledialog-extended\src\include;$(ProjectDir)Third-Party\yaml-cpp\include;$(ProjectDir)/Third-Party/SDL/build/include</IncludePath>
+    <SourcePath>$(SourcePath)</SourcePath>
+    <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)Third-Party\SDL\build\Release;$(ProjectDir)Third-Party\yaml-cpp\build\Release;$(ProjectDir)Third-Party\nativefiledialog-extended\build\src\Release</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2test.lib;nfd_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreEmbeddedIDL>false</IgnoreEmbeddedIDL>
+    </Link>
+    <PreLinkEvent>
+      <Command>lib /out:"$(OutDir)$(ProjectName).lib" "$(OutDir)*.obj" 
+lib "$(OutDir)$(ProjectName).lib" /remove:"$(OutDir)Main.obj"</Command>
+    </PreLinkEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2test.lib;nfd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreEmbeddedIDL>false</IgnoreEmbeddedIDL>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>lib /out:"$(OutDir)$(ProjectName).lib" "$(OutDir)*.obj" 
+lib "$(OutDir)$(ProjectName).lib" /remove:"$(OutDir)Main.obj"</Command>
+      <Message>
+      </Message>
+    </PreLinkEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2test.lib;nfd_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreEmbeddedIDL>false</IgnoreEmbeddedIDL>
+    </Link>
+    <PreLinkEvent>
+      <Command>lib /out:"$(OutDir)$(ProjectName).lib" "$(OutDir)*.obj" 
+lib "$(OutDir)$(ProjectName).lib" /remove:"$(OutDir)Main.obj"</Command>
+    </PreLinkEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalDependencies>SDL2main.lib;SDL2-static.lib;nfd.lib;yaml-cpp.lib;winmm.lib;Setupapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreEmbeddedIDL>false</IgnoreEmbeddedIDL>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>lib /out:"$(OutDir)$(ProjectName).lib" "$(OutDir)*.obj" 
+lib "$(OutDir)$(ProjectName).lib" /remove:"$(OutDir)Main.obj"</Command>
+      <Message>
+      </Message>
+    </PreLinkEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
